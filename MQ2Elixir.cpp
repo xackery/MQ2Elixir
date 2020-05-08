@@ -10,10 +10,23 @@
 #include "../MQ2Plugin.h"
 #include "MQ2Elixir.h"
 #include "Core.h"
-#include "ShamanElixir.h"
-#include "ShadowknightElixir.h"
-#include "ClericElixir.h"
+#include "BardElixir.h"
 #include "BaseElixir.h"
+#include "BeastlordElixir.h"
+#include "BerserkerElixir.h"
+#include "ClericElixir.h"
+#include "DruidElixir.h"
+#include "EnchanterElixir.h"
+#include "MageElixir.h"
+#include "MonkElixir.h"
+#include "NecromancerElixir.h"
+#include "PaladinElixir.h"
+#include "RangerElixir.h"
+#include "RogueElixir.h"
+#include "ShadowknightElixir.h"
+#include "ShamanElixir.h"
+#include "WarriorElixir.h"
+#include "WizardElixir.h"
 
 PreSetup("MQ2Elixir");
 PLUGIN_VERSION(0.1);
@@ -39,7 +52,45 @@ void ElixirCheck()
 	}
 
 	if (elixir == NULL) {
-		if (pChar->pSpawn->GetClass() == Shaman) elixir = new ShamanElixir();
+		switch (pChar->pSpawn->GetClass()) {
+		case Bard:
+			elixir = new BardElixir();
+		case Beastlord:
+			elixir = new BeastlordElixir();
+		case Berserker:
+			elixir = new BerserkerElixir();
+		case Cleric:
+			elixir = new ClericElixir();
+		case Druid:
+			elixir = new DruidElixir();
+		case Enchanter:
+			elixir = new EnchanterElixir();
+		case Mage:
+			elixir = new MageElixir();
+		case Monk:
+			elixir = new MonkElixir();
+		case Necromancer:
+			elixir = new NecromancerElixir();
+		case Paladin:
+			elixir = new PaladinElixir();
+		case Ranger:
+			elixir = new RangerElixir();
+		case Rogue:
+			elixir = new RogueElixir();
+		case Shadowknight:
+			elixir = new ShadowknightElixir();
+		case Shaman:
+			elixir = new ShamanElixir();
+		case Warrior:
+			elixir = new WarriorElixir();
+		case Wizard:
+			elixir = new WizardElixir();
+		default:
+			WriteChatf("MQ2Elixir::ElixirCheck unknown class, unloading");
+			EzCommand("/timed 1 /plugin mq2autosize unload");
+			return;
+		}
+		if (pChar->pSpawn->GetClass() == Shaman) 
 		if (pChar->pSpawn->GetClass() == Shadowknight) elixir = new ShadowknightElixir();
 		if (pChar->pSpawn->GetClass() == Cleric) elixir = new ClericElixir();
 		elixir->StanceMode = lastStance;

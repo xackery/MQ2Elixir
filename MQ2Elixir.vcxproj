@@ -48,25 +48,51 @@
     <IntDir>.\Intermediate\</IntDir>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="BardElixir.cpp" />
     <ClCompile Include="BaseElixir.cpp" />
+    <ClCompile Include="BeastlordElixir.cpp" />
+    <ClCompile Include="BerserkerElixir.cpp" />
     <ClCompile Include="ClericElixir.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="DruidElixir.cpp" />
+    <ClCompile Include="EnchanterElixir.cpp" />
     <ClCompile Include="LaunchWnd.cpp" />
+    <ClCompile Include="MageElixir.cpp" />
+    <ClCompile Include="MonkElixir.cpp" />
     <ClCompile Include="MQ2Elixir.cpp" />
+    <ClCompile Include="NecromancerElixir.cpp" />
     <ClCompile Include="OptionsWnd.cpp" />
+    <ClCompile Include="PaladinElixir.cpp" />
+    <ClCompile Include="RangerElixir.cpp" />
+    <ClCompile Include="RogueElixir.cpp" />
     <ClCompile Include="ShadowknightElixir.cpp" />
     <ClCompile Include="ShamanElixir.cpp" />
+    <ClCompile Include="WarriorElixir.cpp" />
+    <ClCompile Include="WizardElixir.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MQ2Plugin.h" />
+    <ClInclude Include="BardElixir.h" />
     <ClInclude Include="BaseElixir.h" />
+    <ClInclude Include="BeastlordElixir.h" />
+    <ClInclude Include="BerserkerElixir.h" />
     <ClInclude Include="ClericElixir.h" />
     <ClInclude Include="Core.h" />
+    <ClInclude Include="DruidElixir.h" />
+    <ClInclude Include="EnchanterElixir.h" />
     <ClInclude Include="LaunchWnd.h" />
+    <ClInclude Include="MageElixir.h" />
+    <ClInclude Include="MonkElixir.h" />
     <ClInclude Include="MQ2Elixir.h" />
+    <ClInclude Include="NecromancerElixir.h" />
     <ClInclude Include="OptionsWnd.h" />
+    <ClInclude Include="PaladinElixir.h" />
+    <ClInclude Include="RangerElixir.h" />
+    <ClInclude Include="RogueElixir.h" />
     <ClInclude Include="ShadowknightElixir.h" />
     <ClInclude Include="ShamanElixir.h" />
+    <ClInclude Include="WarriorElixir.h" />
+    <ClInclude Include="WizardElixir.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
