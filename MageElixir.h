@@ -4,7 +4,7 @@
 
 class MageElixir : public BaseElixir {
 public:
-	signed int Class() { return Mage; }
+	signed int GetClass() { return Mage; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

@@ -4,7 +4,7 @@
 
 class MonkElixir : public BaseElixir {
 public:
-	signed int Class() { return Monk; }
+	signed int GetClass() { return Monk; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

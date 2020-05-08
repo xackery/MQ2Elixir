@@ -4,7 +4,7 @@
 
 class WizardElixir : public BaseElixir {
 public:
-	signed int Class() { return Wizard; }
+	signed int GetClass() { return Wizard; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

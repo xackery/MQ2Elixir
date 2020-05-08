@@ -4,7 +4,7 @@
 
 class RangerElixir : public BaseElixir {
 public:
-	signed int Class() { return Ranger; }
+	signed int GetClass() { return Ranger; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

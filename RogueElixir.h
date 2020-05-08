@@ -4,7 +4,7 @@
 
 class RogueElixir : public BaseElixir {
 public:
-	signed int Class() { return Rogue; }
+	signed int GetClass() { return Rogue; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

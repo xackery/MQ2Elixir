@@ -4,7 +4,7 @@
 
 class ShamanElixir : public BaseElixir {
 public:
-	signed int Class() { return Shaman; }
+	signed int GetClass() { return Shaman; }
 
 	bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

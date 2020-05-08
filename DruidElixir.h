@@ -4,7 +4,7 @@
 
 class DruidElixir : public BaseElixir {
 public:
-	signed int Class() { return Druid; }
+	signed int GetClass() { return Druid; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

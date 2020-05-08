@@ -63,7 +63,7 @@ bool IsSpellReady(PCHAR szName)
 		DebugSpewAlways("MQ2Elixir::IsSpellReady spell %s not found", szName);
 		return false;
 	}
-	PSPELL pSpell = NULL;
+	PSPELL pSpell = nullptr;
 
 	for (int GEM = 0; GEM < NUM_SPELL_GEMS; GEM++) {
 		if (pSpell1 && GetMemorizedSpell(GEM) == pSpell1->ID) pSpell = pSpell1;
@@ -93,7 +93,7 @@ bool IsSpellMemorized(PCHAR szName)
 		DebugSpewAlways("MQ2Elixir::IsSpellMemorized spell %s not found", szName);
 		return false;
 	}
-	PSPELL pSpell = NULL;
+	PSPELL pSpell = nullptr;
 
 	for (int GEM = 0; GEM < NUM_SPELL_GEMS; GEM++) {
 		if (pSpell1 && GetMemorizedSpell(GEM) == pSpell1->ID) pSpell = pSpell1;
@@ -121,7 +121,7 @@ DWORD SpellCooldown(PCHAR szName)
 		DebugSpewAlways("MQ2Elixir::IsSpellReady spell %s not found", szName);
 		return -1;
 	}
-	PSPELL pSpell = NULL;
+	PSPELL pSpell = nullptr;
 
 	for (int GEM = 0; GEM < NUM_SPELL_GEMS; GEM++) {
 		if (pSpell1 && GetMemorizedSpell(GEM) == pSpell1->ID) pSpell = pSpell1;
@@ -146,6 +146,8 @@ bool ActionCast(PCHAR szName)
 	if (ActionCastSpell(szName)) return true;
 	if (ActionCastAbility(szName)) return true;
 	if (ActionCastItem(szName)) return true;
+	if (ActionCastAA(szName)) return true;
+	if (ActionCastCombatAbility(szName)) return true;
 	return false;
 }
 
@@ -175,7 +177,7 @@ void BuffUpdate(PSPAWNINFO pSpawn)
 	PCHARINFO2 pChar2 = GetCharInfo2();
 	if (!pChar2) return;
 
-	BuffCache* bc = NULL;
+	BuffCache* bc = nullptr;
 	// update self buff info
 	if (pChar->pSpawn->SpawnID == pSpawn->SpawnID) {
 	
@@ -269,7 +271,7 @@ void BuffUpdate(PSPAWNINFO pSpawn)
 bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 {
 	if (!pSpawn) {
-		DebugSpewAlways("MQ2Elixir::HasBuff pSpawn NULL");
+		DebugSpewAlways("MQ2Elixir::HasBuff pSpawn nullptr");
 		return true;
 	}
 	if (pSpawn->Type != SPAWN_PLAYER && pSpawn->Type != SPAWN_NPC) {
@@ -279,7 +281,7 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 
 	PCHARINFO pChar = GetCharInfo();
 	if (!pChar) {
-		DebugSpewAlways("MQ2Elixir::HasBuff pChar is NULL");
+		DebugSpewAlways("MQ2Elixir::HasBuff pChar is nullptr");
 		return true;
 	}
 
@@ -290,7 +292,7 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 	}
 	BuffCache* bc = kv->second;
 	if (!bc) {
-		DebugSpewAlways("MQ2Elixir::HasBuff buffCache is NULL");
+		DebugSpewAlways("MQ2Elixir::HasBuff buffCache is nullptr");
 		return true;
 	}
 
@@ -313,7 +315,7 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 	PSPELL pSpell;
 	for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++)
 	{
-		pSpell = NULL;
+		pSpell = nullptr;
 		if (pSpell1 && pSpell1->ID == bc->Buffs[nBuff].SpellID) pSpell = pSpell1;
 		if (pSpell2 && pSpell2->ID == bc->Buffs[nBuff].SpellID) pSpell = pSpell2;
 		if (pSpell3 && pSpell3->ID == bc->Buffs[nBuff].SpellID) pSpell = pSpell3;
@@ -364,7 +366,7 @@ int CombatState()
 bool IsFacingSpawn(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) {
-		DebugSpewAlways("MQ2Elixir::IsFacingSpawn pSpawn NULL");
+		DebugSpewAlways("MQ2Elixir::IsFacingSpawn pSpawn nullptr");
 		return false;
 	}
 
@@ -405,7 +407,7 @@ int SpawnPctMana(PSPAWNINFO pSpawn)
 bool ActionSpawnTarget(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) {
-		DebugSpewAlways("MQ2Elixir::ActionSpawnTarget pSpawn is NULL");
+		DebugSpewAlways("MQ2Elixir::ActionSpawnTarget pSpawn is nullptr");
 		return false;
 	}
 	if (pTarget->Data.SpawnID == pSpawn->SpawnID) {
@@ -464,11 +466,11 @@ bool ActionCastSpell(PCHAR szName)
 		return false;
 	}
 
-	PSPELL pSpell = NULL;
+	PSPELL pSpell = nullptr;
 
 	int gemIndex = -1;
 	for (int GEM = 0; GEM < NUM_SPELL_GEMS; GEM++) {
-		pSpell =NULL;
+		pSpell = nullptr;
 		if (pSpell1 && GetMemorizedSpell(GEM) == pSpell1->ID) pSpell = pSpell1;
 		if (pSpell2 && GetMemorizedSpell(GEM) == pSpell2->ID) pSpell = pSpell2;
 		if (pSpell3 && GetMemorizedSpell(GEM) == pSpell3->ID) pSpell = pSpell3;
@@ -636,9 +638,9 @@ bool ActionCastAA(PCHAR szName)
 		PALTABILITY pAbility = GetAAByIdWrapper(pPCData->GetAlternateAbilityId(nAbility), level);
 		if (!pAbility) continue;
 		
-		PCHAR pName = pCDBStr->GetString(pAbility->nName, 1, NULL);
+		PCHAR pName = pCDBStr->GetString(pAbility->nName, 1, nullptr);
 		if (!pName) continue;
-		if (_stricmp(pName = pCDBStr->GetString(pAbility->nName, 1, NULL), szName)) continue;
+		if (_stricmp(pName = pCDBStr->GetString(pAbility->nName, 1, nullptr), szName)) continue;
 
 		if (!pAltAdvManager->IsAbilityReady(pPCData, pAbility, 0)) {
 			DebugSpewAlways("MQ2Elixir::ActionCastAA ability %s not ready", szName);
@@ -752,7 +754,7 @@ bool IsCombatAbilityReady(PCHAR szName)
 		return false;
 	}
 
-	PSPELL pSpell = NULL;
+	PSPELL pSpell = nullptr;
 	string szSpellName = szName;
 	PSPELL pSpell1 = GetSpellByName((char*)szSpellName.c_str());
 	if (pSpell1) pSpell = pSpell1;
@@ -769,7 +771,7 @@ bool IsCombatAbilityReady(PCHAR szName)
 		return false;
 	}
 
-	DWORD timeNow = (DWORD)time(NULL);
+	DWORD timeNow = (DWORD)time(nullptr);
 #if !defined(ROF2EMU) && !defined(UFEMU)
 	if (pPCData->GetCombatAbilityTimer(pSpell->ReuseTimerIndex, pSpell->SpellGroup) > timeNow) {
 		return false;
@@ -851,7 +853,7 @@ bool ActionCastCombatAbility(PCHAR szName)
 		return false;
 	}
 
-	PSPELL pSpell = NULL;
+	PSPELL pSpell = nullptr;
 	string szSpellName = szName;
 	PSPELL pSpell1 = GetSpellByName((char*)szSpellName.c_str());
 	if (pSpell1) pSpell = pSpell1;

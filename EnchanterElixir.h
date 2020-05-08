@@ -4,7 +4,7 @@
 
 class EnchanterElixir : public BaseElixir {
 public:
-	signed int Class() { return Enchanter; }
+	signed int GetClass() { return Enchanter; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

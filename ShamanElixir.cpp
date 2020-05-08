@@ -6,7 +6,7 @@ bool ShamanElixir::CastGroupHeal(PSPAWNINFO pSpawn)
 	PCHARINFO pChar = GetCharInfo();
 	if (pChar->pSpawn->GetClass() != Shaman) return false;
 	if (!pSpawn) {
-		DebugSpewAlways("MQ2Elixir::CastGroupHealShaman pSpawn is NULL");
+		DebugSpewAlways("MQ2Elixir::CastGroupHealShaman pSpawn is nullptr");
 		return false;
 	}
 
@@ -49,7 +49,7 @@ bool ShamanElixir::CastGroupPriorityHeal(PSPAWNINFO pSpawn)
 bool ShamanElixir::CastHeal(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) {
-		DebugSpewAlways("MQ2Elixir::CastGroupHealShaman pSpawn is NULL");
+		DebugSpewAlways("MQ2Elixir::CastGroupHealShaman pSpawn is nullptr");
 		return false;
 	}
 

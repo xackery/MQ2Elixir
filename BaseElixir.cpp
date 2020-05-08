@@ -4,9 +4,13 @@
 
 bool BaseElixir::Logic()
 {
+	if (!Class()) return false;
 	if (Target()) return true;
 	if (Heal()) return true;
 	if (Buff()) return true;
+	if (Spell()) return true;
+	if (Ability()) return true;
+	if (Item()) return true;
 	return false;
 }
 
@@ -212,3 +216,17 @@ bool BaseElixir::CombatBuff()
 	return false;
 }
 
+bool BaseElixir::Spell()
+{
+	return false;
+}
+
+bool BaseElixir::Item()
+{
+	return false;
+}
+
+bool BaseElixir::Ability()
+{
+	return false;
+}

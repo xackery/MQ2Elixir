@@ -4,7 +4,7 @@
 bool ShadowknightElixir::CastHeal(PSPAWNINFO pSpawn)
 {
 	if (!pTarget) {
-		DebugSpewAlways("MQ2Elixir::CastHealShadowknight pSpawn is NULL");
+		DebugSpewAlways("MQ2Elixir::CastHealShadowknight pSpawn is nullptr");
 		//TODO: in cases pTarget is not set, we need to discern a lifetap target
 		return false;
 	}
@@ -89,7 +89,7 @@ bool ShadowknightElixir::CastCombatBuff()
 	if (pChar->pSpawn->GetClass() != Shadowknight) return false;
 	bool isMainTank = false;
 	if (pChar->pGroupInfo && pChar->pGroupInfo->pMember[0]->MainTank) isMainTank = true;
-	PSPAWNINFO pTargetSpawn = NULL;
+	PSPAWNINFO pTargetSpawn = nullptr;
 	if (pTarget) pTargetSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
 
 	PCHAR szNames[] = { "Thwart", //113 t15

@@ -4,7 +4,7 @@
 
 class ClericElixir : public BaseElixir {
 public:
-	signed int Class() { return Cleric; }
+	signed int GetClass() { return Cleric; }
 
 	bool CastHeal(PSPAWNINFO pSpawn);
 	bool CastPriorityHeal(PSPAWNINFO pSpawn);

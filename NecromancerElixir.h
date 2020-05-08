@@ -4,7 +4,7 @@
 
 class NecromancerElixir : public BaseElixir {
 public:
-	signed int Class() { return Necromancer; }
+	signed int GetClass() { return Necromancer; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);

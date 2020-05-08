@@ -4,7 +4,7 @@
 
 class ShadowknightElixir : public BaseElixir {
 public:
-	signed int Class() { return Shadowknight; }
+	ShadowknightElixir() { classID = Shadowknight;  }
 
 	bool CastHeal(PSPAWNINFO pSpawn);
 	bool CastPriorityHeal(PSPAWNINFO pSpawn);

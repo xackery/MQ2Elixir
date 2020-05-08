@@ -4,7 +4,7 @@
 
 class BardElixir : public BaseElixir {
 public:
-	signed int Class() { return Bard; }
+	BardElixir() { classID = Bard; }
 
 	//bool CastHeal(PSPAWNINFO pSpawn);
 	//bool CastPriorityHeal(PSPAWNINFO pSpawn);
