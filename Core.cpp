@@ -13,8 +13,6 @@ public:
 
 unordered_map<DWORD, BuffCache*> buffs;
 
-
-
 // How many NPC XTargets within 250 feet of me are there?
 int XTargetNearbyHaterCount()
 {
@@ -140,6 +138,14 @@ bool IsMoving(PSPAWNINFO pSpawn)
 	if (!pSpawn) return false;
 	if (pSpawn->SpeedRun != 0.0f) return true;
 	if (fabs(FindSpeed(pSpawn)) != 0.0f) return true;
+	return false;
+}
+
+bool ActionCast(PCHAR szName)
+{
+	if (ActionCastSpell(szName)) return true;
+	if (ActionCastAbility(szName)) return true;
+	if (ActionCastItem(szName)) return true;
 	return false;
 }
 

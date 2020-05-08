@@ -11,6 +11,7 @@ enum {
 	COMBATSTATE_UNKNOWN
 };
 
+bool ActionCast(PCHAR szName);
 bool ActionCastSpell(PCHAR szName);
 bool ActionSpawnTarget(PSPAWNINFO pSpawn);
 bool ActionCastAA(PCHAR szName);
