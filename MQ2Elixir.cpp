@@ -161,8 +161,28 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 			Dest.Type = pBoolType;
 			return true;
 		case Memorize:
-			//TODO: split the gem from the index string
-			//Dest.DWord = ActionMemorizeSpell(Index);
+			char szName[256] = { 0 };
+			PSPAWNINFO pSpawn = nullptr;
+			WORD gem = 0;
+			int counter = 0;
+			char* token = strtok(Index, " ");
+			std::string name;
+
+			while (token != NULL)
+			{
+				counter++;
+				if (counter == 1) {
+					gem = atoi(token); 
+				}
+				else {
+					name.append(token);
+				}
+				token = strtok(NULL, " ");
+				if (counter > 1 && token != NULL) name.append(" ");
+			}
+
+			Dest.DWord = ActionMemorizeSpell(gem, (PCHAR)name.c_str());
+
 			Dest.DWord = false;
 			Dest.Type = pBoolType;
 			return true;
@@ -172,12 +192,54 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 	PMQ2TYPEMEMBER pMember = MQ2ElixirType::FindMember(Member);
 	if (!pMember) return false;
 
+	PSPAWNINFO pSpawn = nullptr;
+	int stance = -1;
+
 	switch (pMember->ID) {
 	case Stance:
-		int stance = -1;
 		if (pElixir) stance = pElixir->StanceMode;
 		Dest.DWord =  stance;
 		Dest.Type = pIntType;
+		return true;
+	case IsFacingTarget:
+		Dest.DWord = false;
+		pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
+		if (pSpawn) Dest.DWord = IsFacingSpawn(pSpawn);
+		Dest.Type = pBoolType;
+		return true;
+	case TargetHasBuff:
+		Dest.DWord = false;
+		pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
+		if (pSpawn) Dest.DWord = HasBuff(pSpawn, Index);
+		Dest.Type = pBoolType;
+		return true;
+	case SpawnIDHasBuff:
+		Dest.DWord = false;
+		std::string name;
+		PSPAWNINFO pSpawn = nullptr;
+
+		int counter = 0;
+		char* token = strtok(Index, " ");
+		while (token != NULL)
+		{
+			counter++;
+			if (counter == 1) {
+				int spawnID = atoi(token);
+				if (!spawnID) return true;
+				pSpawn = (PSPAWNINFO)GetSpawnByID(spawnID);
+				if (!pSpawn) return true;
+			} else {
+				name.append(token);
+			}
+			token = strtok(NULL, " ");
+			if (token != NULL && counter > 1) name.append(" ");
+		}
+
+		if (!name.size()) return true;
+		if (!pSpawn) return true;
+
+		Dest.DWord = HasBuff(pSpawn, (PCHAR)name.c_str());
+		Dest.Type = pBoolType;
 		return true;
 	}
 

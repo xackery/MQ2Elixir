@@ -33,7 +33,7 @@ bool ClericElixir::CastIdleBuff()
 			DebugSpewAlways("MQ2Elixir::ClericIdleBuffs casting %s", szName);
 			return true;
 		}
-		if (!IsSpellMemorized(szName) && ActionMemorizeSpell(szName, 12)) {
+		if (!IsSpellMemorized(szName) && ActionMemorizeSpell(12, szName)) {
 			DebugSpewAlways("MQ2Elixir::ClericIdleBuffs memorizing %s", szName);
 			return true;
 		}

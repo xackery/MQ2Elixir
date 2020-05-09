@@ -24,6 +24,9 @@ class MQ2ElixirType : public MQ2Type {
 public:
 	enum ElixirMembers {
 		Stance,
+		IsFacingTarget,
+		TargetHasBuff,
+		SpawnIDHasBuff
 	};
 	enum ElixirMethods {
 		Cast,
@@ -37,6 +40,9 @@ public:
 	bool GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TYPEVAR& Dest);
 	MQ2ElixirType() : MQ2Type("Elixir") {
 		TypeMember(Stance);
+		TypeMember(IsFacingTarget);
+		TypeMember(TargetHasBuff);
+		TypeMember(SpawnIDHasBuff);
 		TypeMethod(Cast);
 		TypeMethod(CastItem);
 		TypeMethod(CastSpell);

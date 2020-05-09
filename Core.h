@@ -16,7 +16,7 @@ bool ActionCastSpell(PCHAR szName);
 bool ActionSpawnTarget(PSPAWNINFO pSpawn);
 bool ActionCastAA(PCHAR szName);
 bool ActionCastItem(PCHAR szName);
-bool ActionMemorizeSpell(PCHAR szName, WORD gem);
+bool ActionMemorizeSpell(WORD gem, PCHAR szName);
 bool ActionCastAbility(PCHAR szName);
 bool ActionCastCombatAbility(PCHAR szName);
 

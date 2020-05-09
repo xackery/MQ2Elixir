@@ -54,7 +54,7 @@ bool ShadowknightElixir::CastIdleBuff()
 			DebugSpewAlways("MQ2Elixir::ShadowknightIdleBuffs casting %s", szName);
 			return true;
 		}
-		if (!IsSpellMemorized(szName) && ActionMemorizeSpell(szName, 12)) {
+		if (!IsSpellMemorized(szName) && ActionMemorizeSpell(12, szName)) {
 			DebugSpewAlways("MQ2Elixir::ShadowknightIdleBuffs memorizing %s", szName);
 			return true;
 		}
@@ -70,7 +70,7 @@ bool ShadowknightElixir::CastIdleBuff()
 			//DebugSpewAlways("MQ2Elixir::ShadowknightIdleBuffs casting %s", szName);
 			return true;
 		}
-		if (!IsSpellMemorized(szName) && ActionMemorizeSpell(szName, 12)) {
+		if (!IsSpellMemorized(szName) && ActionMemorizeSpell(12, szName)) {
 			//DebugSpewAlways("MQ2Elixir::ShadowknightIdleBuffs memorizing %s", szName);
 			return true;
 		}

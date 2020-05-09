@@ -535,7 +535,7 @@ bool ActionCastSpell(PCHAR szName)
 	return true;
 }
 
-bool ActionMemorizeSpell(PCHAR szName, WORD gem)
+bool ActionMemorizeSpell(WORD gem, PCHAR szName)
 {
 	if (gem < 1) {
 		DebugSpewAlways("MQ2Elixir::ActionMemorizeSpell invalid gem %d < 1", gem);
