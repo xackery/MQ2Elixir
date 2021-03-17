@@ -26,3 +26,13 @@ Note that spell name does NOT need Rk. suffix, and buffs do not need roman numer
 * ${Elixir.CastAbility[spell name]} returns true if ability invocation succeeds
 * ${Elixir.CastCombatAbility[spell name]} returns true if ability succeeds
 * ${Elixir.CastAA[spell name]} returns true if aa succeeds
+
+
+## Setup
+- Clone https://gitlab.com/redguides/VeryVanilla
+- Inside root, run MQ2Auth.exe, and hit Save
+- run VanillaDIY.sln opening it in Visual Studio 2019
+- Build menu -> Build Solution
+- Right click solution on top right area, Add -> Existing Project, select MQ2Elixir.vcproj
+- Right click newly added project MQ2Elixir, Properties, change from Win XP 2013 to Visual Studio 2019 x142
+- Build menu -> Build Solution again
