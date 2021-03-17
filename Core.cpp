@@ -390,8 +390,8 @@ int SpawnPctHPs(PSPAWNINFO pSpawn)
 int SpawnPctEndurance(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) return 100;
-	if (pSpawn->EnduranceMax < 1 || pSpawn->EnduranceCurrent < 1) return 0;
-	return (int)(pSpawn->EnduranceCurrent * 100 / pSpawn->EnduranceMax);
+	if (pSpawn->GetMaxEndurance() < 1 || pSpawn->GetCurrentEndurance() < 1) return 0;
+	return (int)(pSpawn->GetCurrentEndurance() * 100 / pSpawn->GetMaxEndurance());
 }
 
 
@@ -399,8 +399,8 @@ int SpawnPctEndurance(PSPAWNINFO pSpawn)
 int SpawnPctMana(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) return 100;
-	if (pSpawn->ManaMax < 1 || pSpawn->ManaCurrent < 1) return 0;
-	return (int)(pSpawn->ManaCurrent * 100 / pSpawn->ManaMax);
+	if (pSpawn->GetMaxMana() < 1 || pSpawn->GetCurrentMana() < 1) return 0;
+	return (int)(pSpawn->GetCurrentMana() * 100 / pSpawn->GetMaxMana());
 }
 
 
