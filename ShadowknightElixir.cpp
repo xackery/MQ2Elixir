@@ -184,6 +184,34 @@ bool ShadowknightElixir::CastCombatBuff()
 		if (!ActionCastSpell(szName)) continue;
 		return true;
 	}
+
+
+	PCHAR szSpears[] = {
+		"Spear of Cadcane", //114 16441
+		"Spear of Tylix", //109 13556
+		"Spear of Vizat", //104 11177
+		"Spear of Grelleth", //99 9655
+		"Spear of Sholoth", //94 7961
+		"Gorgon Spear", //89 6419
+		"Malarian Spear", //84 2113
+		"Rotmarrow Spear", //79 1377
+		"Rotroot Spear", //74 1204
+		"Spear of Muram", //69 963
+		"Miasmic Spear", //65 770
+		"Spear of Decay", //64 700
+		"Spear of Plague", //54 444
+		"Spear of Pain", //48 325
+		"Spear of Disease", //34 251
+		"Spike of Disease", //1 15
+	};
+	for (PCHAR szName : szSpears) {
+		if (ActionCastSpell(szName)) {
+			DebugSpewAlways("MQ2Elixir::ShadowknightCombatBuffs casting %s", szName);
+			return true;
+		}
+	}
+
+
 	DebugSpewAlways("EQElixir::ShadowknightCombatBuffs nothing to do");
 	return false;
 }
