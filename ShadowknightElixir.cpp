@@ -9,10 +9,44 @@ bool ShadowknightElixir::CastHeal(PSPAWNINFO pSpawn)
 		return false;
 	}
 
-	//t0 taps
-	if (ActionCastSpell("Touch of Drendar")) return true;
-	if (ActionCastSpell("Touch of Lutzen")) return true;
-	if (ActionCastSpell("Touch of Zlandicar")) return true;
+	PCHAR szNames[] = {
+		"Touch of Drendar", //115 7869
+		"Cadcane's Lifedraw", //113 5053
+		"Touch of T`Vem", //110 6488
+		"Touch of Lutzen", //105 5350
+		"Vizat's Lifedraw", //103 3435
+		"Touch of Falsin", //100 4043
+		"Grelleth's Lifedraw", //98 2769
+		"Unholy Guardian Lifetap", //97 3126
+		"Insolent Agitation", //97 2438
+		"Touch of Urash", //95 3334
+		"Sholothian Lifedraw", //93 2283
+		"Touch of Dyalgem", //90 2749
+		"Gorgon Lifedraw", //88 1882
+		"Touch of Tharoff", //85
+		"Touch of Kildrukaun", //80
+		"Touch of Severan", //75
+		"Drink of Decomposition", //73
+		"Touch of the Devourer", //70
+		"Touch of Inruku", //67
+		"Touch of Innoruuk", //65
+		"Touch of Volatis", //62
+		"Drain Soul", //60
+		"Drain Spirit", //57
+		"Spirit Tap", //55
+		"Siphon Life", //51
+		"Life Leech", //47
+		"Lifedraw", //29
+		"Lifespike", //15
+		"Lifetap" //8
+	};
+	for (PCHAR szName : szNames) {
+		if (ActionCastSpell(szName)) {
+			DebugSpewAlways("MQ2Elixir::SHDCastHeal casting %s", szName);
+			return true;
+		}
+	}
+
 	DebugSpewAlways("MQ2Elixir::CastHealShadowknight no spells available");
 	return false;
 }
@@ -27,9 +61,25 @@ bool ShadowknightElixir::CastPriorityHeal(PSPAWNINFO pSpawn)
 		return false;
 	}
 
-	if (ActionCastSpell("Dire Indictment")) return true;
-	if (ActionCastSpell("Dissident Fang")) return true;
 	if (ActionCastAA("Leech Touch")) return true;
+
+	PCHAR szNames[] = {
+		"Dissident Fang", //106 15000
+		"Dire Indictment", //115 14371
+		"Dire Testimony", //110 11850
+		"Dire Declaration", //105 9772
+		"Dire Insinuation", //100 7879
+		"Dire Allegation", //95 6497
+		"Dire Accusation", //90 5357
+		"Dire Implication", //85 4427
+	};
+	for (PCHAR szName : szNames) {
+		if (ActionCastSpell(szName)) {
+			DebugSpewAlways("MQ2Elixir::SHDCastHeal casting %s", szName);
+			return true;
+		}
+	}
+
 	return false;
 }
 
