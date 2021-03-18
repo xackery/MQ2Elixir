@@ -1,5 +1,6 @@
 #include "../MQ2Plugin.h"
 #include "ShadowknightElixir.h"
+#include "dot/Disease.h"
 
 bool ShadowknightElixir::CastHeal(PSPAWNINFO pSpawn)
 {
@@ -165,27 +166,6 @@ bool ShadowknightElixir::CastCombatBuff()
 	}
 
 
-
-	//Target based combat buffs/debuffs
-	if (!isMainTank) return false;
-	PCHAR szProtest[] = { "Challenge for Power",
-		"Trial for Power",
-		"Charge for Power",
-		"Confrontation for Power",
-		"Provocation for Power",
-		"Demand for Power",
-		"Impose for Power",
-		"Refute for Power",
-		"Protest for Power",
-	};
-	for (PCHAR szName : szProtest) {
-		if (!pTargetSpawn) continue;
-		if (HasBuff(pTargetSpawn, szName)) continue;
-		if (!ActionCastSpell(szName)) continue;
-		return true;
-	}
-
-
 	PCHAR szSpears[] = {
 		"Spear of Cadcane", //114 16441
 		"Spear of Tylix", //109 13556
@@ -209,6 +189,32 @@ bool ShadowknightElixir::CastCombatBuff()
 			DebugSpewAlways("MQ2Elixir::ShadowknightCombatBuffs casting %s", szName);
 			return true;
 		}
+	}
+
+
+
+	if (CastDoTDisease()) {
+		return true;
+	}
+
+	//Target based combat buffs/debuffs
+	if (!isMainTank) return false;
+	PCHAR szProtest[] = { 
+		"Challenge for Power",
+		"Trial for Power",
+		"Charge for Power",
+		"Confrontation for Power",
+		"Provocation for Power",
+		"Demand for Power",
+		"Impose for Power",
+		"Refute for Power",
+		"Protest for Power",
+	};
+	for (PCHAR szName : szProtest) {
+		if (!pTargetSpawn) continue;
+		if (HasBuff(pTargetSpawn, szName)) continue;
+		if (!ActionCastSpell(szName)) continue;
+		return true;
 	}
 
 

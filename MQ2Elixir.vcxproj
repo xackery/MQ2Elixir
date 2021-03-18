@@ -53,6 +53,7 @@
     <ClCompile Include="BeastlordElixir.cpp" />
     <ClCompile Include="BerserkerElixir.cpp" />
     <ClCompile Include="ClericElixir.cpp" />
+    <ClCompile Include="CommonDoTDisease.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="DruidElixir.cpp" />
     <ClCompile Include="EnchanterElixir.cpp" />
@@ -77,6 +78,7 @@
     <ClInclude Include="BeastlordElixir.h" />
     <ClInclude Include="BerserkerElixir.h" />
     <ClInclude Include="ClericElixir.h" />
+    <ClInclude Include="CommonDoTDisease.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="DruidElixir.h" />
     <ClInclude Include="EnchanterElixir.h" />

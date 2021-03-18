@@ -5,7 +5,7 @@
 // BaseElixir is used as a basis for all class inheritence.
 class BaseElixir {
 public:
-	int StanceMode;
+	int StanceMode = 1;
 
 	virtual bool CastGroupHeal(PSPAWNINFO pSpawn) { return false; }
 	virtual bool CastPriorityHeal(PSPAWNINFO pSpawn) { return false; }

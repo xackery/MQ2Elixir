@@ -31,53 +31,67 @@ void CheckElixir()
 	if (!pChar) return;
 	if (!pChar->pSpawn) return;
 
-	int lastStance;
+	int lastStance = 0;
 	if (pElixir) lastStance = pElixir->StanceMode;
 	
 	if (pElixir && pChar->pSpawn->GetClass() != pElixir->Class()) {
-		//delete elixir;
-
 		//check for class change (loaded into a new character)
 		char szName[256] = { 0 };
 		strcpy_s(szName, pChar->Name);
 		lastStance = GetPrivateProfileInt(szName, "Options-DefaultStanceMode", 0, INIFileName);
-		
+		pElixir = nullptr;
 	}
 
 	if (!pElixir) {
 		switch (pChar->pSpawn->GetClass()) {
 		case Bard:
 			pElixir = new BardElixir();
+			break;
 		case Beastlord:
 			pElixir = new BeastlordElixir();
+			break;
 		case Berserker:
 			pElixir = new BerserkerElixir();
+			break;
 		case Cleric:
 			pElixir = new ClericElixir();
+			break;
 		case Druid:
 			pElixir = new DruidElixir();
+			break;
 		case Enchanter:
 			pElixir = new EnchanterElixir();
+			break;
 		case Mage:
 			pElixir = new MageElixir();
+			break;
 		case Monk:
 			pElixir = new MonkElixir();
+			break;
 		case Necromancer:
 			pElixir = new NecromancerElixir();
+			break;
 		case Paladin:
 			pElixir = new PaladinElixir();
+			break;
 		case Ranger:
 			pElixir = new RangerElixir();
+			break;
 		case Rogue:
 			pElixir = new RogueElixir();
+			break;
 		case Shadowknight:
 			pElixir = new ShadowknightElixir();
+			break;
 		case Shaman:
 			pElixir = new ShamanElixir();
+			break;
 		case Warrior:
 			pElixir = new WarriorElixir();
+			break;
 		case Wizard:
 			pElixir = new WizardElixir();
+			break;
 		default:
 			//WriteChatf("MQ2Elixir::ElixirCheck unknown class %d, unloading", pChar->pSpawn->GetClass());
 			//EzCommand("/timed 1 /plugin mq2elixir unload");

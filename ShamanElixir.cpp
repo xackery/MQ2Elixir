@@ -107,4 +107,5 @@ bool ShamanElixir::CastCombatBuff()
 			return true;
 		}
 	}
+	return false;
 }

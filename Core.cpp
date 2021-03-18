@@ -199,10 +199,12 @@ void BuffUpdate(PSPAWNINFO pSpawn)
 				continue;
 			}
 			bc->Buffs[nBuff].Duration = pChar2->Buff[nBuff].Duration;
+#if !defined(ROF2EMU) && !defined(UFEMU)
 			bc->Buffs[nBuff].InitialDuration = pChar2->Buff[nBuff].InitialDuration;
+			bc->Buffs[nBuff].Activatable = pChar2->Buff[nBuff].Activatable;
+#endif
 			bc->Buffs[nBuff].Type = pChar2->Buff[nBuff].Type;
 			bc->Buffs[nBuff].SpellID = pChar2->Buff[nBuff].SpellID;
-			bc->Buffs[nBuff].Activatable = pChar2->Buff[nBuff].Activatable;
 			bc->Buffs[nBuff].Level = pChar2->Buff[nBuff].Level;
 			bc->Buffs[nBuff].Modifier = pChar2->Buff[nBuff].Modifier;
 		}
@@ -583,7 +585,7 @@ bool ActionMemorizeSpell(WORD gem, PCHAR szName)
 		return false;
 	}
 
-	SPELLFAVORITE MemSpellFavorite;
+	SPELLFAVORITE MemSpellFavorite = SPELLFAVORITE();
 	DWORD Favorite = (DWORD)&MemSpellFavorite;
 	
 	ZeroMemory(&MemSpellFavorite, sizeof(MemSpellFavorite));
