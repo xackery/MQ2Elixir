@@ -55,7 +55,9 @@
   <ItemGroup>
     <ClCompile Include="Elixir.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="ElixirButton.cpp" />
     <ClCompile Include="MQ2Elixir.cpp" />
+    <ClCompile Include="ElixirSpell.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MQ2Plugin.h" />

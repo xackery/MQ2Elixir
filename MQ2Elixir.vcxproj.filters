@@ -24,6 +24,12 @@
     <ClCompile Include="Elixir.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ElixirSpell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElixirButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MQ2Plugin.h">
