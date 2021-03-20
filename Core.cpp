@@ -913,6 +913,17 @@ PALTABILITY AAByName(PCHAR Name) {
 	return NULL;
 }
 
+PSPAWNINFO PetTarget()
+{
+	long petID = GetCharInfo()->pSpawn->PetID;
+	if (petID <= 0) return nullptr;
+	if (petID == 0xFFFFFFFF) return nullptr;
+
+	EQPlayer* pPet = GetSpawnByID(petID);
+	if (!pPet) return nullptr;
+	return pPet->Data.WhoFollowing;
+}
+
 /*
 bool SpellStacks() 
 {

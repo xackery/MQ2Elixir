@@ -34,12 +34,16 @@ bool Elixir::Spell(int gemIndex)
 	bool isHeal = false;
 	bool isDebuff = false;
 	bool isBuff = false;
-	bool isDoT = false;
+	bool isDamage = false;
 	bool isLifetap = false;
 	bool isSnare = false;
 	bool isSow = false;
 	bool isTaunt = false;
+	bool isSingleTargetSpell = false;
+	bool isPetSummon = false;
+	bool isTransport = false;
 
+	int bodyType;
 	LONG attr;
 	LONG base;
 	LONG base2;
@@ -72,17 +76,12 @@ bool Elixir::Spell(int gemIndex)
 				if (base < 0) {
 					isHeal = false;
 				}
-				if (pSpell->Category == 126) { //Taps
+				if (pSpell->Category == 114) { //Taps like touch of zlandicar
 					isLifetap = true;
 				}
-				//if (pSpell->Category == 114) { //Taps like touch of zlandicar
-				//	isLifetap = true;
-				//}
 			}
 			if (max < 0) { //Nuke / DoT
-				if (ticks > 0) {
-					isDoT = true;
-				}
+				isDamage = true;
 			}
 		}
 		if (attr == SPA_AC) {
@@ -103,6 +102,14 @@ bool Elixir::Spell(int gemIndex)
 				isSnare = true;
 			}
 		}
+		if (attr == 4) {
+			if (base > 0) { //+STR
+				isBuff = true;
+			}
+			if (base < 0) { //-STR
+				isDebuff = true;
+			}
+		}
 		if (attr == SPA_CHA) {
 			if (base > 0 && base < 254) { //+CHA
 				isBuff = true;
@@ -119,9 +126,136 @@ bool Elixir::Spell(int gemIndex)
 				isDebuff = true;
 			}
 		}
+
+		if (attr == 26) { // Gate
+			isTransport = true;
+		}
+		if (attr == 33) { // Summon Elemental Pet
+			isPetSummon = true;
+		}
+
+		if (attr == 71) { // Summon Skeleton Pet
+			isPetSummon = true;
+		}
+		if (attr == 83) { // Transport
+			isTransport = true;
+		}
+
+		if (attr == 108) { //Summon Familiar
+			isTaunt = true;
+		}
+
 		if (attr == 192) { //taunt
 			isTaunt = true;
 		}
+	}
+
+	if (pSpell->Subcategory == 43) { //Health
+		isHeal = true;
+	}
+
+	if (pSpell->Category == 126) { //Taps
+		if (pSpell->Subcategory == 43) { //Health
+			isLifetap = true;
+		}
+	}
+
+	/*
+	//TODO TargetTypes:
+	case 41: return "Group v2";
+	case 40: return "AE PC v2";
+	case 25: return "AE Summoned";
+	case 24: return "AE Undead";
+	case 20: return "Targetted AE Tap";
+	case  8: return "Targetted AE";
+	case  3: return "Group v1";
+	case  2: return "AE PC v1";
+	case  1: return "Line of Sight";
+	*/
+
+	if (pSpell->TargetType == 4) { //PB AE
+		isSingleTargetSpell = true; //for now just treat like a single target spell
+	}
+
+	if (pSpell->TargetType == 5) { //Single
+		isSingleTargetSpell = true;
+	}
+
+	if (isTransport) {
+		Gems[gemIndex] = "ignoring (transport)";
+		return false;
+	}
+
+	if (pTarget) {
+		bodyType = GetBodyType((PSPAWNINFO)pTarget);
+	}
+	if (pSpell->TargetType == 16) { //Animal
+		if (!pTarget) {
+			Gems[gemIndex] = "no target";
+			return false;
+		}
+		if (bodyType != 21) {
+			Gems[gemIndex] = "not animal";
+		}
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 10) { //Undead
+		if (!pTarget) {
+			Gems[gemIndex] = "no target";
+			return false;
+		}
+		if (bodyType != 3) {
+			Gems[gemIndex] = "not undead";
+		}
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 11) { //Summoned
+		if (!pTarget) {
+			Gems[gemIndex] = "no target";
+			return false;
+		}
+		if (bodyType != 28) {
+			Gems[gemIndex] = "not summoned";
+		}
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 13) { //Lifetap
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 14) { //Pet
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 15) { //Corpse
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 16) { //Plant
+		if (!pTarget) {
+			Gems[gemIndex] = "no target";
+			return false;
+		}
+		if (bodyType != 25) {
+			Gems[gemIndex] = "not plant";
+		}
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 17) { //Uber Giants
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->TargetType == 18) { //Uber Dragons
+		isSingleTargetSpell = true;
+	}
+
+	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) {
+		Gems[gemIndex] = "no line of sight";
+		return false;
 	}
 
 	if (pSpellRecourse && pSpellRecourse->DurationCap > 0) { //recourse buff attached
@@ -154,7 +288,7 @@ bool Elixir::Spell(int gemIndex)
 			if (buffDuration <= 0) {
 				continue;
 			}
-			if (!BuffStackTest(pBuffSpell, pSpell)) {
+			if (!BuffStackTest(pBuffSpell, pSpellRecourse)) {
 				Gems[gemIndex] = "debuff already on";
 				return false;
 			}
@@ -167,6 +301,39 @@ bool Elixir::Spell(int gemIndex)
 					Gems[gemIndex] = "recourse does not stack on target";
 					return false;
 				}
+			}
+		}
+	}
+
+
+	if (ticks > 0 && pSpell->SpellType == 0) { // debuff
+		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
+			
+			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
+			if (buffid <= 0) {
+				continue;
+			}
+			PSPELL pBuffSpell = GetSpellByID(buffid);
+			if (!pBuffSpell) {
+				continue;
+			}
+
+			DWORD buffDuration = ((PCTARGETWND)pTargetWnd)->BuffTimer[nBuff];
+			if (buffDuration <= 0) {
+				continue;
+			}
+			if (!BuffStackTest(pBuffSpell, pSpell)) {
+				Gems[gemIndex] = "debuff already on";
+				return false;
+			}
+
+			if (pBuffSpell->ID == pSpell->ID) {
+				Gems[gemIndex] = "debuff already on target";
+				return false;
+			}
+			if (!BuffStackTest(pBuffSpell, pSpell)) {
+				Gems[gemIndex] = "debuff does not stack on target";
+				return false;
 			}
 		}
 	}
@@ -210,7 +377,18 @@ bool Elixir::Spell(int gemIndex)
 	
 	
 	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) {
-		 Gems[gemIndex] =  "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
+		 Gems[gemIndex] = "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
+		return false;
+	}
+
+	if (isPetSummon && pChar->pSpawn->PetID > 0) {
+		Gems[gemIndex] = "already have pet";
+		return false;
+	}
+
+
+	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > 80) {
+		Gems[gemIndex] = "> 80% hp";
 		return false;
 	}
 
@@ -237,7 +415,7 @@ bool Elixir::Spell(int gemIndex)
 				}
 				if (pSpellRecourse) {
 					if (buff->ID == pSpellRecourse->ID) {
-						Gems[gemIndex] = "recourse already have buff";
+						Gems[gemIndex] = "already have recourse";
 						return false;
 					}
 					if (!BuffStackTest(buff, pSpellRecourse)) {
@@ -292,7 +470,7 @@ bool Elixir::Spell(int gemIndex)
 		}
 	}
 
-	if (pSpell->TargetType == 5 && pSpell->SpellType == 0) { //single target detrimental spell
+	if (isSingleTargetSpell && pSpell->SpellType == 0) { //single target detrimental spell
 		if (!pTarget) {
 			Gems[gemIndex] = "no target";
 			return false;
@@ -303,19 +481,13 @@ bool Elixir::Spell(int gemIndex)
 			return false;
 		}
 
-
-		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) {
+		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) {
 			Gems[gemIndex] = "target too far away";
 			return false;
 		}
 
 		if (SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
 			Gems[gemIndex] = "target > 99%";
-			return false;
-		}
-
-		if (isLifetap && SpawnPctHPs(pChar->pSpawn) > 50) {
-			Gems[gemIndex] = "hp > 50, too high for lifetap";
 			return false;
 		}
 
@@ -364,6 +536,57 @@ bool Elixir::Spell(int gemIndex)
 		Gems[gemIndex] = "casting on enemy target";
 		Execute("/cast %d", gemIndex + 1);
 		return true;
+	}
+
+	if (pSpell->TargetType == 0x0e || pSpell->Category == 69) { //Pet target
+		PSPAWNINFO pPet = (PSPAWNINFO)GetSpawnByID(pChar->pSpawn->PetID);
+		if (!pPet) {
+			Gems[gemIndex] = "no pet";
+			return false;
+		}
+		
+		//if (Distance3DToSpawn(pChar, pPet) > pSpell->Range) {
+		//	Gems[gemIndex] = "pet too far away (" + to_string(Distance3DToSpawn(pChar, pPet)) + " / " + to_string(pSpell->Range) + ")";
+		//	return false;
+		//}
+
+		if (isHeal) {
+			if (SpawnPctHPs(pPet) > 80) {
+				Gems[gemIndex] = "pet > 80% hp";
+				return false;
+			}
+			Gems[gemIndex] = "casting heal on pet";
+			Execute("/cast %d", gemIndex + 1);
+			return true;
+		}
+
+		if (pSpell->DurationCap > 0) { //pet buff
+			if (!pPetInfoWnd) {
+				Gems[gemIndex] = "no pet info wnd";
+				return false;
+			}
+			if (pChar->pSpawn->PetID == 0) {
+				Gems[gemIndex] = "no pet";
+			}
+			for (int nBuff = 0; nBuff < 30; nBuff++) {
+				PSPELL buff = GetSpellByID(((PEQPETINFOWINDOW)pPetInfoWnd)->Buff[nBuff]);
+				if (!buff) {
+					continue;
+				}
+				if (buff->ID == pSpell->ID) {
+					Gems[gemIndex] = "already have buff";
+					return false;
+				}
+				if (!BuffStackTest(buff, pSpell)) {
+					Gems[gemIndex] = "does not stack";
+					return false;
+				}
+			}
+
+			Gems[gemIndex] = "casting on pet";
+			Execute("/cast %d", gemIndex + 1);
+			return true;
+		}
 	}
 
 	Gems[gemIndex] = "unsupported spell";
