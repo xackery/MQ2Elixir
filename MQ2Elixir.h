@@ -1,32 +1,49 @@
 #pragma once
 
-#include "OptionsWnd.h"
-#include "LaunchWnd.h"
-#include "BaseElixir.h"
+#include "Elixir.h"
 
 unsigned long PulseDelay;
 bool IsZoning;
-bool IsWrongUI;
-bool IsElixirLaunchWndActive;
-bool IsElixirOptionsWndActive;
-CElixirLaunchWnd* ElixirLaunchWnd = nullptr;
-CElixirOptionsWnd* ElixirOptionsWnd = nullptr;
 class MQ2ElixirType* pElixirType = nullptr;
 
-void DestroyElixirWindows();
-void CreateElixirWindows();
-void CheckWndActive();
 void CheckElixir();
 
-BaseElixir* pElixir = nullptr;
+Elixir* pElixir = nullptr;
 
 class MQ2ElixirType : public MQ2Type {
+private:
+	char gem1[MAX_STRING];
+	char gem2[MAX_STRING];
+	char gem3[MAX_STRING];
+	char gem4[MAX_STRING];
+	char gem5[MAX_STRING];
+	char gem6[MAX_STRING];
+	char gem7[MAX_STRING];
+	char gem8[MAX_STRING];
+	char gem9[MAX_STRING];
+	char gem10[MAX_STRING];
+	char gem11[MAX_STRING];
+	char gem12[MAX_STRING];
+	char gem13[MAX_STRING];
 public:
 	enum ElixirMembers {
 		Stance,
 		IsFacingTarget,
 		TargetHasBuff,
-		SpawnIDHasBuff
+		SpawnIDHasBuff,
+		Gem1,
+		Gem2,
+		Gem3,
+		Gem4,
+		Gem5,
+		Gem6,
+		Gem7,
+		Gem8,
+		Gem9,
+		Gem10,
+		Gem11,
+		Gem12,
+		Gem13,
 	};
 	enum ElixirMethods {
 		Cast,
@@ -43,6 +60,20 @@ public:
 		TypeMember(IsFacingTarget);
 		TypeMember(TargetHasBuff);
 		TypeMember(SpawnIDHasBuff);
+		TypeMember(Gem1);
+		TypeMember(Gem2);
+		TypeMember(Gem3);
+		TypeMember(Gem4);
+		TypeMember(Gem5);
+		TypeMember(Gem6);
+		TypeMember(Gem7);
+		TypeMember(Gem8);
+		TypeMember(Gem9);
+		TypeMember(Gem10);
+		TypeMember(Gem11);
+		TypeMember(Gem12);
+		TypeMember(Gem13);
+
 		TypeMethod(Cast);
 		TypeMethod(CastItem);
 		TypeMethod(CastSpell);
@@ -62,3 +93,6 @@ public:
 		return false;
 	}
 };
+
+BOOL dataElixir(PCHAR szName, MQ2TYPEVAR& Dest);
+PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine);

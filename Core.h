@@ -35,9 +35,12 @@ bool IsAbilityReady(PCHAR szName);
 bool IsNavActive();
 bool IsFacingSpawn(PSPAWNINFO pSpawn);
 
+PALTABILITY AAByName(PCHAR Name);
 int CombatState();
 int SpawnPctHPs(PSPAWNINFO pSpawn);
+#if !defined(ROF2EMU) && !defined(UF2EMU)
 int XTargetNearbyHaterCount();
+#endif
 DWORD SpellCooldown(PCHAR szName);
 PMQPLUGIN Plugin(char* plugin);
 

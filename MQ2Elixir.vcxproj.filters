@@ -21,64 +21,7 @@
     <ClCompile Include="Core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LaunchWnd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OptionsWnd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ShadowknightElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ClericElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ShamanElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BardElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BeastlordElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BerserkerElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DruidElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EnchanterElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MonkElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MageElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NecromancerElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PaladinElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RangerElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RogueElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WarriorElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WizardElixir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CommonDoTDisease.cpp">
+    <ClCompile Include="Elixir.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,64 +35,7 @@
     <ClInclude Include="Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LaunchWnd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OptionsWnd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShamanElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BaseElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShadowknightElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ClericElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BardElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BeastlordElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BerserkerElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DruidElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EnchanterElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MonkElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MageElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NecromancerElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PaladinElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RangerElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RogueElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WarriorElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WizardElixir.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CommonDoTDisease.h">
+    <ClInclude Include="Elixir.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
