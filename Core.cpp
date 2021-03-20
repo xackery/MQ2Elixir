@@ -314,8 +314,33 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 	}
 
 
-
 	PSPELL pSpell;
+	if (pTarget && pSpawn->SpawnID == ((long)((PSPAWNINFO)pTarget)->SpawnID)) {
+		// we are targetting the person we're checking buff on
+		for (int nBuff = 0; nBuff < NUM_BUFF_SLOTS; nBuff++)
+		{
+			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
+			if (buffid <= 0) {
+				continue;
+			}
+			PSPELL pBuffSpell = GetSpellByID(buffid);
+			if (!pBuffSpell) {
+				continue;
+			}
+			pSpell = nullptr;
+			if (pSpell1 && pSpell1->ID == pBuffSpell->ID) pSpell = pSpell1;
+			if (pSpell1 && !BuffStackTest(pBuffSpell, pSpell1)) return false;
+			if (pSpell2 && pSpell2->ID == pBuffSpell->ID) pSpell = pSpell2;
+			if (pSpell2 && !BuffStackTest(pBuffSpell, pSpell2)) return false;
+			if (pSpell3 && pSpell3->ID == pBuffSpell->ID) pSpell = pSpell3;
+			if (pSpell3 && !BuffStackTest(pBuffSpell, pSpell3)) return false;
+
+			if (!pSpell) continue;
+			//TODO: add level check comparison
+			return true;
+		}
+	}
+
 	for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++)
 	{
 		pSpell = nullptr;
@@ -334,6 +359,7 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 
 		//if (!ret || SlotIndex == -1) return false;
 	}
+
 	return false;
 }
 
