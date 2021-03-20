@@ -4,103 +4,28 @@
 #include "../MQ2Plugin.h"
 #include "MQ2Elixir.h"
 #include "Core.h"
-#include "BardElixir.h"
-#include "BaseElixir.h"
-#include "BeastlordElixir.h"
-#include "BerserkerElixir.h"
-#include "ClericElixir.h"
-#include "DruidElixir.h"
-#include "EnchanterElixir.h"
-#include "MageElixir.h"
-#include "MonkElixir.h"
-#include "NecromancerElixir.h"
-#include "PaladinElixir.h"
-#include "RangerElixir.h"
-#include "RogueElixir.h"
-#include "ShadowknightElixir.h"
-#include "ShamanElixir.h"
-#include "WarriorElixir.h"
-#include "WizardElixir.h"
+#include "Elixir.h"
 
 PreSetup("MQ2Elixir");
-PLUGIN_VERSION(0.1);
+PLUGIN_VERSION(0.2);
 
-void CheckElixir()
+
+// Called once, when the plugin is to initialize
+PLUGIN_API VOID InitializePlugin(VOID)
 {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) return;
-	if (!pChar->pSpawn) return;
-
-	int lastStance = 0;
-	if (pElixir) lastStance = pElixir->StanceMode;
+	DebugSpewAlways("Initializing MQ2Elixir");
+	pElixir = new Elixir();
+	pElixirType = new MQ2ElixirType;
+	AddMQ2Data("Elixir", dataElixir);
 	
-	if (pElixir && pChar->pSpawn->GetClass() != pElixir->Class()) {
-		//check for class change (loaded into a new character)
+	if (GetCharInfo()) {
 		char szName[256] = { 0 };
-		strcpy_s(szName, pChar->Name);
-		lastStance = GetPrivateProfileInt(szName, "Options-DefaultStanceMode", 0, INIFileName);
-		pElixir = nullptr;
+		strcpy_s(szName, GetCharInfo()->Name);
+		pElixir->StanceMode = GetPrivateProfileInt(szName, "Options-DefaultStanceMode", 0, INIFileName);
 	}
 
-	if (!pElixir) {
-		switch (pChar->pSpawn->GetClass()) {
-		case Bard:
-			pElixir = new BardElixir();
-			break;
-		case Beastlord:
-			pElixir = new BeastlordElixir();
-			break;
-		case Berserker:
-			pElixir = new BerserkerElixir();
-			break;
-		case Cleric:
-			pElixir = new ClericElixir();
-			break;
-		case Druid:
-			pElixir = new DruidElixir();
-			break;
-		case Enchanter:
-			pElixir = new EnchanterElixir();
-			break;
-		case Mage:
-			pElixir = new MageElixir();
-			break;
-		case Monk:
-			pElixir = new MonkElixir();
-			break;
-		case Necromancer:
-			pElixir = new NecromancerElixir();
-			break;
-		case Paladin:
-			pElixir = new PaladinElixir();
-			break;
-		case Ranger:
-			pElixir = new RangerElixir();
-			break;
-		case Rogue:
-			pElixir = new RogueElixir();
-			break;
-		case Shadowknight:
-			pElixir = new ShadowknightElixir();
-			break;
-		case Shaman:
-			pElixir = new ShamanElixir();
-			break;
-		case Warrior:
-			pElixir = new WarriorElixir();
-			break;
-		case Wizard:
-			pElixir = new WizardElixir();
-			break;
-		default:
-			//WriteChatf("MQ2Elixir::ElixirCheck unknown class %d, unloading", pChar->pSpawn->GetClass());
-			//EzCommand("/timed 1 /plugin mq2elixir unload");
-			return;
-		}
-		WriteChatf("Class changed to %d", pChar->pSpawn->GetClass());
-		pElixir->StanceMode = lastStance;
-	}
-	if (!pElixir) return;
+	//Add commands, MQ2Data items, hooks, etc.
+	AddCommand("/elixir", ElixirCommand);
 }
 
 BOOL dataElixir(PCHAR szName, MQ2TYPEVAR& Dest) {
@@ -109,72 +34,48 @@ BOOL dataElixir(PCHAR szName, MQ2TYPEVAR& Dest) {
 	return true;
 }
 
-
-// Called once, when the plugin is to initialize
-PLUGIN_API VOID InitializePlugin(VOID)
-{
-    DebugSpewAlways("Initializing MQ2Elixir");
-	pElixir = nullptr;
-	pElixirType = new MQ2ElixirType;
-	AddMQ2Data("Elixir", dataElixir);
-
-	if (IsXMLFilePresent("MQUI_ElixirLaunchWnd.xml")) {
-		AddXMLFile("MQUI_ElixirLaunchWnd.xml");
-	} else {
-		WriteChatf("[MQ2Elixir] could not find MQUI_ElixirLaunchWnd.xml.  Please place in uifiles/default");
-	}
-	if (IsXMLFilePresent("MQUI_ElixirOptionsWnd.xml")) {
-		AddXMLFile("MQUI_ElixirOptionsWnd.xml");
-	}
-	else {
-		WriteChatf("[MQ2Elixir] could not find MQUI_ElixirOptionsWnd.xml.  Please place in uifiles/default");
-	}
-	CheckElixir();
-	CheckWndActive();
-	if (GetCharInfo()) {
-		char szName[256] = { 0 };
-		strcpy_s(szName, GetCharInfo()->Name);
-		if (pElixir) pElixir->StanceMode = GetPrivateProfileInt(szName, "Options-DefaultStanceMode", 0, INIFileName);
-	}
-
-
-    //Add commands, MQ2Data items, hooks, etc.
-    //AddCommand("/mycommand",MyCommand);
-    //AddXMLFile("MQUI_MyXMLFile.xml");
-    //bmMyBenchmark=AddMQ2Benchmark("My Benchmark Name");
-}
-
-
 bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TYPEVAR& Dest) {
 
 	PMQ2TYPEMEMBER pMethod = MQ2ElixirType::FindMethod(Member);
 	if (pMethod) {
-		switch ((ElixirMethods)pMethod->ID) {
-		case Cast:
+		if ((ElixirMethods)pMethod->ID == Cast)
+		{
 			Dest.DWord = ActionCast(Index);
 			Dest.Type = pBoolType;
 			return true;
-		case CastItem:
+		}
+		if ((ElixirMethods)pMethod->ID == CastItem)
+		{
 			Dest.DWord = ActionCastItem(Index);
 			Dest.Type = pBoolType;
 			return true;
-		case CastSpell:
+		}
+		if ((ElixirMethods)pMethod->ID == CastSpell)
+		{
 			Dest.DWord = ActionCastSpell(Index);
 			Dest.Type = pBoolType;
 			return true;
-		case CastAbility:
+		}
+		if ((ElixirMethods)pMethod->ID == CastAbility)
+		{
 			Dest.DWord = ActionCastAbility(Index);
 			Dest.Type = pBoolType;
 			return true;
-		case CastCombatAbility:
+		}
+		if ((ElixirMethods)pMethod->ID == CastCombatAbility)
+		{
 			Dest.DWord = ActionCastCombatAbility(Index);
 			Dest.Type = pBoolType;
 			return true;
-		case CastAA:
+		}
+		if ((ElixirMethods)pMethod->ID == CastAA)
+		{
 			Dest.DWord = ActionCastAA(Index);
 			Dest.Type = pBoolType;
 			return true;
-		case Memorize:
+		}
+		if ((ElixirMethods)pMethod->ID == Memorize)
+		{
 			char szName[256] = { 0 };
 			PSPAWNINFO pSpawn = nullptr;
 			WORD gem = 0;
@@ -186,7 +87,7 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 			{
 				counter++;
 				if (counter == 1) {
-					gem = atoi(token); 
+					gem = atoi(token);
 				}
 				else {
 					name.append(token);
@@ -209,25 +110,27 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 	PSPAWNINFO pSpawn = nullptr;
 	int stance = -1;
 
-	switch (pMember->ID) {
-	case Stance:
+	if (pMember->ID == Stance) {
 		if (pElixir) stance = pElixir->StanceMode;
-		Dest.DWord =  stance;
+		Dest.DWord = stance;
 		Dest.Type = pIntType;
 		return true;
-	case IsFacingTarget:
+	}
+	if (pMember->ID == IsFacingTarget) {
 		Dest.DWord = false;
 		pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
 		if (pSpawn) Dest.DWord = IsFacingSpawn(pSpawn);
 		Dest.Type = pBoolType;
 		return true;
-	case TargetHasBuff:
+	}
+	if (pMember->ID == TargetHasBuff) {
 		Dest.DWord = false;
 		pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
 		if (pSpawn) Dest.DWord = HasBuff(pSpawn, Index);
 		Dest.Type = pBoolType;
 		return true;
-	case SpawnIDHasBuff:
+	}
+	if (pMember->ID == SpawnIDHasBuff) {
 		Dest.DWord = false;
 		std::string name;
 		PSPAWNINFO pSpawn = nullptr;
@@ -242,7 +145,8 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 				if (!spawnID) return true;
 				pSpawn = (PSPAWNINFO)GetSpawnByID(spawnID);
 				if (!pSpawn) return true;
-			} else {
+			}
+			else {
 				name.append(token);
 			}
 			token = strtok(NULL, " ");
@@ -256,38 +160,98 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 		Dest.Type = pBoolType;
 		return true;
 	}
+	if (pMember->ID == Gem1) {
+		strcpy_s(gem1, pElixir->Gems[0].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem1;
+		return true;
+	}
+	if (pMember->ID == Gem2) {
+		strcpy_s(gem2, pElixir->Gems[1].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem2;
+		return true;
+	}
+	if (pMember->ID == Gem3) {
+		strcpy_s(gem3, pElixir->Gems[2].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem3;
+		return true;
+	}
+	if (pMember->ID == Gem4) {
+		strcpy_s(gem4, pElixir->Gems[3].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem4;
+		return true;
+	}
+	if (pMember->ID == Gem5) {
+		strcpy_s(gem5, pElixir->Gems[4].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem5;
+		return true;
+	}
+	if (pMember->ID == Gem6) {
+		strcpy_s(gem6, pElixir->Gems[5].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem6;
+		return true;
+	}
+	if (pMember->ID == Gem7) {
+		strcpy_s(gem7, pElixir->Gems[6].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem7;
+		return true;
+	}
+	if (pMember->ID == Gem8) {
+		strcpy_s(gem8, pElixir->Gems[7].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem8;
+		return true;
+	}
+	if (pMember->ID == Gem9) {
+		strcpy_s(gem9, pElixir->Gems[8].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem9;
+		return true;
+	}
+	if (pMember->ID == Gem10) {
+		strcpy_s(gem10, pElixir->Gems[9].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem10;
+		return true;
+	}
+	if (pMember->ID == Gem11) {
+		strcpy_s(gem11, pElixir->Gems[10].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem11;
+		return true;
+	}
+	if (pMember->ID == Gem12) {
+		strcpy_s(gem12, pElixir->Gems[11].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem12;
+		return true;
+	}
+	if (pMember->ID == Gem13) {
+		strcpy_s(gem13, pElixir->Gems[12].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = gem13;
+		return true;
+	}
 
 	return false;
-}
-
-void CheckWndActive() 
-{
-	IsElixirLaunchWndActive = false;
-	IsElixirOptionsWndActive = false;
-	if (IsZoning) return;
-	if (IsWrongUI) return;
-
-	if (ElixirLaunchWnd && !ElixirLaunchWnd->IsVisible()) IsElixirLaunchWndActive = true;
-	if (ElixirOptionsWnd && !ElixirOptionsWnd->IsVisible()) IsElixirOptionsWndActive = true;
 }
 
 // Called once, when the plugin is to shutdown
 PLUGIN_API VOID ShutdownPlugin(VOID)
 {
     DebugSpewAlways("Shutting down MQ2Elixir");
-	DestroyElixirWindows();
-
+	
 	delete pElixirType;
 	delete pElixir;
 
 	RemoveMQ2Data("Elixir");
-
-	// Additions End
-
-    //Remove commands, MQ2Data items, hooks, etc.
-    //RemoveMQ2Benchmark(bmMyBenchmark);
-    //RemoveCommand("/mycommand");
-    //RemoveXMLFile("MQUI_MyXMLFile.xml");
+    RemoveCommand("/elixir");
 }
 
 // Called after entering a new zone
@@ -296,26 +260,10 @@ PLUGIN_API VOID OnZoned(VOID)
  //   DebugSpewAlways("MQ2Elixir::OnZoned()");
 }
 
-void DestroyElixirWindows() {
-	if (ElixirOptionsWnd) {
-		ElixirOptionsWnd->SaveLoc();
-		delete ElixirOptionsWnd;
-		ElixirOptionsWnd = 0;
-	}
-	if (ElixirLaunchWnd) {
-		ElixirLaunchWnd->SaveLoc();
-		delete ElixirLaunchWnd;
-		ElixirLaunchWnd = 0;
-	}
-	CheckWndActive();
-}
-
-
 // Called once directly before shutdown of the new ui system, and also
 // every time the game calls CDisplay::CleanGameUI()
 PLUGIN_API VOID OnCleanUI(VOID)
 {
-	DestroyElixirWindows();
 }
 
 // Called once directly after the game ui is reloaded, after issuing /loadskin
@@ -323,7 +271,6 @@ PLUGIN_API VOID OnReloadUI(VOID)
 {
 	if (gGameState != GAMESTATE_INGAME) return;
 	if (!pCharSpawn) return;
-	CreateElixirWindows();
 }
 
 // Called every frame that the "HUD" is drawn -- e.g. net status / packet loss bar
@@ -333,68 +280,37 @@ PLUGIN_API VOID OnDrawHUD(VOID)
     //DebugSpewAlways("MQ2Elixir::OnDrawHUD()");
 }
 
-void CreateElixirWindows() {
-	if (ElixirLaunchWnd && ElixirOptionsWnd) return;
-
-	if (pSidlMgr->FindScreenPieceTemplate("ElixirOptionsWnd")) {
-		ElixirOptionsWnd = new CElixirOptionsWnd((CXWnd*)ElixirLaunchWnd);
-		if (ElixirOptionsWnd->IsVisible()) ((CXWnd*)ElixirOptionsWnd)->Show(1, 1);
-		
-		char szTitle[MAX_STRING];
-		sprintf_s(szTitle, "Elixir v%.1f Options", MQ2Version);
-		ElixirOptionsWnd->CSetWindowText(szTitle);
-	}
-	if (pSidlMgr->FindScreenPieceTemplate("ElixirLaunchWnd")) {
-		ElixirLaunchWnd = new CElixirLaunchWnd((CXWnd*)ElixirOptionsWnd);
-		if (pElixir)	ElixirLaunchWnd->CModeList->SetChoice(pElixir->StanceMode);
-
-		if (GetCharInfo()) {
-			char szName[256] = { 0 };
-			strcpy_s(szName, GetCharInfo()->Name);
-			bool isSaved = (GetPrivateProfileInt(szName, "Saved", 0, INIFileName) > 0 ? true : false);
-			bool isLaunchEnabled = true;
-			if (isSaved) {
-				isLaunchEnabled = (GetPrivateProfileInt(szName, "Options-EnableLaunch", 0, INIFileName) > 0 ? true : false);
-			}
-			if (ElixirLaunchWnd->IsVisible() && isLaunchEnabled) ((CXWnd*)ElixirLaunchWnd)->Show(1, 1);
-		}
-	}
-	CheckWndActive();
-}
-
 // Called once directly after initialization, and then every time the gamestate changes
 PLUGIN_API VOID SetGameState(DWORD GameState)
 {
 	if (GameState != GAMESTATE_INGAME) return;
-	CreateElixirWindows();
 }
 
 // This is called every time MQ pulses
 PLUGIN_API VOID OnPulse(VOID)
 {
-	if (GetGameState() != GAMESTATE_INGAME) return;
-	
-
-	if (PulseDelay > MQGetTickCount64()) return;
-	PulseDelay = MQGetTickCount64() + 3000;
-	
-	CheckElixir();
-	if (!pElixir) return;
-
-	if (ElixirLaunchWnd && ElixirLaunchWnd->CModeList->GetCurChoice() != pElixir->StanceMode) {
-		pElixir->StanceMode = ElixirLaunchWnd->CModeList->GetCurChoice();
-		WriteChatf("[MQ2Elixir] Stance is now %d", pElixir->StanceMode);
+	if (GetGameState() != GAMESTATE_INGAME) {
+		return;
 	}
+
+	if (PulseDelay > MQGetTickCount64()) {
+		return;
+	}
+
+	PulseDelay = MQGetTickCount64() + 1000;
+	
 	PCHARINFO pChar = GetCharInfo();
 
 	if (!pChar) return;	
 	BuffUpdate(pChar->pSpawn);
 	if (pTarget) {
 		PSPAWNINFO pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
-		if (pSpawn)	BuffUpdate(pSpawn);
+		if (pSpawn) {
+			BuffUpdate(pSpawn);
+		}
 	}
 
-	if (pElixir->Logic()) return;
+	pElixir->OnPulse();
 }
 
 // This is called every time WriteChatColor is called by MQ2Main or any plugin,
@@ -448,14 +364,12 @@ PLUGIN_API VOID OnRemoveGroundItem(PGROUNDITEM pGroundItem)
 PLUGIN_API VOID OnBeginZone(VOID)
 {
 	IsZoning = true;
-	CheckWndActive();
 }
 
 // This is called when we receive the EQ_END_ZONE packet is received
 PLUGIN_API VOID OnEndZone(VOID)
 {
 	IsZoning = false;
-	CheckWndActive();
 }
 
 // This is called when pChar!=pCharOld && We are NOT zoning
@@ -463,4 +377,22 @@ PLUGIN_API VOID OnEndZone(VOID)
 PLUGIN_API VOID Zoned(VOID)
 {
 //    DebugSpewAlways("MQ2Elixir::Zoned");
+}
+
+PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
+{
+	if (!GetCharInfo2()) return;
+
+	char szArg1[MAX_STRING] = { 0 };
+	char szArg2[MAX_STRING] = { 0 };
+	GetArg(szArg1, szLine, 1);
+	GetArg(szArg2, szLine, 2);
+
+	if (!_strnicmp(szArg1, "list", 4) || !_strnicmp(szArg2, "list", 4)) {
+		return;
+	}
+	if (!_strnicmp(szArg1, "help", 4)) {
+		//Help();
+		return;
+	}
 }

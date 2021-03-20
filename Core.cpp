@@ -4,7 +4,6 @@
 
 using namespace std;
 
-
 class BuffCache {
 public:
 	ULONGLONG cacheExpiration;
@@ -13,6 +12,7 @@ public:
 
 unordered_map<DWORD, BuffCache*> buffs;
 
+#if !defined(ROF2EMU) && !defined(UF2EMU)
 // How many NPC XTargets within 250 feet of me are there?
 int XTargetNearbyHaterCount()
 {
@@ -36,6 +36,7 @@ int XTargetNearbyHaterCount()
 
 	return count;
 }
+#endif
 
 // Is spell casting ready to be done?
 bool IsCastingReady() 
@@ -313,8 +314,33 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 	}
 
 
-
 	PSPELL pSpell;
+	if (pTarget && pSpawn->SpawnID == ((long)((PSPAWNINFO)pTarget)->SpawnID)) {
+		// we are targetting the person we're checking buff on
+		for (int nBuff = 0; nBuff < NUM_BUFF_SLOTS; nBuff++)
+		{
+			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
+			if (buffid <= 0) {
+				continue;
+			}
+			PSPELL pBuffSpell = GetSpellByID(buffid);
+			if (!pBuffSpell) {
+				continue;
+			}
+			pSpell = nullptr;
+			if (pSpell1 && pSpell1->ID == pBuffSpell->ID) pSpell = pSpell1;
+			if (pSpell1 && !BuffStackTest(pBuffSpell, pSpell1)) return false;
+			if (pSpell2 && pSpell2->ID == pBuffSpell->ID) pSpell = pSpell2;
+			if (pSpell2 && !BuffStackTest(pBuffSpell, pSpell2)) return false;
+			if (pSpell3 && pSpell3->ID == pBuffSpell->ID) pSpell = pSpell3;
+			if (pSpell3 && !BuffStackTest(pBuffSpell, pSpell3)) return false;
+
+			if (!pSpell) continue;
+			//TODO: add level check comparison
+			return true;
+		}
+	}
+
 	for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++)
 	{
 		pSpell = nullptr;
@@ -333,6 +359,7 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 
 		//if (!ret || SlotIndex == -1) return false;
 	}
+
 	return false;
 }
 
@@ -388,7 +415,6 @@ int SpawnPctHPs(PSPAWNINFO pSpawn)
 	return (int)(pSpawn->HPCurrent * 100 / pSpawn->HPMax);
 }
 
-
 int SpawnPctEndurance(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) return 100;
@@ -396,15 +422,12 @@ int SpawnPctEndurance(PSPAWNINFO pSpawn)
 	return (int)(pSpawn->GetCurrentEndurance() * 100 / pSpawn->GetMaxEndurance());
 }
 
-
-
 int SpawnPctMana(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) return 100;
 	if (pSpawn->GetMaxMana() < 1 || pSpawn->GetCurrentMana() < 1) return 0;
 	return (int)(pSpawn->GetCurrentMana() * 100 / pSpawn->GetMaxMana());
 }
-
 
 bool ActionSpawnTarget(PSPAWNINFO pSpawn)
 {
@@ -420,7 +443,6 @@ bool ActionSpawnTarget(PSPAWNINFO pSpawn)
 	DebugSpewAlways("MQ2Elixir::ActionSpawnTarget pSpawn %s is now targetted", pSpawn->Name);
 	return true;
 }
-
 
 bool ActionCastSpell(PCHAR szName)
 {
@@ -453,7 +475,6 @@ bool ActionCastSpell(PCHAR szName)
 		DebugSpewAlways("MQ2Elixir::ActionCastSpell obstruction window visible");
 		return false;
 	}
-
 
 	string szSpellName = szName;
 	PSPELL pSpell1 = GetSpellByName((char*)szSpellName.c_str());
@@ -874,3 +895,45 @@ bool ActionCastCombatAbility(PCHAR szName)
 
 	return (pCharData->DoCombatAbility(pSpell->ID));
 }
+
+
+PALTABILITY AAByName(PCHAR Name) {
+	int level = -1;
+	/*if (PSPAWNINFO pMe = (PSPAWNINFO)pLocalPlayer) {
+		level = pMe->Level;
+	}*/
+	for (unsigned long nAbility = 0; nAbility < NUM_ALT_ABILITIES; nAbility++) {
+		if (PALTABILITY pAbility = GetAAByIdWrapper(nAbility, level)) {
+			if (char* pName = pCDBStr->GetString(pAbility->nName, 1, NULL)) {
+				if (!_stricmp(Name, pName))
+					return pAbility;
+			}
+		}
+	}
+	return NULL;
+}
+
+PSPAWNINFO PetTarget()
+{
+	long petID = GetCharInfo()->pSpawn->PetID;
+	if (petID <= 0) return nullptr;
+	if (petID == 0xFFFFFFFF) return nullptr;
+
+	EQPlayer* pPet = GetSpawnByID(petID);
+	if (!pPet) return nullptr;
+	return pPet->Data.WhoFollowing;
+}
+
+/*
+bool SpellStacks() 
+{
+	if (GetSpellDuration(buffSpell, (PSPAWNINFO)pLocalPlayer) >= 0xFFFFFFFE) {
+		buffduration = 99999 + 1;
+	}
+	if (!BuffStackTest(pSpell, buffSpell, TRUE) || ((buffSpell == pSpell) && (buffduration > duration))) {
+		//Dest.DWord = false;
+		//return true;
+		return false;
+	}
+}
+*/
