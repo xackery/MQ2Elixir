@@ -44,12 +44,26 @@ void Elixir::OnPulse()
 
 	for (int i = 0; i < maxGems-1; i++) {
 		AttemptGem(i);
+		
+		if (LONG spellID = GetMemorizedSpell(i)) {			
+			if (PSPELL pSpell = GetSpellByID(spellID)) {
+				char result[100];
+				sprintf(result, "CSPW_Spell%d", i);
+				if (CButtonWnd* pGem = (CButtonWnd*)pCastSpellWnd->GetChildItem(result)) {
+					char result[100];
+					sprintf(result, "%d) %s - %s", i+1, pSpell->Name, Gems[i].c_str());
+					pGem->SetTooltip(result);
+				}
+			}
+		}
+
+		
 	}
-	
+
 	for (int i = maxGems; i < NUM_SPELL_GEMS; i++) {
 		Gems[i] = "not available";
 	}
-	
+
 	//TODO: buff cycle last gem (maxGem)
 }
 
@@ -103,6 +117,7 @@ void Elixir::AttemptGem(int gemIndex)
 
 	if (GetCharInfo()->pSpawn->HideMode) {
 		Gems[gemIndex] = "player invisible";
+		return;
 	}
 
 	
