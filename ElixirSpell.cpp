@@ -44,7 +44,7 @@ bool Elixir::Spell(int gemIndex)
 	bool isTransport = false;
 	bool isGroupSpell = false;
 	bool isBardSong = false;
-
+	
 	int bodyType;
 	LONG attr;
 	LONG base;
@@ -71,12 +71,11 @@ bool Elixir::Spell(int gemIndex)
 
 		if (attr == SPA_HP) {
 			if (max > 0) { //Heal / HoT
-				isHeal = true;
+				if (ticks < 5 && base > 0) { //regen etc are not heals
+					isHeal = true;
+				}
 				if (ticks > 0) {
 					isBuff = true;
-				}
-				if (base < 0) {
-					isHeal = false;
 				}
 				if (pSpell->Category == 114) { //Taps like touch of zlandicar
 					isLifetap = true;
@@ -167,7 +166,7 @@ bool Elixir::Spell(int gemIndex)
 		
 	}
 
-	if (pSpell->Subcategory == 43) { //Health
+	if (pSpell->Subcategory == 43 && ticks < 10) { //Health
 		isHeal = true;
 	}
 
@@ -282,6 +281,32 @@ bool Elixir::Spell(int gemIndex)
 		Gems[gemIndex] = "no line of sight";
 		return false;
 	}
+
+
+	for (int i = 0; i < 4; i++) { // Reagent check
+		if (pSpell->ReagentCount[i] == 0) continue;
+		if (pSpell->ReagentID[i] == -1) continue;
+
+		DWORD count = FindItemCountByID((int)pSpell->ReagentID[i]);
+		if (count > pSpell->ReagentCount[i]) continue;
+
+		PCHAR pItemName = GetItemFromContents(FindItemByID((int)pSpell->ReagentID[i]))->Name;
+		if (pItemName) {
+			sprintf(szTemp, "missing %dx %s", pSpell->ReagentCount[i], pItemName);
+			Gems[gemIndex] = szTemp;
+			return false;
+		}
+	}
+
+
+	DWORD ReqID = pSpell->CasterRequirementID;
+	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) {
+		Gems[gemIndex] = "not < 90% hp";
+		return false;
+	}
+	//if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
+	//if (ReqID == 826 && SpawnPctEndurance(pChar->pSpawn) > 24) return false;
+	//if (ReqID == 827 && SpawnPctEndurance(pChar->pSpawn) > 29) return false;
 
 	if (pSpellRecourse && pSpellRecourse->DurationCap > 0) { //recourse buff attached
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
@@ -402,8 +427,33 @@ bool Elixir::Spell(int gemIndex)
 	
 	
 	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) {
-		 Gems[gemIndex] = "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
+		Gems[gemIndex] = "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
 		return false;
+	}
+
+	if (GetCharInfo2()->Endurance < (int)pSpell->EnduranceCost) {
+		Gems[gemIndex] = "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";
+		return false;
+	}
+
+	if (strstr(pSpell->Name, "Discipline") && pCombatAbilityWnd) {
+		CXWnd* Child = ((CXWnd*)pCombatAbilityWnd)->GetChildItem("CAW_CombatEffectLabel");
+		if (!Child) {
+			Gems[gemIndex] = "combatabilitywnd not found";
+			return false;
+		}
+		CHAR szBuffer[2048] = { 0 };
+		GetCXStr(Child->CGetWindowText(), szBuffer, MAX_STRING);
+		if (szBuffer[0] == '\0') {
+			Gems[gemIndex] = "combatabilitywnd text not null terminated";
+			return false;
+		}
+		PSPELL pBuff = GetSpellByName(szBuffer);
+		if (pBuff) {
+			sprintf(szTemp, "disc %s already active", pBuff->Name);
+			Gems[gemIndex] = szTemp;
+			return false;
+		}
 	}
 
 	if (isPetSummon && pChar->pSpawn->PetID > 0) {
