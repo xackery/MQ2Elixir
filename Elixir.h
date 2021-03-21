@@ -8,9 +8,11 @@ public:
 
 	// StanceMode is what mode is currently being used.
 	int StanceMode = 1;
+	// cooldown before doing anything after zoning
+	unsigned long ZoneCooldown;
 
+	string LastAction;
 	string Gems[NUM_SPELL_GEMS];
-
 	void OnPulse();
 
 	/*
@@ -32,13 +34,12 @@ private:
 	bool isActionComplete;
 	
 	unsigned long gemGlobalCooldown;
-
+	
 	int lastGemIndex;
 	int lastButtonIndex;
 	int lastActionRepeat;
 	unsigned long lastActionRepeatCooldown;
 	
-	string lastAction;
 	string buttons[10];
 
 	void AttemptGem(int gemIndex);

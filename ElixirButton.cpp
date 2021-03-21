@@ -12,9 +12,23 @@ void Elixir::AttemptButton(int buttonIndex)
 		return;
 	}
 
+	if (ZoneCooldown > MQGetTickCount64()) {
+		buttons[buttonIndex] = "zone cooldown";
+		return;
+	}
+
 	if (pChar->pSpawn->GetClass() != Bard && isActionComplete) {
 		buttons[buttonIndex] = "earlier action complete";
 		return;
+	}
+
+	if (GetCharInfo()->Stunned) {
+		buttons[buttonIndex] = "player stunned";
+		return;
+	}
+
+	if (GetCharInfo()->pSpawn->HideMode) {
+		buttons[buttonIndex] = "player invisible";
 	}
 
 	if (lastButtonIndex == buttonIndex && lastActionRepeatCooldown > MQGetTickCount64()) {
@@ -44,8 +58,8 @@ void Elixir::AttemptButton(int buttonIndex)
 	if (child2) {
 		//TODO: iterate gems, figure out which one is this hotbutton, and AttemptGem(gemIndex);
 		if (isActionComplete) {
-			lastAction = "pressing hotbutton " + buttonIndex;
-			buttons[buttonIndex] = lastAction;
+			LastAction = "pressing hotbutton " + buttonIndex;
+			buttons[buttonIndex] = LastAction;
 			lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
 			lastButtonIndex = buttonIndex;
 			isActionComplete = true;
@@ -56,8 +70,8 @@ void Elixir::AttemptButton(int buttonIndex)
 	child2 = child->GetChildItem("HB_InvSlot");
 	//TODO: attempt to click item
 	if (isActionComplete) {
-		lastAction = "pressing hotbutton " + buttonIndex;
-		buttons[buttonIndex] = lastAction;
+		LastAction = "pressing hotbutton " + buttonIndex;
+		buttons[buttonIndex] = LastAction;
 		lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
 		lastButtonIndex = buttonIndex;
 		isActionComplete = true;

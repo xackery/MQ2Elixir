@@ -12,6 +12,7 @@ Elixir* pElixir = nullptr;
 
 class MQ2ElixirType : public MQ2Type {
 private:
+	char lastAction[MAX_STRING];
 	char gem1[MAX_STRING];
 	char gem2[MAX_STRING];
 	char gem3[MAX_STRING];
@@ -31,6 +32,7 @@ public:
 		IsFacingTarget,
 		TargetHasBuff,
 		SpawnIDHasBuff,
+		LastAction,
 		Gem1,
 		Gem2,
 		Gem3,
@@ -60,6 +62,7 @@ public:
 		TypeMember(IsFacingTarget);
 		TypeMember(TargetHasBuff);
 		TypeMember(SpawnIDHasBuff);
+		TypeMember(LastAction);
 		TypeMember(Gem1);
 		TypeMember(Gem2);
 		TypeMember(Gem3);

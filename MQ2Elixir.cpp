@@ -160,6 +160,12 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 		Dest.Type = pBoolType;
 		return true;
 	}
+	if (pMember->ID == LastAction) {
+		strcpy_s(lastAction, pElixir->LastAction.c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = lastAction;
+		return true;
+	}
 	if (pMember->ID == Gem1) {
 		strcpy_s(gem1, pElixir->Gems[0].c_str());
 		Dest.Type = pStringType;
@@ -258,6 +264,7 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 PLUGIN_API VOID OnZoned(VOID)
 {
  //   DebugSpewAlways("MQ2Elixir::OnZoned()");
+	pElixir->ZoneCooldown = (unsigned long)MQGetTickCount64() + 5000;
 }
 
 // Called once directly before shutdown of the new ui system, and also

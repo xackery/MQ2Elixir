@@ -435,7 +435,8 @@ bool ActionSpawnTarget(PSPAWNINFO pSpawn)
 		DebugSpewAlways("MQ2Elixir::ActionSpawnTarget pSpawn is nullptr");
 		return false;
 	}
-	if (pTarget->Data.SpawnID == pSpawn->SpawnID) {
+
+	if (pTarget && pTarget->Data.SpawnID == pSpawn->SpawnID) {
 		DebugSpewAlways("MQ2Elixir::ActionSpawnTarget pSpawn %s already targetted", pSpawn->Name);
 		return true;
 	}

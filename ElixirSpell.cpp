@@ -42,6 +42,8 @@ bool Elixir::Spell(int gemIndex)
 	bool isSingleTargetSpell = false;
 	bool isPetSummon = false;
 	bool isTransport = false;
+	bool isGroupSpell = false;
+	bool isBardSong = false;
 
 	int bodyType;
 	LONG attr;
@@ -84,14 +86,23 @@ bool Elixir::Spell(int gemIndex)
 				isDamage = true;
 			}
 		}
-		if (attr == SPA_AC) {
-			if (base > 0) { //+AC
+		if (attr == SPA_AC ||
+			attr == 2 || //attack
+			attr == 4 || //str
+			attr == 5 || //dex
+			attr == 6 || //agi
+			attr == 7 || //sta
+			attr == 8 || //int
+			attr == 9 //wis
+			) {
+			if (base > 0) { //+stat
 				isBuff = true;
 			}
-			if (base < 0) { //-AC
+			if (base < 0) { //-stat
 				isDebuff = true;
 			}
 		}
+
 		if (attr == SPA_MOVEMENTRATE) {
 			if (base > 0) { //+Movement
 				isBuff = true;
@@ -102,14 +113,7 @@ bool Elixir::Spell(int gemIndex)
 				isSnare = true;
 			}
 		}
-		if (attr == 4) {
-			if (base > 0) { //+STR
-				isBuff = true;
-			}
-			if (base < 0) { //-STR
-				isDebuff = true;
-			}
-		}
+		
 		if (attr == SPA_CHA) {
 			if (base > 0 && base < 254) { //+CHA
 				isBuff = true;
@@ -130,6 +134,18 @@ bool Elixir::Spell(int gemIndex)
 		if (attr == 26) { // Gate
 			isTransport = true;
 		}
+		if (attr == 30) { // frenzy radius reduction (lull)
+			Gems[gemIndex] = "ignored (Lull)";
+			return false;
+		}
+		if (attr == 86) { // reaction radius reduction (lull)
+			Gems[gemIndex] = "ignored (Lull)";
+			return false;
+		}
+		if (attr == 18) { // pacify (lull)
+			Gems[gemIndex] = "ignored (Lull)";
+			return false;
+		}
 		if (attr == 33) { // Summon Elemental Pet
 			isPetSummon = true;
 		}
@@ -148,6 +164,7 @@ bool Elixir::Spell(int gemIndex)
 		if (attr == 192) { //taunt
 			isTaunt = true;
 		}
+		
 	}
 
 	if (pSpell->Subcategory == 43) { //Health
@@ -162,17 +179,25 @@ bool Elixir::Spell(int gemIndex)
 
 	/*
 	//TODO TargetTypes:
-	case 41: return "Group v2";
 	case 40: return "AE PC v2";
 	case 25: return "AE Summoned";
 	case 24: return "AE Undead";
 	case 20: return "Targetted AE Tap";
 	case  8: return "Targetted AE";
-	case  3: return "Group v1";
 	case  2: return "AE PC v1";
 	case  1: return "Line of Sight";
 	*/
 
+	if (pSpell->TargetType == 41) { // Group v2
+		isGroupSpell = true;
+	}
+	if (pSpell->TargetType == 3) { // Group v1
+		isGroupSpell = true;
+	}
+
+	if (isGroupSpell && pSpell->CastTime == 3000) {
+		isBardSong = true;
+	}
 	if (pSpell->TargetType == 4) { //PB AE
 		isSingleTargetSpell = true; //for now just treat like a single target spell
 	}
@@ -392,8 +417,8 @@ bool Elixir::Spell(int gemIndex)
 		return false;
 	}
 
-	if (pSpell->TargetType == 6 && pSpell->SpellType >= 1) { //self beneficial spell
-		if (pSpell->CastTime > 1000 && CombatState() == COMBATSTATE_COMBAT) {
+	if (pSpell->SpellType >= 1 && (pSpell->TargetType == 6 || isGroupSpell)) { //self/group beneficial spell
+		if (pSpell->CastTime > 1000 && CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
 			Gems[gemIndex] = "cast time > 1s, long for combat";
 			return false;
 		}
@@ -424,50 +449,147 @@ bool Elixir::Spell(int gemIndex)
 					}
 				}
 			}
+			for (int b = 0; b < NUM_SHORT_BUFFS; b++)
+			{
+				PSPELL buff = GetSpellByID(GetCharInfo2()->ShortBuff[b].SpellID);
+				if (!buff) {
+					continue;
+				}
+				if (buff->ID == pSpell->ID) {
+					Gems[gemIndex] = "already have shortbuff";
+					return false;
+				}
+				if (!BuffStackTest(buff, pSpell)) {
+					Gems[gemIndex] = "does not stack";
+					return false;
+				}
+				if (pSpellRecourse) {
+					if (buff->ID == pSpellRecourse->ID) {
+						Gems[gemIndex] = "already have short recourse";
+						return false;
+					}
+					if (!BuffStackTest(buff, pSpellRecourse)) {
+						Gems[gemIndex] = "recourse does not stack";
+						return false;
+					}
+				}
+			}
 		}
 		Gems[gemIndex] = "casting on self";
+
+		if (isGroupSpell) {
+			Gems[gemIndex] = "casting on group";
+		}
 		Execute("/cast %d", gemIndex + 1);
 		return true;
 	}
 
 	if (pSpell->TargetType == 5 && pSpell->SpellType >= 1) { //single target beneficial spell
-		if (isHeal) { //single target heal
-			if (GetCharInfo()->pGroupInfo == nullptr) {
-				Gems[gemIndex] = "not in a group";
-				return false;
-			}
-			int spawnPctHPs = 100;
-			int spawnGroupID = -1;
-			GROUPMEMBER* pG;
-			PSPAWNINFO pSpawn;
-			for (int i = 1; i < 6; i++) {
-				pG = GetCharInfo()->pGroupInfo->pMember[i];
-				if (!pG) continue;
-				if (pG->Offline) continue;
-				//if (${Group.Member[${i}].Mercenary}) /continue
-				//if (${ Group.Member[${i}].OtherZone }) / continue
+		if (GetCharInfo()->pGroupInfo != nullptr) {
+			if (isHeal) { //single target heal
+				int spawnPctHPs = 100;
+				int spawnGroupID = -1;
+				GROUPMEMBER* pG;
+				PSPAWNINFO pSpawn;
+				for (int i = 1; i < 6; i++) {
+					pG = GetCharInfo()->pGroupInfo->pMember[i];
+					if (!pG) continue;
+					if (pG->Offline) continue;
+					//if (${Group.Member[${i}].Mercenary}) /continue
+					//if (${ Group.Member[${i}].OtherZone }) / continue
+					pSpawn = pG->pSpawn;
+					if (!pSpawn) continue;
+					//if (pSpawn->SpawnID == pChar->pSpawn->SpawnID) continue;
+					if (pSpawn->Type == SPAWN_CORPSE) continue;
+					if (Distance3DToSpawn(pChar, pSpawn) > 200) continue;
+					if (SpawnPctHPs(pSpawn) > spawnPctHPs) continue;
+					spawnGroupID = i;
+				}
+				if (spawnPctHPs >= 50) {
+					Gems[gemIndex] = "no one in range less than 50% hp";
+					return false;
+				}
+
+				pG = GetCharInfo()->pGroupInfo->pMember[spawnGroupID];
 				pSpawn = pG->pSpawn;
-				if (!pSpawn) continue;
-				//if (pSpawn->SpawnID == pChar->pSpawn->SpawnID) continue;
-				if (pSpawn->Type == SPAWN_CORPSE) continue;
-				if (Distance3DToSpawn(pChar, pSpawn) > 200) continue;
-				if (SpawnPctHPs(pSpawn) > spawnPctHPs) continue;
-				spawnGroupID = i;
+				if (!ActionSpawnTarget(pSpawn)) {
+					Gems[gemIndex] = "can't target group";
+					return false;
+				}
+
+				Gems[gemIndex] = "casting heal on party member";
+				Execute("/cast %d", gemIndex + 1);
+				return true;
 			}
-			if (spawnPctHPs >= 50) {
-				Gems[gemIndex] = "no one in range less than 50% hp";
-				return false;
-			}
-
-			pG = GetCharInfo()->pGroupInfo->pMember[spawnGroupID];
-			pSpawn = pG->pSpawn;
-			//pTarget = pSpawn;
-
-
-			Gems[gemIndex] = "casting on party member";
-			Execute("/cast %d", gemIndex + 1);
-			return true;
 		}
+
+		//no group
+		if (ticks > 0) {
+			for (int b = 0; b < NUM_LONG_BUFFS; b++)
+			{
+				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[b].SpellID);
+				if (!buff) {
+					continue;
+				}
+				if (buff->ID == pSpell->ID) {
+					Gems[gemIndex] = "already have buff";
+					return false;
+				}
+				if (!BuffStackTest(buff, pSpell)) {
+					Gems[gemIndex] = "does not stack";
+					return false;
+				}
+				if (pSpellRecourse) {
+					if (buff->ID == pSpellRecourse->ID) {
+						Gems[gemIndex] = "already have recourse";
+						return false;
+					}
+					if (!BuffStackTest(buff, pSpellRecourse)) {
+						Gems[gemIndex] = "recourse does not stack";
+						return false;
+					}
+				}
+			}
+			for (int b = 0; b < NUM_SHORT_BUFFS; b++)
+			{
+				PSPELL buff = GetSpellByID(GetCharInfo2()->ShortBuff[b].SpellID);
+				if (!buff) {
+					continue;
+				}
+				if (buff->ID == pSpell->ID) {
+					Gems[gemIndex] = "already have shortbuff";
+					return false;
+				}
+				if (!BuffStackTest(buff, pSpell)) {
+					Gems[gemIndex] = "does not stack";
+					return false;
+				}
+				if (pSpellRecourse) {
+					if (buff->ID == pSpellRecourse->ID) {
+						Gems[gemIndex] = "already have short recourse";
+						return false;
+					}
+					if (!BuffStackTest(buff, pSpellRecourse)) {
+						Gems[gemIndex] = "recourse does not stack";
+						return false;
+					}
+				}
+			}
+		}
+
+		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= 50) {
+			Gems[gemIndex] = "I'm > 50% hp";
+			return false;
+		}
+
+		if (!ActionSpawnTarget(pChar->pSpawn)) {
+			Gems[gemIndex] = "can't target self";
+			return false;
+		}
+
+		Gems[gemIndex] = "casting buff on self";
+		Execute("/cast %d", gemIndex + 1);
+		return true;
 	}
 
 	if (isSingleTargetSpell && pSpell->SpellType == 0) { //single target detrimental spell

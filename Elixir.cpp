@@ -9,7 +9,17 @@ void Elixir::OnPulse()
 
 	// Reset last pulse results
 	isActionComplete = false;
-	lastAction = "";
+	lastGemIndex = -1;
+
+	//GetCharInfo()->pSpawn->CastingData.SpellETA <= 0
+	//if (!pCastSpellWnd && GetCharInfo()->pSpawn->CastingData.IsCasting() && GetCharInfo()->pSpawn->CastingData.SpellID) {
+	int eta = ((PSPAWNINFO)pLocalPlayer)->CastingData.SpellETA;
+	if (eta > 0) eta = ((PSPAWNINFO)pLocalPlayer)->CastingData.SpellETA - ((PSPAWNINFO)pLocalPlayer)->TimeStamp;
+
+	if (pCastSpellWnd && !pSpellBookWnd->IsVisible() && GetCharInfo()->pSpawn->CastingData.IsCasting() && eta <= 0) {
+		Execute("/stopsong");
+		LastAction = "stopping bard song";
+	}
 
 	for (int i = 0; i < 10; i++) {
 		AttemptButton(i);
@@ -56,6 +66,11 @@ void Elixir::AttemptGem(int gemIndex)
 		return;
 	}
 
+	if (ZoneCooldown > MQGetTickCount64()) {
+		Gems[gemIndex] = "zone cooldown";
+		return;
+	}
+
 	if (isActionComplete) {
 		Gems[gemIndex] = "earlier action completed";
 		return;
@@ -81,6 +96,15 @@ void Elixir::AttemptGem(int gemIndex)
 		return;
 	}
 
+	if (GetCharInfo()->Stunned) {
+		Gems[gemIndex] = "player stunned";
+		return;
+	}
+
+	if (GetCharInfo()->pSpawn->HideMode) {
+		Gems[gemIndex] = "player invisible";
+	}
+
 	
 	if ((int)((PCDISPLAY)pDisplay)->TimeStamp <= ((PSPAWNINFO)pLocalPlayer)->GetSpellCooldownETA()) {
 		Gems[gemIndex] = "all gems on recent use cooldown";
@@ -102,7 +126,7 @@ void Elixir::AttemptGem(int gemIndex)
 		return;
 	}
 
-	lastAction = Gems[gemIndex];
+	LastAction = "gem " + to_string(gemIndex+1) + " " + Gems[gemIndex];
 	lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
 	lastGemIndex = gemIndex;
 	isActionComplete = true;
