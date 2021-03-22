@@ -530,7 +530,7 @@ bool Elixir::Spell(int gemIndex)
 		if (isGroupSpell) {
 			Gems[gemIndex] = "casting on group";
 		}
-		Execute("/cast %d", gemIndex + 1);
+		ActionCastGem(gemIndex + 1);
 		return true;
 	}
 
@@ -541,7 +541,7 @@ bool Elixir::Spell(int gemIndex)
 				int spawnGroupID = -1;
 				GROUPMEMBER* pG;
 				PSPAWNINFO pSpawn;
-				for (int i = 1; i < 6; i++) {
+				for (int i = 0; i < 6; i++) {
 					pG = GetCharInfo()->pGroupInfo->pMember[i];
 					if (!pG) continue;
 					if (pG->Offline) continue;
@@ -550,13 +550,17 @@ bool Elixir::Spell(int gemIndex)
 					pSpawn = pG->pSpawn;
 					if (!pSpawn) continue;
 					//if (pSpawn->SpawnID == pChar->pSpawn->SpawnID) continue;
+					
+					
 					if (pSpawn->Type == SPAWN_CORPSE) continue;
-					if (Distance3DToSpawn(pChar, pSpawn) > 200) continue;
+					if (Distance3DToSpawn(pChar->pSpawn, pSpawn) > 200) continue;
 					if (SpawnPctHPs(pSpawn) > spawnPctHPs) continue;
 					spawnGroupID = i;
+					spawnPctHPs = SpawnPctHPs(pSpawn);
 				}
 				if (spawnPctHPs >= 50) {
-					Gems[gemIndex] = "no one in range less than 50% hp";
+					sprintf(szTemp, "no one in group < 50%% hp (%d%% lowest %d)", spawnPctHPs, spawnGroupID);
+					Gems[gemIndex] = szTemp;
 					return false;
 				}
 
@@ -568,7 +572,7 @@ bool Elixir::Spell(int gemIndex)
 				}
 
 				Gems[gemIndex] = "casting heal on party member";
-				Execute("/cast %d", gemIndex + 1);
+				ActionCastGem(gemIndex + 1);
 				return true;
 			}
 		}
@@ -638,7 +642,7 @@ bool Elixir::Spell(int gemIndex)
 		}
 
 		Gems[gemIndex] = "casting buff on self";
-		Execute("/cast %d", gemIndex + 1);
+		ActionCastGem(gemIndex + 1);
 		return true;
 	}
 
@@ -706,7 +710,7 @@ bool Elixir::Spell(int gemIndex)
 		}
 
 		Gems[gemIndex] = "casting on enemy target";
-		Execute("/cast %d", gemIndex + 1);
+		ActionCastGem(gemIndex + 1);
 		return true;
 	}
 
@@ -728,7 +732,7 @@ bool Elixir::Spell(int gemIndex)
 				return false;
 			}
 			Gems[gemIndex] = "casting heal on pet";
-			Execute("/cast %d", gemIndex + 1);
+			ActionCastGem(gemIndex + 1);
 			return true;
 		}
 
@@ -756,7 +760,7 @@ bool Elixir::Spell(int gemIndex)
 			}
 
 			Gems[gemIndex] = "casting on pet";
-			Execute("/cast %d", gemIndex + 1);
+			ActionCastGem(gemIndex + 1);
 			return true;
 		}
 	}

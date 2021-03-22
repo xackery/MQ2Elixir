@@ -811,6 +811,7 @@ bool IsCombatAbilityReady(PCHAR szName)
 	if (HasBuff(pChar->pSpawn, pSpell->Name)) {
 		return false;
 	}
+
 	if (strstr(pSpell->Name, "Discipline") && pCombatAbilityWnd) {
 		CXWnd* Child = ((CXWnd*)pCombatAbilityWnd)->GetChildItem("CAW_CombatEffectLabel");
 		if (!Child) {
@@ -938,3 +939,13 @@ bool SpellStacks()
 	}
 }
 */
+
+bool ActionCastGem(int gemIndex) 
+{
+	if (GetCharInfo()->pSpawn->StandState == STANDSTATE_SIT) {
+		DoCommandf("/stand");
+	}
+
+	Execute("/cast %d", gemIndex);
+	return true;
+}
