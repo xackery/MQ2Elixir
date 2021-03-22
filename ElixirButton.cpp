@@ -6,60 +6,74 @@ using namespace std;
 
 void Elixir::AttemptButton(int buttonIndex)
 {
+	CHAR szTemp[MAX_STRING] = { 0 };
+
 	PCHARINFO pChar = GetCharInfo();
 	if (!pChar) {
-		buttons[buttonIndex] = "char not loaded";
+		Buttons[buttonIndex] = "char not loaded";
 		return;
 	}
 
 	if (ZoneCooldown > MQGetTickCount64()) {
-		buttons[buttonIndex] = "zone cooldown";
+		Buttons[buttonIndex] = "zone cooldown";
 		return;
 	}
 
 	if (pChar->pSpawn->GetClass() != Bard && isActionComplete) {
-		buttons[buttonIndex] = "earlier action complete";
+		Buttons[buttonIndex] = "earlier action complete";
 		return;
 	}
 
 	if (GetCharInfo()->Stunned) {
-		buttons[buttonIndex] = "player stunned";
+		Buttons[buttonIndex] = "player stunned";
 		return;
 	}
 
 	if (GetCharInfo()->pSpawn->HideMode) {
-		buttons[buttonIndex] = "player invisible";
+		Buttons[buttonIndex] = "player invisible";
 	}
 
 	if (lastButtonIndex == buttonIndex && lastActionRepeatCooldown > MQGetTickCount64()) {
-		buttons[buttonIndex] = "last action repeat cooldown";
+		Buttons[buttonIndex] = "last action repeat cooldown";
 		return;
 	}
 
 	CXWnd* wnd = FindMQ2Window("HotButtonWnd");
 	if (!wnd) {
-		buttons[buttonIndex] = "button window not found";
+		Buttons[buttonIndex] = "button window not found";
 		return;
 	}
 
-	CXWnd* child = wnd->GetChildItem("HB_Button" + buttonIndex + 1);
+	sprintf(szTemp, "HB_Button%d", buttonIndex + 1);
+	CXWnd* child = wnd->GetChildItem(szTemp);
 	if (!child) {
-		buttons[buttonIndex] = "button area not found";
+		Buttons[buttonIndex] = "button area not found";
 		return;
 	}
 
 	CHotButton* hbtn = (CHotButton*)child;
 	if (!hbtn) {
-		buttons[buttonIndex] = "button not set";
+		Buttons[buttonIndex] = "button not set";
 	}
 
+	CXWnd* child2 = child->GetChildItem(szTemp);
+	/*if (child2 && child2->IsVisible()) {
 
-	CXWnd* child2 = child->GetChildItem("HB_SpellGem");
-	if (child2) {
-		//TODO: iterate gems, figure out which one is this hotbutton, and AttemptGem(gemIndex);
+		Buttons[buttonIndex] = "found ability?";
+		return;
+	}
+	*/
+
+	child2 = child->GetChildItem("HB_InvSlot");
+	if (child2 && child2->IsVisible()) {
+		GetCXStr(child2->GetTooltip(), szTemp, MAX_STRING);
+		//sprintf(szTemp, "item: %s", szTemp);
+		Buttons[buttonIndex] = szTemp;
+		return;
+		//TODO: attempt to click item
 		if (isActionComplete) {
 			LastAction = "pressing hotbutton " + buttonIndex;
-			buttons[buttonIndex] = LastAction;
+			Buttons[buttonIndex] = LastAction;
 			lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
 			lastButtonIndex = buttonIndex;
 			isActionComplete = true;
@@ -67,19 +81,27 @@ void Elixir::AttemptButton(int buttonIndex)
 		}
 	}
 
-	child2 = child->GetChildItem("HB_InvSlot");
-	//TODO: attempt to click item
-	if (isActionComplete) {
-		LastAction = "pressing hotbutton " + buttonIndex;
-		buttons[buttonIndex] = LastAction;
-		lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
-		lastButtonIndex = buttonIndex;
-		isActionComplete = true;
+	child2 = child->GetChildItem("HB_SpellGem");
+	if (child2 && child2->IsVisible()) {
+		GetCXStr(child2->GetTooltip(), szTemp, MAX_STRING);
+		//sprintf(szTemp, "spell gem: %s", szTemp);
+		//Buttons[buttonIndex] = child2->Tooltip->Text;
+		Buttons[buttonIndex] = szTemp;
 		return;
+		//TODO: iterate gems, figure out which one is this hotbutton, and AttemptGem(gemIndex);
+		if (isActionComplete) {
+			LastAction = "pressing hotbutton " + buttonIndex;
+			Buttons[buttonIndex] = LastAction;
+			lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+			lastButtonIndex = buttonIndex;
+			isActionComplete = true;
+			return;
+		}
 	}
+	
 
 	//TODO: figure out combat ability, normal ability hotbuttons
 
-	buttons[buttonIndex] = "unrecognized button";
+	Buttons[buttonIndex] = "unrecognized button";
 	return;
 }

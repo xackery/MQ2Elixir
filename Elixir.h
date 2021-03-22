@@ -13,6 +13,7 @@ public:
 
 	string LastAction;
 	string Gems[NUM_SPELL_GEMS];
+	string Buttons[12];
 	void OnPulse();
 
 	/*
@@ -40,7 +41,6 @@ private:
 	int lastActionRepeat;
 	unsigned long lastActionRepeatCooldown;
 	
-	string buttons[10];
 
 	void AttemptGem(int gemIndex);
 	void AttemptButton(int buttonIndex);

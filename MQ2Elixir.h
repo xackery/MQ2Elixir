@@ -26,6 +26,18 @@ private:
 	char gem11[MAX_STRING];
 	char gem12[MAX_STRING];
 	char gem13[MAX_STRING];
+	char button1[MAX_STRING];
+	char button2[MAX_STRING];
+	char button3[MAX_STRING];
+	char button4[MAX_STRING];
+	char button5[MAX_STRING];
+	char button6[MAX_STRING];
+	char button7[MAX_STRING];
+	char button8[MAX_STRING];
+	char button9[MAX_STRING];
+	char button10[MAX_STRING];
+	char button11[MAX_STRING];
+	char button12[MAX_STRING];
 public:
 	enum ElixirMembers {
 		Stance,
@@ -46,6 +58,18 @@ public:
 		Gem11,
 		Gem12,
 		Gem13,
+		Button1,
+		Button2,
+		Button3,
+		Button4,
+		Button5,
+		Button6,
+		Button7,
+		Button8,
+		Button9,
+		Button10,
+		Button11,
+		Button12,
 	};
 	enum ElixirMethods {
 		Cast,
@@ -76,7 +100,18 @@ public:
 		TypeMember(Gem11);
 		TypeMember(Gem12);
 		TypeMember(Gem13);
-
+		TypeMember(Button1);
+		TypeMember(Button2);
+		TypeMember(Button3);
+		TypeMember(Button4);
+		TypeMember(Button5);
+		TypeMember(Button6);
+		TypeMember(Button7);
+		TypeMember(Button8);
+		TypeMember(Button9);
+		TypeMember(Button10);
+		TypeMember(Button11);
+		TypeMember(Button12);
 		TypeMethod(Cast);
 		TypeMethod(CastItem);
 		TypeMethod(CastSpell);

@@ -244,7 +244,78 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 		Dest.Ptr = gem13;
 		return true;
 	}
-
+	if (pMember->ID == Button1) {
+		strcpy_s(button1, pElixir->Buttons[0].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button1;
+		return true;
+	}
+	if (pMember->ID == Button2) {
+		strcpy_s(button2, pElixir->Buttons[1].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button2;
+		return true;
+	}
+	if (pMember->ID == Button3) {
+		strcpy_s(button3, pElixir->Buttons[2].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button3;
+		return true;
+	}
+	if (pMember->ID == Button4) {
+		strcpy_s(button4, pElixir->Buttons[3].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button4;
+		return true;
+	}
+	if (pMember->ID == Button5) {
+		strcpy_s(button5, pElixir->Buttons[4].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button5;
+		return true;
+	}
+	if (pMember->ID == Button6) {
+		strcpy_s(button6, pElixir->Buttons[5].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button6;
+		return true;
+	}
+	if (pMember->ID == Button7) {
+		strcpy_s(button7, pElixir->Buttons[6].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button7;
+		return true;
+	}
+	if (pMember->ID == Button8) {
+		strcpy_s(button8, pElixir->Buttons[7].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button8;
+		return true;
+	}
+	if (pMember->ID == Button9) {
+		strcpy_s(button9, pElixir->Buttons[8].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button9;
+		return true;
+	}
+	if (pMember->ID == Button10) {
+		strcpy_s(button10, pElixir->Buttons[9].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button10;
+		return true;
+	}
+	if (pMember->ID == Button11) {
+		strcpy_s(button11, pElixir->Buttons[10].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button11;
+		return true;
+	}
+	if (pMember->ID == Button12) {
+		strcpy_s(button12, pElixir->Buttons[11].c_str());
+		Dest.Type = pStringType;
+		Dest.Ptr = button12;
+		return true;
+	}
 	return false;
 }
 

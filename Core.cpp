@@ -942,10 +942,11 @@ bool SpellStacks()
 
 bool ActionCastGem(int gemIndex) 
 {
+#if defined(ROF2EMU) || defined(UFEMU)
 	if (GetCharInfo()->pSpawn->StandState == STANDSTATE_SIT) {
 		DoCommandf("/stand");
 	}
-
+#endif
 	Execute("/cast %d", gemIndex);
 	return true;
 }
