@@ -950,3 +950,48 @@ bool ActionCastGem(int gemIndex)
 	Execute("/cast %d", gemIndex);
 	return true;
 }
+
+PCONTENTS EquippedSlot(PCONTENTS pCont)
+{
+	if (PITEMINFO pItem = GetItemFromContents(pCont))
+	{
+		DWORD cmp = pItem->EquipSlots;
+		for (int N = 0; N < 32; N++)
+		{
+			if (cmp & (1 << N))
+			{
+				if (PCHARINFO2 pChar2 = GetCharInfo2())
+				{
+					if (PCONTENTS pInvSlot = pChar2->pInventoryArray->InventoryArray[N])
+					{
+						return pInvSlot;
+					}
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+
+bool IsAAPurchased(PCHAR AAName) {
+	DWORD level = -1;
+	if (PSPAWNINFO pMe = (PSPAWNINFO)pLocalPlayer) {
+		level = pMe->Level;
+	}
+
+	for (unsigned long nAbility = 0; nAbility < AA_CHAR_MAX_REAL; nAbility++) {
+		PALTABILITY pAbility = GetAAByIdWrapper(pPCData->GetAlternateAbilityId(nAbility), level);
+
+		//test for good structure, and level as quick fail fast, the above wrapper not use level on EMU
+		if (pAbility && pAbility->MinLevel <= level) {
+			PCHAR pName = pCDBStr->GetString(pAbility->nName, 1, NULL);
+			if (pName && !_stricmp(AAName, pName)) {
+				// good level,  good name,   return postive find.
+				return true;
+			}
+		}
+	}
+	// failed to find by level and name checks,  return negative find.
+	return false;
+}

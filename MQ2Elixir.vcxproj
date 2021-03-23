@@ -55,7 +55,10 @@
   <ItemGroup>
     <ClCompile Include="Elixir.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="ElixirAbility.cpp" />
     <ClCompile Include="ElixirButton.cpp" />
+    <ClCompile Include="ElixirCombatAbility.cpp" />
+    <ClCompile Include="ElixirGem.cpp" />
     <ClCompile Include="MQ2Elixir.cpp" />
     <ClCompile Include="ElixirSpell.cpp" />
   </ItemGroup>

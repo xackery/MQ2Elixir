@@ -2,7 +2,7 @@
 
 #include "../MQ2Plugin.h"
 #include "Core.h"
-// Elixir is the brains of determining what to do each pulse
+// Elixir is the brains of the plugin
 class Elixir {
 public:
 
@@ -42,9 +42,14 @@ private:
 	unsigned long lastActionRepeatCooldown;
 	
 
-	void AttemptGem(int gemIndex);
-	void AttemptButton(int buttonIndex);
-	bool Spell(int gemIndex);
+	// Gem attempts to cast the provided gem index
+	void ActionGem(int gemIndex);
+	void ActionButton(int buttonIndex);
+
+	std::string Elixir::Ability(int abilityIndex);
+	std::string Elixir::Spell(PSPELL pSpell);	
+	std::string Elixir::CombatAbility(PSPELL pSpell);
+	
 
 	/*
 	bool Target();

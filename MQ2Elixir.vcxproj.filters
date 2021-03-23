@@ -30,6 +30,15 @@
     <ClCompile Include="ElixirButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ElixirGem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElixirCombatAbility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElixirAbility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MQ2Plugin.h">

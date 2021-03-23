@@ -24,6 +24,7 @@ bool ActionCastCombatAbility(PCHAR szName);
 void BuffUpdate(PSPAWNINFO pSpawn);
 void Execute(PCHAR zFormat, ...);
 
+PCONTENTS EquippedSlot(PCONTENTS pCont);
 bool IsCastingReady();
 bool IsMoving(PSPAWNINFO pSpawn);
 bool IsInSafeZone();
@@ -35,6 +36,7 @@ bool IsSpellMemorized(PCHAR szName);
 bool IsAbilityReady(PCHAR szName);
 bool IsNavActive();
 bool IsFacingSpawn(PSPAWNINFO pSpawn);
+bool IsAAPurchased(PCHAR AAName);
 
 PALTABILITY AAByName(PCHAR Name);
 int CombatState();

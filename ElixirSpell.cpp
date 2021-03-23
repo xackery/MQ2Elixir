@@ -4,31 +4,18 @@
 
 using namespace std;
 
-bool Elixir::Spell(int gemIndex)
+// Spell returns a string with a reason if provided spell cannot be cast
+std::string  Elixir::Spell(PSPELL pSpell)
 {
 	CHAR szTemp[MAX_STRING] = { 0 };
 
 	PCHARINFO pChar = (PCHARINFO)pCharData;
 	if (!pChar) {
-		Gems[gemIndex] = "char not loaded";
-		return false;
+		return "char not loaded";
 	}
 
 	if (!pLocalPlayer) {
-		Gems[gemIndex] = "pLocalPlayer not loaded";
-		return false;
-	}
-
-	LONG spellID = GetMemorizedSpell(gemIndex);
-	if (!spellID) {
-		Gems[gemIndex] = "no spell memorized";
-		return false;
-	}
-
-	PSPELL pSpell = GetSpellByID(spellID);
-	if (!pSpell) {
-		Gems[gemIndex] = "spell not found";
-		return false;
+		return "pLocalPlayer not loaded";
 	}
 
 	bool isHeal = false;
@@ -134,16 +121,13 @@ bool Elixir::Spell(int gemIndex)
 			isTransport = true;
 		}
 		if (attr == 30) { // frenzy radius reduction (lull)
-			Gems[gemIndex] = "ignored (Lull)";
-			return false;
+			return "ignored (Lull)";
 		}
 		if (attr == 86) { // reaction radius reduction (lull)
-			Gems[gemIndex] = "ignored (Lull)";
-			return false;
+			return "ignored (Lull)";
 		}
 		if (attr == 18) { // pacify (lull)
-			Gems[gemIndex] = "ignored (Lull)";
-			return false;
+			return "ignored (Lull)";
 		}
 		if (attr == 33) { // Summon Elemental Pet
 			isPetSummon = true;
@@ -206,8 +190,7 @@ bool Elixir::Spell(int gemIndex)
 	}
 
 	if (isTransport) {
-		Gems[gemIndex] = "ignoring (transport)";
-		return false;
+		return "ignoring (transport)";
 	}
 
 	if (pTarget) {
@@ -215,33 +198,30 @@ bool Elixir::Spell(int gemIndex)
 	}
 	if (pSpell->TargetType == 16) { //Animal
 		if (!pTarget) {
-			Gems[gemIndex] = "no target";
-			return false;
+			return "no animal target";
 		}
 		if (bodyType != 21) {
-			Gems[gemIndex] = "not animal";
+			return "target not animal";
 		}
 		isSingleTargetSpell = true;
 	}
 
 	if (pSpell->TargetType == 10) { //Undead
 		if (!pTarget) {
-			Gems[gemIndex] = "no target";
-			return false;
+			return "no undead target";
 		}
 		if (bodyType != 3) {
-			Gems[gemIndex] = "not undead";
+			return "target not undead";
 		}
 		isSingleTargetSpell = true;
 	}
 
 	if (pSpell->TargetType == 11) { //Summoned
 		if (!pTarget) {
-			Gems[gemIndex] = "no target";
-			return false;
+			return "no summoned target";
 		}
 		if (bodyType != 28) {
-			Gems[gemIndex] = "not summoned";
+			return "target not summoned";
 		}
 		isSingleTargetSpell = true;
 	}
@@ -260,11 +240,10 @@ bool Elixir::Spell(int gemIndex)
 
 	if (pSpell->TargetType == 16) { //Plant
 		if (!pTarget) {
-			Gems[gemIndex] = "no target";
-			return false;
+			return "no plant target";
 		}
 		if (bodyType != 25) {
-			Gems[gemIndex] = "not plant";
+			return "target not plant";
 		}
 		isSingleTargetSpell = true;
 	}
@@ -278,8 +257,7 @@ bool Elixir::Spell(int gemIndex)
 	}
 
 	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) {
-		Gems[gemIndex] = "no line of sight";
-		return false;
+		return "target not line of sight";
 	}
 
 
@@ -293,16 +271,14 @@ bool Elixir::Spell(int gemIndex)
 		PCHAR pItemName = GetItemFromContents(FindItemByID((int)pSpell->ReagentID[i]))->Name;
 		if (pItemName) {
 			sprintf(szTemp, "missing %dx %s", pSpell->ReagentCount[i], pItemName);
-			Gems[gemIndex] = szTemp;
-			return false;
+			return szTemp;
 		}
 	}
 
 
 	DWORD ReqID = pSpell->CasterRequirementID;
 	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) {
-		Gems[gemIndex] = "not < 90% hp";
-		return false;
+		return "not < 90% hp";
 	}
 	//if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
 	//if (ReqID == 826 && SpawnPctEndurance(pChar->pSpawn) > 24) return false;
@@ -316,12 +292,10 @@ bool Elixir::Spell(int gemIndex)
 					continue;
 				}
 				if (buff->ID == pSpellRecourse->ID) {
-					Gems[gemIndex] = "recourse already have buff";
-					return false;
+					return "recourse already have buff";
 				}
 				if (!BuffStackTest(buff, pSpellRecourse)) {
-					Gems[gemIndex] = "recourse does not stack";
-					return false;
+					return "recourse does not stack";
 				}
 			}
 
@@ -339,17 +313,14 @@ bool Elixir::Spell(int gemIndex)
 				continue;
 			}
 			if (!BuffStackTest(pBuffSpell, pSpellRecourse)) {
-				Gems[gemIndex] = "debuff already on";
-				return false;
+				return "debuff already on";
 			}
 			if (pSpellRecourse->TargetType == 8) { //targetted
 				if (pBuffSpell->ID == pSpellRecourse->ID) {
-					Gems[gemIndex] = "recourse already on target";
-					return false;
+					return "recourse already on target";
 				}
 				if (!BuffStackTest(pBuffSpell, pSpellRecourse)) {
-					Gems[gemIndex] = "recourse does not stack on target";
-					return false;
+					return "recourse does not stack on target";
 				}
 			}
 		}
@@ -373,17 +344,14 @@ bool Elixir::Spell(int gemIndex)
 				continue;
 			}
 			if (!BuffStackTest(pBuffSpell, pSpell)) {
-				Gems[gemIndex] = "debuff already on";
-				return false;
+				return "debuff already on";
 			}
 
 			if (pBuffSpell->ID == pSpell->ID) {
-				Gems[gemIndex] = "debuff already on target";
-				return false;
+				return "debuff already on target";
 			}
 			if (!BuffStackTest(pBuffSpell, pSpell)) {
-				Gems[gemIndex] = "debuff does not stack on target";
-				return false;
+				return "debuff does not stack on target";
 			}
 		}
 	}
@@ -391,86 +359,71 @@ bool Elixir::Spell(int gemIndex)
 	PZONEINFO pZone = reinterpret_cast<PZONEINFO>(pZoneInfo);
 	if (pZone && pSpell->ZoneType == 1) { //can't cast indoors
 		if (pZone->OutDoor == EOutDoor::IndoorDungeon) {
-			Gems[gemIndex] = "in dungeon";
-			return false;
+			return "in dungeon";
 		}
 		if (pZone->OutDoor == EOutDoor::IndoorCity) {
-			Gems[gemIndex] = "in city";
-			return false;
+			return "in city";
 		}
 		if (pZone->OutDoor == EOutDoor::DungeonCity) {
-			Gems[gemIndex] = "in dungeon city";
-			return false;
+			return "in dungeon city";
 		}
 	}
 
 	if (pZone && pSpell->ZoneType == 2) { //can't cast outdoor
 		if (pZone->OutDoor == EOutDoor::Outdoor) {
-			Gems[gemIndex] = "outdoors";
-			return false;
+			return "outdoors";
 		}
 		if (pZone->OutDoor == EOutDoor::OutdoorCity) {
-			Gems[gemIndex] = "outdoor city";
-			return false;
+			return "outdoor city";
 		}
 		if (pZone->OutDoor == EOutDoor::OutdoorDungeon) {
-			Gems[gemIndex] = "outdoor dungeon";
-			return false;
+			return "outdoor dungeon";
 		}
 	}
 
 
 	if (!pSpell->CanCastInCombat && CombatState() == COMBATSTATE_COMBAT) {
-		Gems[gemIndex] = "cannot be cast in combat";
-		return false;
+		return "cannot be cast in combat";
 	}
 	
 	
 	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) {
-		Gems[gemIndex] = "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
-		return false;
+		return "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
 	}
 
 	if (GetCharInfo2()->Endurance < (int)pSpell->EnduranceCost) {
-		Gems[gemIndex] = "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";
-		return false;
+		return "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";
 	}
 
 	if (strstr(pSpell->Name, "Discipline") && pCombatAbilityWnd) {
 		CXWnd* Child = ((CXWnd*)pCombatAbilityWnd)->GetChildItem("CAW_CombatEffectLabel");
 		if (!Child) {
-			Gems[gemIndex] = "combatabilitywnd not found";
-			return false;
+			return "combatabilitywnd not found";
 		}
 		CHAR szBuffer[2048] = { 0 };
 		GetCXStr(Child->CGetWindowText(), szBuffer, MAX_STRING);
 		if (szBuffer[0] == '\0') {
-			Gems[gemIndex] = "combatabilitywnd text not null terminated";
-			return false;
+			return "combatabilitywnd text not null terminated";
 		}
 		PSPELL pBuff = GetSpellByName(szBuffer);
 		if (pBuff) {
 			sprintf(szTemp, "disc %s already active", pBuff->Name);
-			Gems[gemIndex] = szTemp;
-			return false;
+			return szTemp;
 		}
 	}
 
 	if (isPetSummon && pChar->pSpawn->PetID > 0) {
-		Gems[gemIndex] = "already have pet";
-		return false;
+		return "already have pet";
 	}
 
 
 	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > 80) {
-		Gems[gemIndex] = "> 80% hp";
-		return false;
+		return "> 80% hp";
 	}
 
 	if (pSpell->SpellType >= 1 && (pSpell->TargetType == 6 || isGroupSpell)) { //self/group beneficial spell
 		if (pSpell->CastTime > 1000 && CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
-			Gems[gemIndex] = "cast time > 1s, long for combat";
-			return false;
+			return "cast time > 1s, long for combat";
 		}
 
 		if (ticks > 0) {
@@ -481,21 +434,17 @@ bool Elixir::Spell(int gemIndex)
 					continue;
 				}
 				if (buff->ID == pSpell->ID) {
-					Gems[gemIndex] = "already have buff";
-					return false;
+					return "already have buff";
 				}
 				if (!BuffStackTest(buff, pSpell)) {
-					Gems[gemIndex] = "does not stack";
-					return false;
+					return "does not stack";
 				}
 				if (pSpellRecourse) {
 					if (buff->ID == pSpellRecourse->ID) {
-						Gems[gemIndex] = "already have recourse";
-						return false;
+						return "already have recourse";
 					}
 					if (!BuffStackTest(buff, pSpellRecourse)) {
-						Gems[gemIndex] = "recourse does not stack";
-						return false;
+						return "recourse does not stack";
 					}
 				}
 			}
@@ -506,32 +455,23 @@ bool Elixir::Spell(int gemIndex)
 					continue;
 				}
 				if (buff->ID == pSpell->ID) {
-					Gems[gemIndex] = "already have shortbuff";
-					return false;
+					return "already have shortbuff";
 				}
 				if (!BuffStackTest(buff, pSpell)) {
-					Gems[gemIndex] = "does not stack";
-					return false;
+					return "does not stack";
 				}
 				if (pSpellRecourse) {
 					if (buff->ID == pSpellRecourse->ID) {
-						Gems[gemIndex] = "already have short recourse";
-						return false;
+						return "already have short recourse";
 					}
 					if (!BuffStackTest(buff, pSpellRecourse)) {
-						Gems[gemIndex] = "recourse does not stack";
-						return false;
+						return "recourse does not stack";
 					}
 				}
 			}
 		}
-		Gems[gemIndex] = "casting on self";
 
-		if (isGroupSpell) {
-			Gems[gemIndex] = "casting on group";
-		}
-		ActionCastGem(gemIndex + 1);
-		return true;
+		return "";
 	}
 
 	if (pSpell->TargetType == 5 && pSpell->SpellType >= 1) { //single target beneficial spell
@@ -560,20 +500,16 @@ bool Elixir::Spell(int gemIndex)
 				}
 				if (spawnPctHPs >= 50) {
 					sprintf(szTemp, "no one in group < 50%% hp (%d%% lowest %d)", spawnPctHPs, spawnGroupID);
-					Gems[gemIndex] = szTemp;
-					return false;
+					return szTemp;
 				}
 
 				pG = GetCharInfo()->pGroupInfo->pMember[spawnGroupID];
 				pSpawn = pG->pSpawn;
 				if (!ActionSpawnTarget(pSpawn)) {
-					Gems[gemIndex] = "can't target group";
-					return false;
+					return "can't target group";
 				}
 
-				Gems[gemIndex] = "casting heal on party member";
-				ActionCastGem(gemIndex + 1);
-				return true;
+				return "";
 			}
 		}
 
@@ -586,21 +522,17 @@ bool Elixir::Spell(int gemIndex)
 					continue;
 				}
 				if (buff->ID == pSpell->ID) {
-					Gems[gemIndex] = "already have buff";
-					return false;
+					return "already have buff";
 				}
 				if (!BuffStackTest(buff, pSpell)) {
-					Gems[gemIndex] = "does not stack";
-					return false;
+					return "does not stack";
 				}
 				if (pSpellRecourse) {
 					if (buff->ID == pSpellRecourse->ID) {
-						Gems[gemIndex] = "already have recourse";
-						return false;
+						return "already have recourse";
 					}
 					if (!BuffStackTest(buff, pSpellRecourse)) {
-						Gems[gemIndex] = "recourse does not stack";
-						return false;
+						return "recourse does not stack";
 					}
 				}
 			}
@@ -611,71 +543,57 @@ bool Elixir::Spell(int gemIndex)
 					continue;
 				}
 				if (buff->ID == pSpell->ID) {
-					Gems[gemIndex] = "already have shortbuff";
-					return false;
+					return "already have shortbuff";
 				}
 				if (!BuffStackTest(buff, pSpell)) {
-					Gems[gemIndex] = "does not stack";
-					return false;
+					return "does not stack";
 				}
 				if (pSpellRecourse) {
 					if (buff->ID == pSpellRecourse->ID) {
-						Gems[gemIndex] = "already have short recourse";
-						return false;
+						return "already have short recourse";
 					}
 					if (!BuffStackTest(buff, pSpellRecourse)) {
-						Gems[gemIndex] = "recourse does not stack";
-						return false;
+						return "recourse does not stack";
 					}
 				}
 			}
 		}
 
 		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= 50) {
-			Gems[gemIndex] = "I'm > 50% hp";
-			return false;
+			return "I'm > 50% hp";
 		}
 
 		if (!ActionSpawnTarget(pChar->pSpawn)) {
-			Gems[gemIndex] = "can't target self";
-			return false;
+			return "can't target self";
 		}
 
-		Gems[gemIndex] = "casting buff on self";
-		ActionCastGem(gemIndex + 1);
-		return true;
+		return "";
 	}
 
 	if (isSingleTargetSpell && pSpell->SpellType == 0) { //single target detrimental spell
 		if (!pTarget) {
-			Gems[gemIndex] = "no target";
-			return false;
+			return "no target";
 		}
 
 		if (pTarget->Data.Type != SPAWN_NPC) {
-			Gems[gemIndex] = "non npc targetted";
-			return false;
+			return "non npc targetted";
 		}
 
 		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) {
-			Gems[gemIndex] = "target too far away";
-			return false;
+			return "target too far away";
 		}
 
 		if (SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
-			Gems[gemIndex] = "target > 99%";
-			return false;
+			return "target > 99%";
 		}
 
 		if (isTaunt) {
 			if (GetCharInfo()->pGroupInfo == nullptr) {
-				Gems[gemIndex] = "not in a group";
-				return false;
+				return "not in a group";
 			}
 			
 			if (!pAggroInfo) {
-				Gems[gemIndex] = "pAggroInfo empty";
-				return false;
+				return "pAggroInfo empty";
 			}
 
 			bool isMainTank = false;
@@ -698,27 +616,22 @@ bool Elixir::Spell(int gemIndex)
 			}
 
 			if (!isMainTank) {
-				Gems[gemIndex] = "I am not main tank";
-				return false;
+				return "I am not main tank";
 			}
 
 			if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) {
-				Gems[gemIndex] = "I am already primary target";
-				return false;
+				return "I am already primary target";
 			}
 
 		}
 
-		Gems[gemIndex] = "casting on enemy target";
-		ActionCastGem(gemIndex + 1);
-		return true;
+		return "";
 	}
 
 	if (pSpell->TargetType == 0x0e || pSpell->Category == 69) { //Pet target
 		PSPAWNINFO pPet = (PSPAWNINFO)GetSpawnByID(pChar->pSpawn->PetID);
 		if (!pPet) {
-			Gems[gemIndex] = "no pet";
-			return false;
+			return "no pet";
 		}
 		
 		//if (Distance3DToSpawn(pChar, pPet) > pSpell->Range) {
@@ -728,21 +641,17 @@ bool Elixir::Spell(int gemIndex)
 
 		if (isHeal) {
 			if (SpawnPctHPs(pPet) > 80) {
-				Gems[gemIndex] = "pet > 80% hp";
-				return false;
+				return "pet > 80% hp";
 			}
-			Gems[gemIndex] = "casting heal on pet";
-			ActionCastGem(gemIndex + 1);
-			return true;
+			return "";
 		}
 
 		if (pSpell->DurationCap > 0) { //pet buff
 			if (!pPetInfoWnd) {
-				Gems[gemIndex] = "no pet info wnd";
-				return false;
+				return "no pet info wnd";
 			}
 			if (pChar->pSpawn->PetID == 0) {
-				Gems[gemIndex] = "no pet";
+				return "no pet";
 			}
 			for (int nBuff = 0; nBuff < 30; nBuff++) {
 				PSPELL buff = GetSpellByID(((PEQPETINFOWINDOW)pPetInfoWnd)->Buff[nBuff]);
@@ -750,21 +659,16 @@ bool Elixir::Spell(int gemIndex)
 					continue;
 				}
 				if (buff->ID == pSpell->ID) {
-					Gems[gemIndex] = "already have buff";
-					return false;
+					return "pet already has buff";
 				}
 				if (!BuffStackTest(buff, pSpell)) {
-					Gems[gemIndex] = "does not stack";
-					return false;
+					return "pet buff does not stack";
 				}
 			}
 
-			Gems[gemIndex] = "casting on pet";
-			ActionCastGem(gemIndex + 1);
-			return true;
+			return "";
 		}
 	}
 
-	Gems[gemIndex] = "unsupported spell";
-	return false;
+	return "unsupported spell";
 }
