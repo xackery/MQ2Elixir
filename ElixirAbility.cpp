@@ -38,17 +38,21 @@ std::string Elixir::Ability(int abilityIndex)
 		return "can't find ability";
 	}
 	if (!pCSkillMgr->IsActivatedSkill(abilityIndex)) {
-	//	return "not activated skill (ignored)";
+		return "not activated skill (ignored)";
 	}
 
 	if (!pCSkillMgr->IsAvailable(abilityIndex)) {
-	//	return "not available";
+		return "on cooldown";
+	}
+
+	if (stricmp(abilityName, "Hide") == 0) {
+		return "(ignored)";
 	}
 
 	// Do logical ability checks
 
 
-	if (!ppTarget) {
+	if (!pTarget) {
 		return "no target";
 	}
 
@@ -64,11 +68,21 @@ std::string Elixir::Ability(int abilityIndex)
 		return "non npc targetted";
 	}
 
+
+	if (SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
+		return "target > 99%";
+	}
+
 	if (stricmp(abilityName, "Bash") == 0) {
 		if (!isBashAllowed()) {
 			return "cannot bash";
 		}
 		
+		return "";
+	}
+
+
+	if (stricmp(abilityName, "Kick") == 0) {
 		return "";
 	}
 

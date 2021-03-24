@@ -42,6 +42,11 @@ void Elixir::ActionButton(int buttonIndex)
 		return;
 	}
 
+	if (AreObstructionWindowsVisible()) {
+		Buttons[buttonIndex] = "obstruction window visible";
+		return;
+	}
+
 	if (GetCharInfo()->pSpawn->HideMode) {
 		Buttons[buttonIndex] = "player invisible";
 	}
@@ -164,13 +169,14 @@ void Elixir::ActionButton(int buttonIndex)
 			if (!HasSkill(i)) continue;
 			char* abilityName = pStringTable->getString(nToken, 0);
 			if (!abilityName) continue;
+			if (stricmp(abilityName, szTemp) != 0) continue;
 
 			Buttons[buttonIndex] = Ability(i);
 			if (strlen(Buttons[buttonIndex].c_str()) > 0) {
 				return;
 			}
 			DoAbility(pChar->pSpawn, szTemp);
-			LastAction = "pressing hotbutton " + buttonIndex;
+			LastAction = "pressing hotbutton " + to_string(buttonIndex);
 			Buttons[buttonIndex] = LastAction;
 			lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
 			lastButtonIndex = buttonIndex;
@@ -262,7 +268,25 @@ void Elixir::ActionButton(int buttonIndex)
 			Buttons[buttonIndex] = "combat ability empty";
 			return;
 		}
-		Buttons[buttonIndex] = szTemp;
+		pSpell = GetSpellByName(szTemp);
+		if (!pSpell) {
+			Buttons[buttonIndex] = "combat ability not found";
+			return;
+		}
+		Buttons[buttonIndex] = CombatAbility(pSpell);
+		if (strlen(Buttons[buttonIndex].c_str()) > 0) {
+			return;
+		}
+
+		if (!pCharData->DoCombatAbility(pSpell->ID)) {
+			Buttons[buttonIndex] = "ability failed";
+			return;
+		}
+		LastAction = "pressing hotbutton " + to_string(buttonIndex);
+		Buttons[buttonIndex] = LastAction;
+		lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+		lastButtonIndex = buttonIndex;
+		isActionComplete = true;
 		return;
 	default:
 		sprintf(szTemp, "unkown button type: %i", hbtn->LastButtonType);
