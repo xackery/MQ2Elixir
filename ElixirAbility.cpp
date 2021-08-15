@@ -98,7 +98,7 @@ std::string Elixir::Ability(int abilityIndex)
 		bool isMainTank = false;
 		GROUPMEMBER* pG;
 		PSPAWNINFO pSpawn;
-		for (int i = 1; i < 6; i++) {
+		for (int i = 0; i < 6; i++) {
 			pG = GetCharInfo()->pGroupInfo->pMember[i];
 			if (!pG) continue;
 			if (pG->Offline) continue;
@@ -108,7 +108,7 @@ std::string Elixir::Ability(int abilityIndex)
 			if (!pSpawn) continue;
 			if (pSpawn->SpawnID != pChar->pSpawn->SpawnID) continue;
 			if (pSpawn->Type == SPAWN_CORPSE) continue;
-			if (pG->MainTank > 0) {
+			if (pG->MainTank) {
 				isMainTank = true;
 				break;
 			}
@@ -116,6 +116,10 @@ std::string Elixir::Ability(int abilityIndex)
 
 		if (!isMainTank) {
 			return "not main tank";
+		}
+
+		if (pAggroInfo && pAggroInfo->aggroData[AD_Player].AggroPct >= 100) {
+			return "already have high hate";
 		}
 
 		if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) {

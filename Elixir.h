@@ -35,6 +35,10 @@ private:
 	bool isActionComplete;
 	
 	unsigned long gemGlobalCooldown;
+	unsigned long movementGlobalCooldown;
+
+	// lastCastedSpellID only is set when elixir invokes a spell cast
+	int lastCastedSpellID;
 	
 	int lastGemIndex;
 	int lastButtonIndex;

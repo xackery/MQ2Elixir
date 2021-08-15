@@ -32,6 +32,8 @@ bool AreObstructionWindowsVisible();
 bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName);
 bool IsCombatAbilityReady(PCHAR szName);
 bool IsSpellReady(PCHAR szName);
+bool IsHighHateAggro();
+bool IsIdealDamageReceiver();
 bool IsSpellMemorized(PCHAR szName);
 bool IsAbilityReady(PCHAR szName);
 bool IsNavActive();

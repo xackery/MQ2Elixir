@@ -193,6 +193,10 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		return "ignoring (transport)";
 	}
 
+	if (IsHighHateAggro() && isDamage && !IsIdealDamageReceiver()) {
+		return "waiting to damage until hate lowers";
+	}
+
 	if (pTarget) {
 		bodyType = GetBodyType((PSPAWNINFO)pTarget);
 	}
@@ -599,7 +603,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			bool isMainTank = false;
 			GROUPMEMBER* pG;
 			PSPAWNINFO pSpawn;
-			for (int i = 1; i < 6; i++) {
+			for (int i = 0; i < 6; i++) {
 				pG = GetCharInfo()->pGroupInfo->pMember[i];
 				if (!pG) continue;
 				if (pG->Offline) continue;
@@ -616,11 +620,14 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			}
 
 			if (!isMainTank) {
-				return "I am not main tank";
+				return "not main tank";
 			}
 
 			if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) {
-				return "I am already primary target";
+				return "already primary target";
+			}
+			if (pAggroInfo && pAggroInfo->aggroData[AD_Player].AggroPct >= 100) {
+				return "already have high hate";
 			}
 
 		}

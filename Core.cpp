@@ -77,6 +77,82 @@ bool IsSpellReady(PCHAR szName)
 	return false;
 }
 
+// IsIdealDamageReceiver means you likely should be doing damage in the current situation (you have aggro, there's a main tank, you're not a tank class, etc)
+bool IsIdealDamageReceiver() 
+{
+	PCHARINFO pChar = GetCharInfo();
+	bool isIdeal = true;
+
+	bool isMainTank = false;
+	bool isAnyMainTank = false;
+	bool isTauntClassInGroup = false;
+	GROUPMEMBER* pG;
+	PSPAWNINFO pSpawn;
+
+
+	for (int i = 0; i < 6; i++) {
+		pG = GetCharInfo()->pGroupInfo->pMember[i];
+		if (!pG) continue;
+		if (pG->Offline) continue;
+		//if (${Group.Member[${i}].Mercenary}) /continue
+		//if (${ Group.Member[${i}].OtherZone }) / continue
+		pSpawn = pG->pSpawn;
+		if (!pSpawn) continue;
+		
+		if (pSpawn->Type == SPAWN_CORPSE) continue;
+		if (pSpawn->GetClass() == Shadowknight || 
+			pSpawn->GetClass() == Paladin || 
+			pSpawn->GetClass() == Warrior) {
+			isTauntClassInGroup = true;
+		}
+		if (pG->MainTank != 0) continue;
+		isAnyMainTank = true;
+		isTauntClassInGroup = true;
+		if (pSpawn->SpawnID != pChar->pSpawn->SpawnID) return true;
+		break;
+	}
+
+	if (!isTauntClassInGroup) return true;
+
+	int myClass = pChar->pSpawn->GetClass();
+	switch (myClass) {
+	case Shadowknight:
+	case Warrior:
+	case Paladin:
+		if (isMainTank) return true;
+		if (SpawnPctHPs(pChar->pSpawn) < 50) return false;
+		break;
+	case Bard:
+	case Berserker:
+	case Rogue:
+	case Ranger:
+	case Beastlord:
+	case Monk:
+		if (SpawnPctHPs(pChar->pSpawn) < 50) return false;
+		break;
+	case Cleric:
+	case Druid:
+	case Shaman:
+	case Necromancer:
+	case Enchanter:
+	case Wizard:
+	case Mage:
+		isIdeal = false;
+		break;
+	}
+	return isIdeal;
+}
+
+bool IsHighHateAggro()
+{	
+	if (!pAggroInfo) return false;
+	if (pAggroInfo->aggroData[AD_Player].AggroPct >= 80) return true;
+	PCHARINFO pChar = GetCharInfo();
+	if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) return true;
+	
+	return false;
+}
+
 
 // Is provided spell memorized?
 bool IsSpellMemorized(PCHAR szName)

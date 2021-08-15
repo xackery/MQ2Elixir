@@ -6,10 +6,11 @@ using namespace std;
 
 void Elixir::OnPulse()
 {
-
+	PCHARINFO pChar = GetCharInfo();
 	// Reset last pulse results
 	isActionComplete = false;
 	lastGemIndex = -1;
+	
 
 	//GetCharInfo()->pSpawn->CastingData.SpellETA <= 0
 	//if (!pCastSpellWnd && GetCharInfo()->pSpawn->CastingData.IsCasting() && GetCharInfo()->pSpawn->CastingData.SpellID) {
@@ -19,6 +20,26 @@ void Elixir::OnPulse()
 	if (pCastSpellWnd && !pSpellBookWnd->IsVisible() && GetCharInfo()->pSpawn->CastingData.IsCasting() && eta <= 0) {
 		Execute("/stopsong");
 		LastAction = "stopping bard song";
+	}
+
+
+	if (lastCastedSpellID > 0 && (!pCastSpellWnd || !GetCharInfo()->pSpawn->CastingData.IsCasting())) {
+		lastCastedSpellID = 0;
+	}
+
+	if (lastCastedSpellID > 0 && pCastSpellWnd && !pSpellBookWnd->IsVisible() && GetCharInfo()->pSpawn->CastingData.IsCasting()) {
+		if (lastCastedSpellID != GetCharInfo()->pSpawn->CastingData.SpellID) {
+			lastCastedSpellID = 0;
+		}
+		if (lastCastedSpellID > 0 && !pTarget) {
+			Execute("/stopcast");
+			gemGlobalCooldown = (unsigned long)MQGetTickCount64() + 1000;
+			LastAction = "stopping spell, target dead";
+		}
+	}
+	
+	if (pChar->pSpawn->GetClass() != Bard && IsMoving(pChar->pSpawn)) {
+		movementGlobalCooldown = (unsigned long)MQGetTickCount64() + 2000;
 	}
 
 	for (int i = 0; i < 12; i++) {

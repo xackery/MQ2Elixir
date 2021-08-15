@@ -37,6 +37,11 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
+	if (movementGlobalCooldown > MQGetTickCount64()) {
+		Gems[gemIndex] = "movement AI cooldown";
+		return;
+	}
+
 	if (AreObstructionWindowsVisible()) {
 		Gems[gemIndex] = "obstruction window visible";
 		return;
@@ -91,11 +96,15 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
+	
 	ActionCastGem(gemIndex + 1);
 	Gems[gemIndex] = "casting";
 	LastAction = "gem " + to_string(gemIndex + 1) + " " + Gems[gemIndex];
 	lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
 	lastGemIndex = gemIndex;
+	if (pSpell->TargetType == 5) { //Single
+		lastCastedSpellID = pSpell->ID;
+	}
 	isActionComplete = true;
 	gemGlobalCooldown = (unsigned long)MQGetTickCount64() + 3000;
 }
