@@ -4,9 +4,9 @@
 
 unsigned long PulseDelay;
 bool IsZoning;
+// exposed by members IsElixirActive
+bool IsElixirRunning = true;
 class MQ2ElixirType* pElixirType = nullptr;
-
-void CheckElixir();
 
 Elixir* pElixir = nullptr;
 
@@ -70,6 +70,7 @@ public:
 		Button10,
 		Button11,
 		Button12,
+		IsEnabled,
 	};
 	enum ElixirMethods {
 		Cast,
@@ -79,6 +80,8 @@ public:
 		CastCombatAbility,
 		CastAA,
 		Memorize,
+		Enable,
+		Disable,
 	};
 	bool GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TYPEVAR& Dest);
 	MQ2ElixirType() : MQ2Type("Elixir") {
@@ -112,6 +115,7 @@ public:
 		TypeMember(Button10);
 		TypeMember(Button11);
 		TypeMember(Button12);
+		TypeMember(IsEnabled);
 		TypeMethod(Cast);
 		TypeMethod(CastItem);
 		TypeMethod(CastSpell);
@@ -119,6 +123,8 @@ public:
 		TypeMethod(CastCombatAbility);
 		TypeMethod(CastAA);
 		TypeMethod(Memorize);
+		TypeMethod(Enable);
+		TypeMethod(Disable);
 	}
 	bool ToString(MQ2VARPTR VarPtr, PCHAR Destination) {
 		strcpy_s(Destination, MAX_STRING, "TRUE");

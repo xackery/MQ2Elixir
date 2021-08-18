@@ -59,6 +59,7 @@
     <ClCompile Include="ElixirButton.cpp" />
     <ClCompile Include="ElixirCombatAbility.cpp" />
     <ClCompile Include="ElixirGem.cpp" />
+    <ClCompile Include="Mob.cpp" />
     <ClCompile Include="MQ2Elixir.cpp" />
     <ClCompile Include="ElixirSpell.cpp" />
   </ItemGroup>
@@ -66,6 +67,7 @@
     <ClInclude Include="..\MQ2Plugin.h" />
     <ClInclude Include="Elixir.h" />
     <ClInclude Include="Core.h" />
+    <ClInclude Include="Mob.h" />
     <ClInclude Include="MQ2Elixir.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

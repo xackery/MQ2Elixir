@@ -7,13 +7,15 @@ using namespace std;
 
 bool isBashAllowed()
 {
+	if (!GetCharInfo2()) return false;
+	if (GetCharInfo2()->pInventoryArray->Inventory.Secondary && GetItemFromContents(GetCharInfo2()->pInventoryArray->Inventory.Secondary)->ItemType == 8) return true;
 #if !defined(ROF2EMU) && !defined(UFEMU)
-	if (GetCharInfo2()->Class == EQData::Warrior) return IsAAPurchased("Two-Handed Bash");
-	if (GetCharInfo2()->Class == EQData::Paladin || GetCharInfo2()->Class == EQData::Shadowknight) return IsAAPurchased("Improved Bash");
-	return false;
+	if (GetCharInfo2()->Class == EQData::Warrior && IsAAPurchased("Two-Handed Bash")) return true;
+	if (GetCharInfo2()->Class == EQData::Paladin || GetCharInfo2()->Class == EQData::Shadowknight && IsAAPurchased("Improved Bash")) return true;
 #else
-	return IsAAPurchased("2 Hand Bash");
+	if (IsAAPurchased("2 Hand Bash")) return true;
 #endif
+	return false;
 }
 
 // Ability returns a string with a reason if provided ability cannot be used
@@ -77,13 +79,24 @@ std::string Elixir::Ability(int abilityIndex)
 		if (!isBashAllowed()) {
 			return "cannot bash";
 		}
-		
+
 		return "";
 	}
 
 
 	if (stricmp(abilityName, "Kick") == 0) {
 		return "";
+	}
+	if (stricmp(abilityName, "Disarm") == 0) {
+		return "";
+	}
+
+	if (stricmp(abilityName, "Bind Wound") == 0) {
+		//if (SpawnPctHPs(GetCharInfo()->pSpawn) < 50) {
+			//return "not < 50% hp";
+		//}
+		//return "";
+		return "not supported";
 	}
 
 	if (stricmp(abilityName, "Taunt") == 0) {

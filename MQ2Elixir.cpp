@@ -102,6 +102,20 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 			Dest.Type = pBoolType;
 			return true;
 		}
+		if ((ElixirMethods)pMethod->ID == Disable)
+		{
+			IsElixirRunning = false;
+			Dest.DWord = false;
+			Dest.Type = pBoolType;
+			return true;
+		}
+		if ((ElixirMethods)pMethod->ID == Enable)
+		{
+			IsElixirRunning = true;
+			Dest.DWord = true;
+			Dest.Type = pBoolType;
+			return true;
+		}
 	}
 
 	PMQ2TYPEMEMBER pMember = MQ2ElixirType::FindMember(Member);
@@ -316,6 +330,11 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 		Dest.Ptr = button12;
 		return true;
 	}
+	if (pMember->ID == IsEnabled) {
+		Dest.Type = pBoolType;
+		Dest.DWord = IsElixirRunning;
+		return true;
+	}
 	return false;
 }
 
@@ -372,6 +391,14 @@ PLUGIN_API VOID OnPulse(VOID)
 	}
 
 	if (PulseDelay > MQGetTickCount64()) {
+		return;
+	}
+
+	if (IsZoning) {
+		return;
+	}
+
+	if (!IsElixirRunning) {
 		return;
 	}
 

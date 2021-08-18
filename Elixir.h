@@ -36,6 +36,8 @@ private:
 	
 	unsigned long gemGlobalCooldown;
 	unsigned long movementGlobalCooldown;
+	// if I cast a stun, this is a cooldown before using another follow up one
+	unsigned long stunGlobalCooldown;
 
 	// lastCastedSpellID only is set when elixir invokes a spell cast
 	int lastCastedSpellID;
