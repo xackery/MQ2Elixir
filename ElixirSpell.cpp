@@ -1,6 +1,7 @@
 #include "../MQ2Plugin.h"
 #include "Core.h"
 #include "Elixir.h"
+#include "Mob.h"
 
 using namespace std;
 
@@ -21,17 +22,22 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	bool isHeal = false;
 	bool isDebuff = false;
 	bool isBuff = false;
-	bool isDamage = false;
 	bool isLifetap = false;
+	bool isMana = false;
 	bool isSnare = false;
-	bool isSow = false;
+	bool isSow = false;	
 	bool isTaunt = false;
 	bool isSingleTargetSpell = false;
 	bool isPetSummon = false;
 	bool isTransport = false;
 	bool isGroupSpell = false;
 	bool isBardSong = false;
-	
+	bool isMez = false;
+
+	long stunDuration = 0;
+	long damageAmount = 0;
+	long healAmount = 0;
+
 	int bodyType;
 	LONG attr;
 	LONG base;
@@ -56,10 +62,11 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		max = GetSpellMax(pSpell, i);
 		calc = GetSpellCalc(pSpell, i);
 
-		if (attr == SPA_HP) {
+		if (attr == SPA_HP) { //0
 			if (max > 0) { //Heal / HoT
 				if (ticks < 5 && base > 0) { //regen etc are not heals
 					isHeal = true;
+					healAmount = base;
 				}
 				if (ticks > 0) {
 					isBuff = true;
@@ -68,11 +75,14 @@ std::string  Elixir::Spell(PSPELL pSpell)
 					isLifetap = true;
 				}
 			}
+			if (base < 0 && damageAmount == 0) {
+				damageAmount = -base;
+			}
 			if (max < 0) { //Nuke / DoT
-				isDamage = true;
+				damageAmount = -max;
 			}
 		}
-		if (attr == SPA_AC ||
+		if (attr == SPA_AC || //1
 			attr == 2 || //attack
 			attr == 4 || //str
 			attr == 5 || //dex
@@ -89,7 +99,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			}
 		}
 
-		if (attr == SPA_MOVEMENTRATE) {
+		if (attr == SPA_MOVEMENTRATE) { //3
 			if (base > 0) { //+Movement
 				isBuff = true;
 				isSow = true;
@@ -100,7 +110,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			}
 		}
 		
-		if (attr == SPA_CHA) {
+		if (attr == SPA_CHA) { //10
 			if (base > 0 && base < 254) { //+CHA
 				isBuff = true;
 			}
@@ -117,21 +127,38 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			}
 		}
 
+		if (attr == 15) { // Mana
+			isMana = true;
+		}
+		if (attr == 18) { // pacify (lull)
+			return "ignored (lull)";
+		}
+		if (attr == 21) { // stun
+			stunDuration = base2;
+		}
+		if (attr == 22) { // charm
+			return "ignored (charm)";
+		}
+
 		if (attr == 26) { // Gate
 			isTransport = true;
 		}
 		if (attr == 30) { // frenzy radius reduction (lull)
-			return "ignored (Lull)";
+			return "ignored (lull)";
 		}
 		if (attr == 86) { // reaction radius reduction (lull)
-			return "ignored (Lull)";
+			return "ignored (lull)";
 		}
-		if (attr == 18) { // pacify (lull)
-			return "ignored (Lull)";
+
+		if (attr == 31) { // Mesmerization
+			isMez = true;
+			return "ignored (mez)";
 		}
+
 		if (attr == 33) { // Summon Elemental Pet
 			isPetSummon = true;
 		}
+
 
 		if (attr == 71) { // Summon Skeleton Pet
 			isPetSummon = true;
@@ -139,15 +166,17 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		if (attr == 83) { // Transport
 			isTransport = true;
 		}
+		if (attr == 88) { // Evac
+			isTransport = true;
+		}
 
 		if (attr == 108) { //Summon Familiar
-			isTaunt = true;
+			isPetSummon = true;
 		}
 
 		if (attr == 192) { //taunt
 			isTaunt = true;
 		}
-		
 	}
 
 	if (pSpell->Subcategory == 43 && ticks < 10) { //Health
@@ -191,10 +220,6 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 	if (isTransport) {
 		return "ignoring (transport)";
-	}
-
-	if (IsHighHateAggro() && isDamage && !IsIdealDamageReceiver()) {
-		return "waiting to damage until hate lowers";
 	}
 
 	if (pTarget) {
@@ -263,7 +288,6 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) {
 		return "target not line of sight";
 	}
-
 
 	for (int i = 0; i < 4; i++) { // Reagent check
 		if (pSpell->ReagentCount[i] == 0) continue;
@@ -420,6 +444,23 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		return "already have pet";
 	}
 
+	if (isPetSummon) {
+		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
+			if (GetCharInfo2()->Buff[nBuff].SpellID == pSpell->ID) return "already have pet buff";
+		}
+	}
+
+
+	if (isMana && pSpell->TargetType == 6 && ticks <= 0 && !isPetSummon) { // self only mana regen, like harvest, canni
+		if (stunDuration > 0 && CombatState() == COMBATSTATE_COMBAT) {
+			return "in combat, has stun attached";
+		}
+		if (SpawnPctMana(pChar->pSpawn) > 50) {
+			return "not < 50 % mana";
+		}
+		return "";
+	}
+
 
 	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > 80) {
 		return "> 80% hp";
@@ -431,6 +472,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		}
 
 		if (ticks > 0) {
+
 			for (int b = 0; b < NUM_LONG_BUFFS; b++)
 			{
 				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[b].SpellID);
@@ -569,8 +611,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 		if (!ActionSpawnTarget(pChar->pSpawn)) {
 			return "can't target self";
-		}
-
+		}		
 		return "";
 	}
 
@@ -589,6 +630,19 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 		if (SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
 			return "target > 99%";
+		}
+
+		int mobHP = MobHP(pTarget->Data.Level, ((PSPAWNINFO)pTarget)->mActorClient.Class);
+		if (mobHP > 0 && damageAmount > 0 &&  damageAmount > mobHP) {
+			return "mob too low hp";
+		}
+
+		if (isDebuff && !gTargetbuffs) {
+			return "waiting for buffs to populate";
+		}
+
+		if (damageAmount > 0 && SpawnPctHPs((PSPAWNINFO)pTarget) > 20 && IsHighHateAggro() && !IsIdealDamageReceiver()) {
+			return "waiting to damage until hate lowers";
 		}
 
 		if (isTaunt) {
@@ -632,6 +686,10 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 		}
 
+		if (stunDuration > 1000 && stunGlobalCooldown > MQGetTickCount64()) {
+			sprintf(szTemp, "stun AI cooldown (%llds)", ((stunGlobalCooldown - MQGetTickCount64()) / 1000));
+			return szTemp;
+		}
 		return "";
 	}
 
@@ -654,6 +712,9 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		}
 
 		if (pSpell->DurationCap > 0) { //pet buff
+			if (!IsSpellStackable(pChar->pSpawn, pSpell)) {
+				return "not stackable";
+			}
 			if (!pPetInfoWnd) {
 				return "no pet info wnd";
 			}

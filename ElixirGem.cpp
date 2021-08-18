@@ -96,7 +96,11 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
-	
+	unsigned long stunDuration = StunDuration(pSpell);
+	if (stunDuration > 1000) {
+		stunGlobalCooldown = (unsigned long)MQGetTickCount64() + stunDuration;
+	}
+
 	ActionCastGem(gemIndex + 1);
 	Gems[gemIndex] = "casting";
 	LastAction = "gem " + to_string(gemIndex + 1) + " " + Gems[gemIndex];

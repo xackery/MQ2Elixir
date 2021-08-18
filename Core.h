@@ -34,15 +34,19 @@ bool IsCombatAbilityReady(PCHAR szName);
 bool IsSpellReady(PCHAR szName);
 bool IsHighHateAggro();
 bool IsIdealDamageReceiver();
+
 bool IsSpellMemorized(PCHAR szName);
 bool IsAbilityReady(PCHAR szName);
 bool IsNavActive();
 bool IsFacingSpawn(PSPAWNINFO pSpawn);
 bool IsAAPurchased(PCHAR AAName);
-
+bool IsSpellStackable(PSPAWNINFO pSpawn, PSPELL pSpell);
+bool IsSpellStackableCompare(PSPELL pSpell1, PSPELL pSpell2);
 PALTABILITY AAByName(PCHAR Name);
 int CombatState();
 int SpawnPctHPs(PSPAWNINFO pSpawn);
+int SpawnPctMana(PSPAWNINFO pSpawn);
+unsigned long StunDuration(PSPELL pSpell);
 #if !defined(ROF2EMU) && !defined(UF2EMU)
 int XTargetNearbyHaterCount();
 #endif

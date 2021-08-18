@@ -81,14 +81,12 @@ bool IsSpellReady(PCHAR szName)
 bool IsIdealDamageReceiver() 
 {
 	PCHARINFO pChar = GetCharInfo();
-	bool isIdeal = true;
 
 	bool isMainTank = false;
 	bool isAnyMainTank = false;
 	bool isTauntClassInGroup = false;
 	GROUPMEMBER* pG;
 	PSPAWNINFO pSpawn;
-
 
 	for (int i = 0; i < 6; i++) {
 		pG = GetCharInfo()->pGroupInfo->pMember[i];
@@ -121,7 +119,7 @@ bool IsIdealDamageReceiver()
 	case Paladin:
 		if (isMainTank) return true;
 		if (SpawnPctHPs(pChar->pSpawn) < 50) return false;
-		break;
+		return true;
 	case Bard:
 	case Berserker:
 	case Rogue:
@@ -129,7 +127,7 @@ bool IsIdealDamageReceiver()
 	case Beastlord:
 	case Monk:
 		if (SpawnPctHPs(pChar->pSpawn) < 50) return false;
-		break;
+		return true;
 	case Cleric:
 	case Druid:
 	case Shaman:
@@ -137,10 +135,9 @@ bool IsIdealDamageReceiver()
 	case Enchanter:
 	case Wizard:
 	case Mage:
-		isIdeal = false;
-		break;
+		return false;
 	}
-	return isIdeal;
+	return false;
 }
 
 bool IsHighHateAggro()
@@ -409,8 +406,7 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 			if (pSpell2 && pSpell2->ID == pBuffSpell->ID) pSpell = pSpell2;
 			if (pSpell2 && !BuffStackTest(pBuffSpell, pSpell2)) return false;
 			if (pSpell3 && pSpell3->ID == pBuffSpell->ID) pSpell = pSpell3;
-			if (pSpell3 && !BuffStackTest(pBuffSpell, pSpell3)) return false;
-
+			if (pSpell3 && !BuffStackTest(pBuffSpell, pSpell3)) return false;			
 			if (!pSpell) continue;
 			//TODO: add level check comparison
 			return true;
@@ -435,6 +431,8 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 
 		//if (!ret || SlotIndex == -1) return false;
 	}
+
+	if (!IsSpellStackable(pSpawn, pSpell)) return true;
 
 	return false;
 }
@@ -1070,4 +1068,80 @@ bool IsAAPurchased(PCHAR AAName) {
 	}
 	// failed to find by level and name checks,  return negative find.
 	return false;
+}
+
+
+bool IsSpellStackable(PSPAWNINFO pSpawn, PSPELL pSpell) {
+	if (!pSpell) return false;
+	if (!pSpawn) return false;
+
+	if (pTarget && pSpawn->SpawnID == ((long)((PSPAWNINFO)pTarget)->SpawnID)) {
+		// we are targetting the person we're checking buff on
+		for (int nBuff = 0; nBuff < NUM_BUFF_SLOTS; nBuff++)
+		{
+			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
+			if (buffid <= 0) continue;
+			PSPELL pBuffSpell = GetSpellByID(buffid);
+			if (!pBuffSpell) continue;
+			if (!IsSpellStackableCompare(pSpell, pBuffSpell)) return false;
+		}
+	}
+	else if (pSpawn->SpawnID == GetCharInfo()->pSpawn->SpawnID) {
+		for (int i = 0; i < NUM_LONG_BUFFS; i++) {
+			PSPELL pBuffSpell = GetSpellByID(GetCharInfo2()->Buff[i].SpellID);
+			if (!pBuffSpell) continue;
+			if (!IsSpellStackableCompare(pSpell, pBuffSpell)) return false;
+		}
+	}
+	return true;
+}
+
+bool IsSpellStackableCompare(PSPELL pSpell1, PSPELL pSpell2) {
+	if (pSpell1->ID == pSpell2->ID) return false; //assume if same spell, that it's not worth recasting
+	if (pSpell1->ID == 2751) return false; //manaburn check
+	if (IsSPAEffect(pSpell1, 350)) return false; //mana burn SE
+	LONG attr1;
+	LONG base11;
+	LONG base12;
+	LONG max1;
+	LONG calc1;
+	LONG attr2;
+	LONG base21;
+	LONG base22;
+	LONG max2;
+	LONG calc2;
+
+	for (int i = 0; i < GetSpellNumEffects(pSpell1); i++) {
+		attr1 = GetSpellAttrib(pSpell1, i);
+		base11 = GetSpellBase(pSpell1, i);
+		base12 = GetSpellBase2(pSpell1, i);
+		max1 = GetSpellMax(pSpell1, i);
+		calc1 = GetSpellCalc(pSpell1, i);
+		attr2 = GetSpellAttrib(pSpell2, i);
+		base21 = GetSpellBase(pSpell2, i);
+		base22 = GetSpellBase2(pSpell2, i);
+		max2 = GetSpellMax(pSpell2, i);
+		calc2 = GetSpellCalc(pSpell2, i);
+		if (attr1 == attr1) return false;
+	}
+	return true;
+}
+
+
+unsigned long StunDuration(PSPELL pSpell) {
+	LONG attr;
+	//LONG base;
+	LONG base2;
+	//LONG max;
+	//LONG calc;
+
+	for (int i = 0; i < GetSpellNumEffects(pSpell); i++) {
+		attr = GetSpellAttrib(pSpell, i);
+		//base = GetSpellBase(pSpell, i);
+		base2 = GetSpellBase2(pSpell, i);
+		//max = GetSpellMax(pSpell, i);
+		//calc = GetSpellCalc(pSpell, i);
+		if (attr == 21) return base2;
+	}
+	return 0;
 }
