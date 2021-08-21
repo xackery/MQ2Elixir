@@ -116,6 +116,20 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 			Dest.Type = pBoolType;
 			return true;
 		}
+		if ((ElixirMethods)pMethod->ID == HateAIEnable)
+		{
+			pElixir->IsHateAIRunning = true;
+			Dest.DWord = true;
+			Dest.Type = pBoolType;
+			return true;
+		}
+		if ((ElixirMethods)pMethod->ID == HateAIDisable)
+		{
+			pElixir->IsHateAIRunning = false;
+			Dest.DWord = true;
+			Dest.Type = pBoolType;
+			return true;
+		}
 	}
 
 	PMQ2TYPEMEMBER pMember = MQ2ElixirType::FindMember(Member);
@@ -333,6 +347,11 @@ bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TY
 	if (pMember->ID == IsEnabled) {
 		Dest.Type = pBoolType;
 		Dest.DWord = IsElixirRunning;
+		return true;
+	}
+	if (pMember->ID == IsHateAIEnabled) {
+		Dest.Type = pBoolType;
+		Dest.DWord = pElixir->IsHateAIRunning;
 		return true;
 	}
 	return false;

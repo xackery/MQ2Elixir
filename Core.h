@@ -47,6 +47,7 @@ int CombatState();
 int SpawnPctHPs(PSPAWNINFO pSpawn);
 int SpawnPctMana(PSPAWNINFO pSpawn);
 unsigned long StunDuration(PSPELL pSpell);
+unsigned long MainAssistTargetID();
 #if !defined(ROF2EMU) && !defined(UF2EMU)
 int XTargetNearbyHaterCount();
 #endif

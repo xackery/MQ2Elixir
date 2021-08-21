@@ -88,6 +88,9 @@ std::string Elixir::Ability(int abilityIndex)
 		return "";
 	}
 	if (stricmp(abilityName, "Disarm") == 0) {
+		if (Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > 14) {
+			return "too far away";
+		}
 		return "";
 	}
 

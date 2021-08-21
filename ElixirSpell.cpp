@@ -135,6 +135,9 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		}
 		if (attr == 21) { // stun
 			stunDuration = base2;
+			if (pSpell->TargetType == 2 || pSpell->TargetType == 4) {
+				isSingleTargetSpell = true; //hack to make ae stuns work
+			}
 		}
 		if (attr == 22) { // charm
 			return "ignored (charm)";
@@ -209,9 +212,6 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 	if (isGroupSpell && pSpell->CastTime == 3000) {
 		isBardSong = true;
-	}
-	if (pSpell->TargetType == 4) { //PB AE
-		isSingleTargetSpell = true; //for now just treat like a single target spell
 	}
 
 	if (pSpell->TargetType == 5) { //Single
@@ -467,12 +467,15 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	}
 
 	if (pSpell->SpellType >= 1 && (pSpell->TargetType == 6 || isGroupSpell)) { //self/group beneficial spell
-		if (pSpell->CastTime > 1000 && CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
+		//if (pSpell->CastTime > 1000 && CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
+		//	return "cast time > 1s, long for combat";
+		//}
+		if (CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
 			return "cast time > 1s, long for combat";
 		}
 
+		
 		if (ticks > 0) {
-
 			for (int b = 0; b < NUM_LONG_BUFFS; b++)
 			{
 				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[b].SpellID);
@@ -615,6 +618,39 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		return "";
 	}
 
+	if (damageAmount > 0 && (pSpell->TargetType == 2 || pSpell->TargetType == 4)) { // AE DD
+		ExtendedTargetList* xtm = pChar->pXTargetMgr;
+		if (!xtm) {
+			return "xtarget not supported";
+		}
+		if (!xtm->XTargetSlots.Count) {
+			return "xtarget no count found";
+		}
+
+		int xTargetCount = 0;
+		for (int n = 0; n < xtm->XTargetSlots.Count; n++)
+		{
+			XTARGETSLOT xts = xtm->XTargetSlots[n];
+			if (xts.xTargetType != XTARGET_AUTO_HATER) continue;
+			if (!xts.XTargetSlotStatus) continue;
+			if (!xts.SpawnID) continue;
+
+			PSPAWNINFO pXTargetSpawn = (PSPAWNINFO)GetSpawnByID(xts.SpawnID);
+			if (!pXTargetSpawn) continue;
+			if (pXTargetSpawn->Type != SPAWN_NPC) continue;
+			if (Distance3DToSpawn(pChar->pSpawn, pXTargetSpawn) > pSpell->AERange) continue;
+
+			xTargetCount++;
+			//TODO: Main assist check
+			//GetTargetBuffBySPA(31, 0)) // Is Target Mezzed?
+		}
+		if (xTargetCount < 2) {
+			sprintf(szTemp, "< 2 targets nearby (%d)", xTargetCount);
+			return szTemp;
+		}
+		return "";
+	}
+ 
 	if (isSingleTargetSpell && pSpell->SpellType == 0) { //single target detrimental spell
 		if (!pTarget) {
 			return "no target";
@@ -628,7 +664,8 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			return "target too far away";
 		}
 
-		if (SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
+
+		if (pChar->pGroupInfo && !pChar->pGroupInfo->pMember[0]->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
 			return "target > 99%";
 		}
 
@@ -638,10 +675,10 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		}
 
 		if (isDebuff && !gTargetbuffs) {
-			return "waiting for buffs to populate";
+			return "target buffs not populated";
 		}
 
-		if (damageAmount > 0 && SpawnPctHPs((PSPAWNINFO)pTarget) > 20 && IsHighHateAggro() && !IsIdealDamageReceiver()) {
+		if (IsHateAIRunning && damageAmount > 0 && SpawnPctHPs((PSPAWNINFO)pTarget) > 20 && IsHighHateAggro() && !IsIdealDamageReceiver()) {
 			return "waiting to damage until hate lowers";
 		}
 

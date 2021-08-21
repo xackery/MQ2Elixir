@@ -26,9 +26,12 @@ Note that spell name does NOT need Rk. suffix, and buffs do not need roman numer
 * ${Elixir.CastAbility[spell name]} returns true if ability invocation succeeds
 * ${Elixir.CastCombatAbility[spell name]} returns true if ability succeeds
 * ${Elixir.CastAA[spell name]} returns true if aa succeeds
-* ${Elixir.Enable} stops Elixir AI
-* ${Elixir.Disable} resumes Elixir AI
+* ${Elixir.Enable} enables Elixir AI, this resumes all AI logic
+* ${Elixir.Disable} disables Elixir AI, this stops all processes from running
+* ${Elixir.HateAIEnable} enables Elixir Hate AI
+* ${Elixir.HateAIDisable} disables Elixir Hate AI
 * ${Elixir.IsEnabled} return true if Elixir AI is running
+* ${Elixir.IsHateAIEnabled} return true if Elixir Hate AI management is running (if disabled, wizards nuke nonstop etc)
 
 ## Setup
 - Clone https://gitlab.com/redguides/VeryVanilla

@@ -16,6 +16,9 @@ public:
 	string Buttons[12];
 	void OnPulse();
 
+	// Is Hate AI logic running. When disabled, hate is not honored and we just nuke freely
+	bool IsHateAIRunning = false;
+
 	/*
 	virtual bool CastGroupHeal(PSPAWNINFO pSpawn) { return false; }
 	virtual bool CastPriorityHeal(PSPAWNINFO pSpawn) { return false; }
@@ -30,7 +33,6 @@ private:
 	
 	int highPctHPs = 90;
 	int lowPctHPs = 45;
-
 	// isActionComplete is set to false on every pulse. When an action succeeds, this is flagged, stopping future actions.
 	bool isActionComplete;
 	

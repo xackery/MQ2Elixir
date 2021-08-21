@@ -71,6 +71,7 @@ public:
 		Button11,
 		Button12,
 		IsEnabled,
+		IsHateAIEnabled,
 	};
 	enum ElixirMethods {
 		Cast,
@@ -82,6 +83,8 @@ public:
 		Memorize,
 		Enable,
 		Disable,
+		HateAIDisable,
+		HateAIEnable,
 	};
 	bool GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TYPEVAR& Dest);
 	MQ2ElixirType() : MQ2Type("Elixir") {
@@ -116,6 +119,7 @@ public:
 		TypeMember(Button11);
 		TypeMember(Button12);
 		TypeMember(IsEnabled);
+		TypeMember(IsHateAIEnabled);
 		TypeMethod(Cast);
 		TypeMethod(CastItem);
 		TypeMethod(CastSpell);
@@ -125,6 +129,8 @@ public:
 		TypeMethod(Memorize);
 		TypeMethod(Enable);
 		TypeMethod(Disable);
+		TypeMethod(HateAIEnable);
+		TypeMethod(HateAIDisable);
 	}
 	bool ToString(MQ2VARPTR VarPtr, PCHAR Destination) {
 		strcpy_s(Destination, MAX_STRING, "TRUE");

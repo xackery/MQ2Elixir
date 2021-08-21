@@ -1145,3 +1145,10 @@ unsigned long StunDuration(PSPELL pSpell) {
 	}
 	return 0;
 }
+
+unsigned long MainAssistTargetID() {
+	PCHARINFO pChar = GetCharInfo();
+	if (!pChar) return 0;
+	if (pChar->pGroupInfo) return 0;
+	return ((PSPAWNINFO)pLocalPlayer)->GroupAssistNPC[0];
+}
