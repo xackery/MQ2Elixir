@@ -87,3 +87,13 @@ void Elixir::OnPulse()
 
 	//TODO: buff cycle last gem (maxGem)
 }
+
+bool Elixir::IsHighHateAggro()
+{
+	if (!pAggroInfo) return false;
+	if (pAggroInfo->aggroData[AD_Player].AggroPct >= HateAIMax) return true;
+	PCHARINFO pChar = GetCharInfo();
+	if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) return true;
+
+	return false;
+}

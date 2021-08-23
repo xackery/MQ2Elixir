@@ -18,6 +18,19 @@ public:
 
 	// Is Hate AI logic running. When disabled, hate is not honored and we just nuke freely
 	bool IsHateAIRunning = false;
+	// Is Heal AI logic running. When disabled. heals will not be casted
+	bool IsHealAIRunning = false;
+	// Is Buff AI logic running. When disabled, buffs will not be casted
+	bool IsBuffAIRunning = false;
+	// Tag Mode is a debugging display on spell tooltips etc that show the tags associated with a spell
+	bool IsDebugTagMode = false;
+	// HateAI's Maximum Hate threshold before it stops doing offensive abilities and spells
+	int HateAIMax = 80;
+	// HealAI Maximum health value to trigger heal spells to be casted on a group member
+	int HealAIMax = 50;
+
+	// Is the target considered having high hate
+	bool IsHighHateAggro();
 
 	/*
 	virtual bool CastGroupHeal(PSPAWNINFO pSpawn) { return false; }

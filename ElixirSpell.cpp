@@ -9,7 +9,7 @@ using namespace std;
 std::string  Elixir::Spell(PSPELL pSpell)
 {
 	CHAR szTemp[MAX_STRING] = { 0 };
-
+		
 	PCHARINFO pChar = (PCHARINFO)pCharData;
 	if (!pChar) {
 		return "char not loaded";
@@ -24,6 +24,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	bool isBuff = false;
 	bool isLifetap = false;
 	bool isMana = false;
+	bool isCharm = false;
 	bool isSnare = false;
 	bool isSow = false;	
 	bool isTaunt = false;
@@ -33,7 +34,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	bool isGroupSpell = false;
 	bool isBardSong = false;
 	bool isMez = false;
-
+	bool isLull = false;
 	long stunDuration = 0;
 	long damageAmount = 0;
 	long healAmount = 0;
@@ -131,7 +132,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			isMana = true;
 		}
 		if (attr == 18) { // pacify (lull)
-			return "ignored (lull)";
+			isLull = true;
 		}
 		if (attr == 21) { // stun
 			stunDuration = base2;
@@ -140,22 +141,21 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			}
 		}
 		if (attr == 22) { // charm
-			return "ignored (charm)";
+			isCharm = true;
 		}
 
 		if (attr == 26) { // Gate
 			isTransport = true;
 		}
 		if (attr == 30) { // frenzy radius reduction (lull)
-			return "ignored (lull)";
+			isLull = true;
 		}
 		if (attr == 86) { // reaction radius reduction (lull)
-			return "ignored (lull)";
+			isLull = true;
 		}
 
 		if (attr == 31) { // Mesmerization
 			isMez = true;
-			return "ignored (mez)";
 		}
 
 		if (attr == 33) { // Summon Elemental Pet
@@ -218,40 +218,19 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		isSingleTargetSpell = true;
 	}
 
-	if (isTransport) {
-		return "ignoring (transport)";
-	}
-
 	if (pTarget) {
 		bodyType = GetBodyType((PSPAWNINFO)pTarget);
 	}
+
 	if (pSpell->TargetType == 16) { //Animal
-		if (!pTarget) {
-			return "no animal target";
-		}
-		if (bodyType != 21) {
-			return "target not animal";
-		}
 		isSingleTargetSpell = true;
 	}
 
 	if (pSpell->TargetType == 10) { //Undead
-		if (!pTarget) {
-			return "no undead target";
-		}
-		if (bodyType != 3) {
-			return "target not undead";
-		}
 		isSingleTargetSpell = true;
 	}
 
 	if (pSpell->TargetType == 11) { //Summoned
-		if (!pTarget) {
-			return "no summoned target";
-		}
-		if (bodyType != 28) {
-			return "target not summoned";
-		}
 		isSingleTargetSpell = true;
 	}
 
@@ -268,12 +247,6 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	}
 
 	if (pSpell->TargetType == 16) { //Plant
-		if (!pTarget) {
-			return "no plant target";
-		}
-		if (bodyType != 25) {
-			return "target not plant";
-		}
 		isSingleTargetSpell = true;
 	}
 
@@ -283,6 +256,88 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 	if (pSpell->TargetType == 18) { //Uber Dragons
 		isSingleTargetSpell = true;
+	}
+
+	if (IsDebugTagMode) {
+		sprintf(szTemp, "mana %d", pSpell->ManaCost);
+		if (isHeal) sprintf(szTemp, "%s %s", szTemp, "isHeal");
+		if (isDebuff) sprintf(szTemp, "%s %s", szTemp, "isDebuff");
+		if (isBuff) sprintf(szTemp, "%s %s", szTemp, "isBuff");
+		if (isLifetap) sprintf(szTemp, "%s %s", szTemp, "isLifetap");
+		if (isMana) sprintf(szTemp, "%s %s", szTemp, "isMana");
+		if (isSnare) sprintf(szTemp, "%s %s", szTemp, "isSnare");
+		if (isSow) sprintf(szTemp, "%s %s", szTemp, "isSow");
+		if (isTaunt) sprintf(szTemp, "%s %s hateAmount %d", szTemp, "isTaunt", pSpell->HateGenerated);
+		if (isSingleTargetSpell) sprintf(szTemp, "%s %s", szTemp, "isSingleTargetSpell");
+		if (isPetSummon) sprintf(szTemp, "%s %s", szTemp, "isPetSummon");
+		if (isTransport) sprintf(szTemp, "%s %s", szTemp, "isTransport");
+		if (isGroupSpell) sprintf(szTemp, "%s %s", szTemp, "isGroupSpell");
+		if (isBardSong) sprintf(szTemp, "%s %s", szTemp, "isBardSong");
+		if (isCharm) sprintf(szTemp, "%s %s", szTemp, "isCharm");
+		if (isMez) sprintf(szTemp, "%s %s", szTemp, "isMez");
+		if (isLull) sprintf(szTemp, "%s %s", szTemp, "isLull");
+		if (isMez) sprintf(szTemp, "%s %s", szTemp, "isMez");
+		if (stunDuration) sprintf(szTemp, "%s %s %dms", szTemp, "stunDuration", stunDuration);
+		if (damageAmount) sprintf(szTemp, "%s %s %d", szTemp, "damageAmount", damageAmount);
+		if (healAmount) sprintf(szTemp, "%s %s %d", szTemp, "healAmount", healAmount);
+		return szTemp;
+	}
+
+
+	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) {
+		return "not enough mana (" + to_string((int)pSpell->ManaCost) + "/" + to_string(GetCharInfo2()->Mana) + ")";
+	}
+
+	if (isLull) {
+		return "ignored (lull)";
+	}
+
+	if (isMez) {
+		return "ignored (mez)";
+	}
+
+	if (isCharm) {
+		return "ignored (charm)";
+	}
+
+	if (pSpell->TargetType == 16) { //Animal
+		if (!pTarget) {
+			return "no animal target";
+		}
+		if (bodyType != 21) {
+			return "target not animal";
+		}
+	}
+
+	if (pSpell->TargetType == 10) { //Undead
+		if (!pTarget) {
+			return "no undead target";
+		}
+		if (bodyType != 3) {
+			return "target not undead";
+		}
+	}
+
+	if (pSpell->TargetType == 11) { //Summoned
+		if (!pTarget) {
+			return "no summoned target";
+		}
+		if (bodyType != 28) {
+			return "target not summoned";
+		}
+	}
+
+	if (pSpell->TargetType == 16) { //Plant
+		if (!pTarget) {
+			return "no plant target";
+		}
+		if (bodyType != 25) {
+			return "target not plant";
+		}
+	}
+	
+	if (isTransport) {
+		return "ignoring (transport)";
 	}
 
 	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) {
@@ -311,6 +366,10 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	//if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
 	//if (ReqID == 826 && SpawnPctEndurance(pChar->pSpawn) > 24) return false;
 	//if (ReqID == 827 && SpawnPctEndurance(pChar->pSpawn) > 29) return false;
+
+	if ((isHeal || isLifetap) && !IsHealAIRunning) {
+		return "heal AI not running";
+	}
 
 	if (pSpellRecourse && pSpellRecourse->DurationCap > 0) { //recourse buff attached
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
@@ -415,10 +474,6 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	}
 	
 	
-	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) {
-		return "not enough mana (" + to_string((int)pSpell->ManaCost) +  "/" + to_string(GetCharInfo2()->Mana) + ")";
-	}
-
 	if (GetCharInfo2()->Endurance < (int)pSpell->EnduranceCost) {
 		return "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";
 	}
@@ -462,8 +517,9 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	}
 
 
-	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > 80) {
-		return "> 80% hp";
+	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > HealAIMax) {
+		sprintf(szTemp, "> %d%% hp", HealAIMax);
+		return szTemp;
 	}
 
 	if (pSpell->SpellType >= 1 && (pSpell->TargetType == 6 || isGroupSpell)) { //self/group beneficial spell
@@ -476,6 +532,10 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 		
 		if (ticks > 0) {
+			if (!IsBuffAIRunning) {
+				return "buff ai not running";
+			}
+
 			for (int b = 0; b < NUM_LONG_BUFFS; b++)
 			{
 				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[b].SpellID);
@@ -547,8 +607,9 @@ std::string  Elixir::Spell(PSPELL pSpell)
 					spawnGroupID = i;
 					spawnPctHPs = SpawnPctHPs(pSpawn);
 				}
-				if (spawnPctHPs >= 50) {
-					sprintf(szTemp, "no one in group < 50%% hp (%d%% lowest %d)", spawnPctHPs, spawnGroupID);
+
+				if (spawnPctHPs >= HealAIMax) {
+					sprintf(szTemp, "no one in group < %d%% hp (%d%% lowest %d)", HealAIMax, spawnPctHPs, spawnGroupID);
 					return szTemp;
 				}
 
@@ -608,8 +669,9 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			}
 		}
 
-		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= 50) {
-			return "I'm > 50% hp";
+		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= HealAIMax) {
+			sprintf(szTemp, "> %d% hp", HealAIMax);
+			return szTemp;
 		}
 
 		if (!ActionSpawnTarget(pChar->pSpawn)) {
@@ -644,8 +706,8 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			//TODO: Main assist check
 			//GetTargetBuffBySPA(31, 0)) // Is Target Mezzed?
 		}
-		if (xTargetCount < 2) {
-			sprintf(szTemp, "< 2 targets nearby (%d)", xTargetCount);
+		if (xTargetCount < 3) {
+			sprintf(szTemp, "< 3 targets nearby (%d)", xTargetCount);
 			return szTemp;
 		}
 		return "";
@@ -740,10 +802,11 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		//	Gems[gemIndex] = "pet too far away (" + to_string(Distance3DToSpawn(pChar, pPet)) + " / " + to_string(pSpell->Range) + ")";
 		//	return false;
 		//}
-
+		
 		if (isHeal) {
-			if (SpawnPctHPs(pPet) > 80) {
-				return "pet > 80% hp";
+			if (SpawnPctHPs(pPet) > HealAIMax) {
+				sprintf(szTemp, "pet > %d%% hp", HealAIMax);
+				return szTemp;
 			}
 			return "";
 		}

@@ -140,17 +140,6 @@ bool IsIdealDamageReceiver()
 	return false;
 }
 
-bool IsHighHateAggro()
-{	
-	if (!pAggroInfo) return false;
-	if (pAggroInfo->aggroData[AD_Player].AggroPct >= 80) return true;
-	PCHARINFO pChar = GetCharInfo();
-	if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) return true;
-	
-	return false;
-}
-
-
 // Is provided spell memorized?
 bool IsSpellMemorized(PCHAR szName)
 {

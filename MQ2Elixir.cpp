@@ -400,6 +400,10 @@ PLUGIN_API VOID OnDrawHUD(VOID)
 PLUGIN_API VOID SetGameState(DWORD GameState)
 {
 	if (GameState != GAMESTATE_INGAME) return;
+	if (!strcmp(ServerCharacterINI, GetCharInfo()->Name)) return;
+	sprintf(ServerCharacterINI, "%s_%s", EQADDR_SERVERNAME, GetCharInfo()->Name);
+	_snprintf_s(INIFileName, 260, "%s\\MQ2Elixir.ini", gszINIPath);
+	LoadINI();
 }
 
 // This is called every time MQ pulses
@@ -422,10 +426,11 @@ PLUGIN_API VOID OnPulse(VOID)
 	}
 
 	PulseDelay = MQGetTickCount64() + 1000;
-	
+
 	PCHARINFO pChar = GetCharInfo();
 
-	if (!pChar) return;	
+	if (!pChar) return;
+	
 	BuffUpdate(pChar->pSpawn);
 	if (pTarget) {
 		PSPAWNINFO pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
@@ -442,16 +447,16 @@ PLUGIN_API VOID OnPulse(VOID)
 // CALL CEverQuest::dsp_chat MAKE SURE TO IMPLEMENT EVENTS HERE (for chat plugins)
 PLUGIN_API DWORD OnWriteChatColor(PCHAR Line, DWORD Color, DWORD Filter)
 {
-  //  DebugSpewAlways("MQ2Elixir::OnWriteChatColor(%s)",Line);
-    return 0;
+	//  DebugSpewAlways("MQ2Elixir::OnWriteChatColor(%s)",Line);
+	return 0;
 }
 
 // This is called every time EQ shows a line of chat with CEverQuest::dsp_chat,
 // but after MQ filters and chat events are taken care of.
 PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 {
-   // DebugSpewAlways("MQ2Elixir::OnIncomingChat(%s)",Line);
-    return 0;
+	// DebugSpewAlways("MQ2Elixir::OnIncomingChat(%s)",Line);
+	return 0;
 }
 
 // This is called each time a spawn is added to a zone (inserted into EQ's list of spawns),
@@ -459,14 +464,14 @@ PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 // NOTE: When you zone, these will come BEFORE OnZoned
 PLUGIN_API VOID OnAddSpawn(PSPAWNINFO pNewSpawn)
 {
-   // DebugSpewAlways("MQ2Elixir::OnAddSpawn(%s)",pNewSpawn->Name);
+	// DebugSpewAlways("MQ2Elixir::OnAddSpawn(%s)",pNewSpawn->Name);
 }
 
 // This is called each time a spawn is removed from a zone (removed from EQ's list of spawns).
 // It is NOT called for each existing spawn when a plugin shuts down.
 PLUGIN_API VOID OnRemoveSpawn(PSPAWNINFO pSpawn)
 {
- //   DebugSpewAlways("MQ2Elixir::OnRemoveSpawn(%s)",pSpawn->Name);
+	//   DebugSpewAlways("MQ2Elixir::OnRemoveSpawn(%s)",pSpawn->Name);
 }
 
 // This is called each time a ground item is added to a zone
@@ -474,14 +479,14 @@ PLUGIN_API VOID OnRemoveSpawn(PSPAWNINFO pSpawn)
 // NOTE: When you zone, these will come BEFORE OnZoned
 PLUGIN_API VOID OnAddGroundItem(PGROUNDITEM pNewGroundItem)
 {
-    //DebugSpewAlways("MQ2Elixir::OnAddGroundItem(%d)",pNewGroundItem->DropID);
+	//DebugSpewAlways("MQ2Elixir::OnAddGroundItem(%d)",pNewGroundItem->DropID);
 }
 
 // This is called each time a ground item is removed from a zone
 // It is NOT called for each existing ground item when a plugin shuts down.
 PLUGIN_API VOID OnRemoveGroundItem(PGROUNDITEM pGroundItem)
 {
-   // DebugSpewAlways("MQ2Elixir::OnRemoveGroundItem(%d)",pGroundItem->DropID);
+	// DebugSpewAlways("MQ2Elixir::OnRemoveGroundItem(%d)",pGroundItem->DropID);
 }
 
 // This is called when we receive the EQ_BEGIN_ZONE packet is received
@@ -500,23 +505,198 @@ PLUGIN_API VOID OnEndZone(VOID)
 // honestly I have no idea if its better to use this one or EndZone (above)
 PLUGIN_API VOID Zoned(VOID)
 {
-//    DebugSpewAlways("MQ2Elixir::Zoned");
+	//    DebugSpewAlways("MQ2Elixir::Zoned");
 }
 
 PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 {
 	if (!GetCharInfo2()) return;
 
-	char szArg1[MAX_STRING] = { 0 };
+	char szCommand[MAX_STRING] = { 0 };
+	char szArg[MAX_STRING] = { 0 };
 	char szArg2[MAX_STRING] = { 0 };
-	GetArg(szArg1, szLine, 1);
-	GetArg(szArg2, szLine, 2);
+	GetArg(szCommand, szLine, 1);
+	GetArg(szArg, szLine, 2);
+	GetArg(szArg2, szLine, 3);
+	if (!*szCommand || !_strnicmp(szCommand, "help", 5)) {
+		WriteChatf("usage: /elixir <command> [subCommands] (current value): description");
+		WriteChatf("elixir <ai> [0|1] (\a%s\ax): overall AI running and management", (IsElixirRunning ? "g1" : "r0"));
+		WriteChatf("elixir <hate> [ai:(\a%s\ax)|max:(\ag%d\ax)]: set smart hate AI values", (pElixir->IsHateAIRunning ? "g1" : "r0"), pElixir->HateAIMax);
+		WriteChatf("elixir <buff> [ai:(\a%s\ax)]: set smart buff AI values", (pElixir->IsBuffAIRunning ? "g1" : "r0"));
+		WriteChatf("elixir <heal> [ai:(\a%s\ax)|max:(\ag%d\ax)]: set smart heal AI values", (pElixir->IsHealAIRunning ? "g1" : "r0"), pElixir->HealAIMax);
+		WriteChatf("elixir <loadini>: reload ini values");
+		WriteChatf("elixir <saveini>: save current settings to ini");
+		WriteChatf("elixir <debug> [tagmode:(\a%s\ax)]: enable debug options", (pElixir->IsDebugTagMode ? "g1" : "r0"));
+		return;
+	}
+	if (!_strnicmp(szCommand, "enable", 7)) {
+		IsElixirRunning = true;
+		return;
+	}
 
-	if (!_strnicmp(szArg1, "list", 4) || !_strnicmp(szArg2, "list", 4)) {
+	if (!_strnicmp(szCommand, "disable", 8)) {
+		IsElixirRunning = true;
 		return;
 	}
-	if (!_strnicmp(szArg1, "help", 4)) {
-		//Help();
+
+	if (!_strnicmp(szCommand, "loadini", 8)) {
+		LoadINI();
+		WriteChatf("elixir ini reloaded");
 		return;
 	}
+
+	if (!_strnicmp(szCommand, "saveini", 8)) {		
+		SaveINI();
+		WriteChatf("elixir ini saved");
+		return;
+	}
+
+	if (!_strnicmp(szCommand, "hate", 4)) {
+		if (!_strnicmp(szArg, "ai", 3)) {
+			if (!_strnicmp(szArg2, "1", 2)) {
+				pElixir->IsHateAIRunning = true;
+				WriteChatf("elixir hate ai is now enabled");
+				WritePrivateProfileInt("Elixir", "IsHateAIEnabled", 1, INIFileName);
+				return;
+			}
+			if (!_strnicmp(szArg2, "0", 2)) {
+				pElixir->IsHateAIRunning = false;
+				WriteChatf("elixir hate ai is now disabled");
+				WritePrivateProfileInt("Elixir", "IsHateAIEnabled", 0, INIFileName);
+				return;
+			}
+			WriteChatf("elixir hate ai [0|1] (\a%s\ax): set smart hate AI values", (pElixir->IsHateAIRunning ? "g1" : "r0"));
+			return;
+		}
+		if (!_strnicmp(szArg, "max", 4)) {
+			if (!*szArg2) {
+				WriteChatf("/elixir hate max (\ag%d\ax): set smart hate AI threshold", pElixir->HateAIMax);
+				return;
+			}
+			if (!IsNumber(szArg2)) {
+				WriteChatf("invalid number: %s", szArg2);
+				return;
+			}
+			if (atoi(szArg2) < 1) {
+				WriteChatf("invalid number: %s, must be greater than 0", szArg2);
+			}
+			if (atoi(szArg2) > 100) {
+				WriteChatf("invalid number: %s, must be less than 100", szArg2);
+			}
+
+			pElixir->HateAIMax = atoi(szArg2);
+
+			WriteChatf("elixir hate max threshold is set to %d", pElixir->HateAIMax);
+			return;
+		}
+
+		WriteChatf("elixir <hate> [ai:(\a%s\ax)|max:(\ag%d\ax)]: set smart hate AI values", (pElixir->IsHateAIRunning ? "g1" : "r0"), pElixir->HateAIMax);
+		return;
+	}
+
+	if (!_strnicmp(szCommand, "heal", 4)) {
+		if (!_strnicmp(szArg, "ai", 3)) {
+			if (!_strnicmp(szArg2, "1", 2)) {
+				pElixir->IsHealAIRunning = true;
+				WriteChatf("elixir heal ai is now enabled");
+				return;
+			}
+			if (!_strnicmp(szArg2, "0", 2)) {
+				pElixir->IsHealAIRunning = false;
+				WriteChatf("elixir heal ai is now disabled");
+				return;
+			}
+			WriteChatf("elixir heal ai [0|1] (\a%s\ax): set smart heal AI values", (pElixir->IsHealAIRunning ? "g1" : "r0"));
+			return;
+		}
+		if (!_strnicmp(szArg, "max", 4)) {
+			if (!*szArg2) {
+				WriteChatf("elixir heal max (\ag%d\ax): set smart hate AI threshold", pElixir->HealAIMax);
+				return;
+			}
+			if (!IsNumber(szArg2)) {
+				WriteChatf("invalid number: %s", szArg2);
+				return;
+			}
+			if (atoi(szArg2) < 1) {
+				WriteChatf("invalid number: %s, must be greater than 0", szArg2);
+			}
+			if (atoi(szArg2) > 100) {
+				WriteChatf("invalid number: %s, must be less than 100", szArg2);
+			}
+
+			pElixir->HealAIMax = atoi(szArg2);
+			WriteChatf("elixir heal max threshold is set to %d", pElixir->HealAIMax);
+			return;
+		}
+
+		WriteChatf("elixir <heal> [ai|max] (\a%s\ax): set smart heal AI threshold", (pElixir->IsHealAIRunning ? "g1" : "r0"));
+		return;
+	}
+
+
+	if (!_strnicmp(szCommand, "buff", 4)) {
+		if (!_strnicmp(szArg, "ai", 3)) {
+			if (!_strnicmp(szArg2, "1", 2)) {
+				pElixir->IsBuffAIRunning = true;
+				WriteChatf("elixir buff ai is now enabled");
+				return;
+			}
+			if (!_strnicmp(szArg2, "0", 2)) {
+				pElixir->IsBuffAIRunning = false;
+				WriteChatf("elixir buff ai is now disabled");
+				return;
+			}
+			WriteChatf("elixir buff ai [0|1] (\a%s\ax): set smart buff AI values", (pElixir->IsBuffAIRunning ? "g1" : "r0"));
+			return;
+		}
+
+		WriteChatf("elixir <buff> [ai] (\a%s\ax): set smart buff AI threshold", (pElixir->IsBuffAIRunning ? "g1" : "r0"));
+		return;
+	}
+
+
+	if (!_strnicmp(szCommand, "debug", 6)) {
+		if (!_strnicmp(szArg, "tagmode", 8)) {
+			if (!_strnicmp(szArg2, "1", 2)) {
+				pElixir->IsDebugTagMode = true;
+				WriteChatf("elixir debug tagmode is now enabled");
+				return;
+			}
+			if (!_strnicmp(szArg2, "0", 2)) {
+				pElixir->IsDebugTagMode = false;
+				WriteChatf("elixir debug tagmode is now disabled");
+				return;
+			}
+			WriteChatf("elixir debug [tagmode:(\a%s\ax)]: enable debug options", (pElixir->IsDebugTagMode ? "g1" : "r0"));
+			return;
+		}
+
+		WriteChatf("elixir <debug> [tagmode:(\a%s\ax)]: enable debug options", (pElixir->IsDebugTagMode ? "g1" : "r0"));
+		return;
+	}
+}
+
+void SaveINI() {
+	WritePrivateProfileInt(ServerCharacterINI, "HealAIMax", pElixir->HealAIMax, INIFileName);
+	WritePrivateProfileInt(ServerCharacterINI, "HealAIEnabled", (pElixir->IsHealAIRunning ? 1 : 0), INIFileName);
+	WritePrivateProfileInt(ServerCharacterINI, "HateAIMax", pElixir->HateAIMax, INIFileName);
+	WritePrivateProfileInt(ServerCharacterINI, "HateAIEnabled", (pElixir->IsHateAIRunning ? 1 : 0), INIFileName);
+	WritePrivateProfileInt(ServerCharacterINI, "BuffAIEnabled", (pElixir->IsBuffAIRunning ? 1 : 0), INIFileName);
+	WritePrivateProfileInt(ServerCharacterINI, "AIEnabled", (IsElixirRunning ? 1 : 0), INIFileName);
+}
+
+void LoadINI() {
+	IsElixirRunning = GetPrivateProfileInt(ServerCharacterINI, "AIEnabled", 1, INIFileName);
+	pElixir->HealAIMax = GetPrivateProfileInt(ServerCharacterINI, "HealAIMax", 50, INIFileName);
+	pElixir->IsHealAIRunning = GetPrivateProfileInt(ServerCharacterINI, "HealAIEnabled", 1, INIFileName);
+	pElixir->HateAIMax = GetPrivateProfileInt(ServerCharacterINI, "HateAIMax", 80, INIFileName);
+	pElixir->IsHateAIRunning = GetPrivateProfileInt(ServerCharacterINI, "HateAIEnabled", 0, INIFileName);
+	pElixir->IsBuffAIRunning = GetPrivateProfileInt(ServerCharacterINI, "BuffAIEnabled", 0, INIFileName);
+}
+
+bool WINAPI WritePrivateProfileInt(LPCSTR AppName, LPCSTR KeyName, INT Value, LPCSTR Filename) {
+	CHAR Temp[1024] = { 0 };
+	_snprintf_s(Temp, 1023, "%i", Value);
+	return WritePrivateProfileString(AppName, KeyName, Temp, Filename);
 }
