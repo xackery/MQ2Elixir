@@ -41,3 +41,9 @@ Note that spell name does NOT need Rk. suffix, and buffs do not need roman numer
 - Right click solution on top right area, Add -> Existing Project, select MQ2Elixir.vcproj
 - Right click newly added project MQ2Elixir, Properties, change from Win XP 2013 to Visual Studio 2019 x142
 - Build menu -> Build Solution again
+
+## TODO
+- Add spell fizzle detection
+- Add spell resist detection/retry limit
+- Add predictive healing
+- Add predictive combat
