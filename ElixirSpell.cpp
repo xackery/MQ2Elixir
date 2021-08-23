@@ -6,18 +6,12 @@
 using namespace std;
 
 // Spell returns a string with a reason if provided spell cannot be cast
-std::string  Elixir::Spell(PSPELL pSpell)
-{
+std::string  Elixir::Spell(PSPELL pSpell) {
 	CHAR szTemp[MAX_STRING] = { 0 };
 		
 	PCHARINFO pChar = (PCHARINFO)pCharData;
-	if (!pChar) {
-		return "char not loaded";
-	}
-
-	if (!pLocalPlayer) {
-		return "pLocalPlayer not loaded";
-	}
+	if (!pChar) return "char not loaded";
+	if (!pLocalPlayer) return "pLocalPlayer not loaded";
 
 	bool isHeal = false;
 	bool isDebuff = false;
@@ -284,65 +278,35 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	}
 
 
-	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) {
-		return "not enough mana (" + to_string((int)pSpell->ManaCost) + "/" + to_string(GetCharInfo2()->Mana) + ")";
-	}
+	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) return "not enough mana (" + to_string((int)pSpell->ManaCost) + "/" + to_string(GetCharInfo2()->Mana) + ")";
 
-	if (isLull) {
-		return "ignored (lull)";
-	}
-
-	if (isMez) {
-		return "ignored (mez)";
-	}
-
-	if (isCharm) {
-		return "ignored (charm)";
-	}
+	if (isLull) return "ignored (lull)";
+	if (isMez) return "ignored (mez)";
+	if (isCharm) return "ignored (charm)";
 
 	if (pSpell->TargetType == 16) { //Animal
-		if (!pTarget) {
-			return "no animal target";
-		}
-		if (bodyType != 21) {
-			return "target not animal";
-		}
+		if (!pTarget) return "no animal target";
+		if (bodyType != 21) return "target not animal";
 	}
 
 	if (pSpell->TargetType == 10) { //Undead
-		if (!pTarget) {
-			return "no undead target";
-		}
-		if (bodyType != 3) {
-			return "target not undead";
-		}
+		if (!pTarget) return "no undead target";
+		if (bodyType != 3) return "target not undead";
 	}
 
 	if (pSpell->TargetType == 11) { //Summoned
-		if (!pTarget) {
-			return "no summoned target";
-		}
-		if (bodyType != 28) {
-			return "target not summoned";
-		}
+		if (!pTarget) return "no summoned target";
+		if (bodyType != 28) return "target not summoned";
 	}
 
 	if (pSpell->TargetType == 16) { //Plant
-		if (!pTarget) {
-			return "no plant target";
-		}
-		if (bodyType != 25) {
-			return "target not plant";
-		}
+		if (!pTarget) return "no plant target";
+		if (bodyType != 25) return "target not plant";
 	}
 	
-	if (isTransport) {
-		return "ignoring (transport)";
-	}
+	if (isTransport) return "ignoring (transport)";
 
-	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) {
-		return "target not line of sight";
-	}
+	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) return "target not line of sight";
 
 	for (int i = 0; i < 4; i++) { // Reagent check
 		if (pSpell->ReagentCount[i] == 0) continue;
@@ -360,16 +324,13 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 
 	DWORD ReqID = pSpell->CasterRequirementID;
-	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) {
-		return "not < 90% hp";
-	}
+	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) return "not < 90% hp";
+
 	//if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
 	//if (ReqID == 826 && SpawnPctEndurance(pChar->pSpawn) > 24) return false;
 	//if (ReqID == 827 && SpawnPctEndurance(pChar->pSpawn) > 29) return false;
 
-	if ((isHeal || isLifetap) && !IsHealAIRunning) {
-		return "heal AI not running";
-	}
+	if ((isHeal || isLifetap) && !IsHealAIRunning) return "heal AI not running";
 
 	if (pSpellRecourse && pSpellRecourse->DurationCap > 0) { //recourse buff attached
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
@@ -378,12 +339,8 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpellRecourse->ID) {
-					return "recourse already have buff";
-				}
-				if (!BuffStackTest(buff, pSpellRecourse)) {
-					return "recourse does not stack";
-				}
+				if (buff->ID == pSpellRecourse->ID) return "recourse already have buff";
+				if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 			}
 
 			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
@@ -403,12 +360,8 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				return "debuff already on";
 			}
 			if (pSpellRecourse->TargetType == 8) { //targetted
-				if (pBuffSpell->ID == pSpellRecourse->ID) {
-					return "recourse already on target";
-				}
-				if (!BuffStackTest(pBuffSpell, pSpellRecourse)) {
-					return "recourse does not stack on target";
-				}
+				if (pBuffSpell->ID == pSpellRecourse->ID) return "recourse already on target";
+				if (!BuffStackTest(pBuffSpell, pSpellRecourse)) return "recourse does not stack on target";
 			}
 		}
 	}
@@ -430,64 +383,39 @@ std::string  Elixir::Spell(PSPELL pSpell)
 			if (buffDuration <= 0) {
 				continue;
 			}
-			if (!BuffStackTest(pBuffSpell, pSpell)) {
-				return "debuff already on";
-			}
+			if (!BuffStackTest(pBuffSpell, pSpell)) return "debuff already on";
 
-			if (pBuffSpell->ID == pSpell->ID) {
-				return "debuff already on target";
-			}
-			if (!BuffStackTest(pBuffSpell, pSpell)) {
-				return "debuff does not stack on target";
-			}
+			if (pBuffSpell->ID == pSpell->ID) return "debuff already on target";
+			if (!BuffStackTest(pBuffSpell, pSpell)) return "debuff does not stack on target";
 		}
 	}
 
 	PZONEINFO pZone = reinterpret_cast<PZONEINFO>(pZoneInfo);
 	if (pZone && pSpell->ZoneType == 1) { //can't cast indoors
-		if (pZone->OutDoor == EOutDoor::IndoorDungeon) {
-			return "in dungeon";
-		}
-		if (pZone->OutDoor == EOutDoor::IndoorCity) {
-			return "in city";
-		}
-		if (pZone->OutDoor == EOutDoor::DungeonCity) {
-			return "in dungeon city";
-		}
+		if (pZone->OutDoor == EOutDoor::IndoorDungeon) return "in dungeon";
+		if (pZone->OutDoor == EOutDoor::IndoorCity) return "in city";
+		if (pZone->OutDoor == EOutDoor::DungeonCity) return "in dungeon city";
 	}
 
 	if (pZone && pSpell->ZoneType == 2) { //can't cast outdoor
-		if (pZone->OutDoor == EOutDoor::Outdoor) {
-			return "outdoors";
-		}
-		if (pZone->OutDoor == EOutDoor::OutdoorCity) {
-			return "outdoor city";
-		}
-		if (pZone->OutDoor == EOutDoor::OutdoorDungeon) {
-			return "outdoor dungeon";
-		}
+		if (pZone->OutDoor == EOutDoor::Outdoor) return "outdoors";
+		if (pZone->OutDoor == EOutDoor::OutdoorCity) return "outdoor city";
+		if (pZone->OutDoor == EOutDoor::OutdoorDungeon) return "outdoor dungeon";
 	}
 
 
-	if (!pSpell->CanCastInCombat && CombatState() == COMBATSTATE_COMBAT) {
-		return "cannot be cast in combat";
-	}
+	if (!pSpell->CanCastInCombat && CombatState() == COMBATSTATE_COMBAT) return "cannot be cast in combat";
 	
 	
-	if (GetCharInfo2()->Endurance < (int)pSpell->EnduranceCost) {
-		return "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";
-	}
+	if (GetCharInfo2()->Endurance < (int)pSpell->EnduranceCost) return "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";	
 
 	if (strstr(pSpell->Name, "Discipline") && pCombatAbilityWnd) {
 		CXWnd* Child = ((CXWnd*)pCombatAbilityWnd)->GetChildItem("CAW_CombatEffectLabel");
-		if (!Child) {
-			return "combatabilitywnd not found";
-		}
+		if (!Child) return "combatabilitywnd not found";
+
 		CHAR szBuffer[2048] = { 0 };
 		GetCXStr(Child->CGetWindowText(), szBuffer, MAX_STRING);
-		if (szBuffer[0] == '\0') {
-			return "combatabilitywnd text not null terminated";
-		}
+		if (szBuffer[0] == '\0') return "combatabilitywnd text not null terminated";
 		PSPELL pBuff = GetSpellByName(szBuffer);
 		if (pBuff) {
 			sprintf(szTemp, "disc %s already active", pBuff->Name);
@@ -495,9 +423,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		}
 	}
 
-	if (isPetSummon && pChar->pSpawn->PetID > 0) {
-		return "already have pet";
-	}
+	if (isPetSummon && pChar->pSpawn->PetID > 0) return "already have pet";
 
 	if (isPetSummon) {
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
@@ -507,12 +433,9 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 
 	if (isMana && pSpell->TargetType == 6 && ticks <= 0 && !isPetSummon) { // self only mana regen, like harvest, canni
-		if (stunDuration > 0 && CombatState() == COMBATSTATE_COMBAT) {
-			return "in combat, has stun attached";
-		}
-		if (SpawnPctMana(pChar->pSpawn) > 50) {
-			return "not < 50 % mana";
-		}
+		if (stunDuration > 0 && CombatState() == COMBATSTATE_COMBAT) return "in combat, has stun attached";
+
+		if (SpawnPctMana(pChar->pSpawn) > 50) return "not < 50 % mana";
 		return "";
 	}
 
@@ -526,15 +449,11 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		//if (pSpell->CastTime > 1000 && CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
 		//	return "cast time > 1s, long for combat";
 		//}
-		if (CombatState() == COMBATSTATE_COMBAT && !isBardSong) {
-			return "cast time > 1s, long for combat";
-		}
+		if (CombatState() == COMBATSTATE_COMBAT && !isBardSong) return "cast time > 1s, long for combat";
 
 		
 		if (ticks > 0) {
-			if (!IsBuffAIRunning) {
-				return "buff ai not running";
-			}
+			if (!IsBuffAIRunning) return "buff ai not running";
 
 			for (int b = 0; b < NUM_LONG_BUFFS; b++)
 			{
@@ -542,19 +461,11 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) {
-					return "already have buff";
-				}
-				if (!BuffStackTest(buff, pSpell)) {
-					return "does not stack";
-				}
+				if (buff->ID == pSpell->ID) return "already have buff";
+				if (!BuffStackTest(buff, pSpell)) return "does not stack";
 				if (pSpellRecourse) {
-					if (buff->ID == pSpellRecourse->ID) {
-						return "already have recourse";
-					}
-					if (!BuffStackTest(buff, pSpellRecourse)) {
-						return "recourse does not stack";
-					}
+					if (buff->ID == pSpellRecourse->ID) return "already have recourse";
+					if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 				}
 			}
 			for (int b = 0; b < NUM_SHORT_BUFFS; b++)
@@ -563,19 +474,11 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) {
-					return "already have shortbuff";
-				}
-				if (!BuffStackTest(buff, pSpell)) {
-					return "does not stack";
-				}
+				if (buff->ID == pSpell->ID) return "already have shortbuff";
+				if (!BuffStackTest(buff, pSpell)) return "does not stack";
 				if (pSpellRecourse) {
-					if (buff->ID == pSpellRecourse->ID) {
-						return "already have short recourse";
-					}
-					if (!BuffStackTest(buff, pSpellRecourse)) {
-						return "recourse does not stack";
-					}
+					if (buff->ID == pSpellRecourse->ID) return "already have short recourse";
+					if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 				}
 			}
 		}
@@ -615,9 +518,7 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 				pG = GetCharInfo()->pGroupInfo->pMember[spawnGroupID];
 				pSpawn = pG->pSpawn;
-				if (!ActionSpawnTarget(pSpawn)) {
-					return "can't target group";
-				}
+				if (!ActionSpawnTarget(pSpawn)) return "can't target group";
 
 				return "";
 			}
@@ -631,19 +532,11 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) {
-					return "already have buff";
-				}
-				if (!BuffStackTest(buff, pSpell)) {
-					return "does not stack";
-				}
+				if (buff->ID == pSpell->ID) return "already have buff";
+				if (!BuffStackTest(buff, pSpell)) return "does not stack";
 				if (pSpellRecourse) {
-					if (buff->ID == pSpellRecourse->ID) {
-						return "already have recourse";
-					}
-					if (!BuffStackTest(buff, pSpellRecourse)) {
-						return "recourse does not stack";
-					}
+					if (buff->ID == pSpellRecourse->ID) return "already have recourse";
+					if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 				}
 			}
 			for (int b = 0; b < NUM_SHORT_BUFFS; b++)
@@ -652,42 +545,28 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) {
-					return "already have shortbuff";
-				}
-				if (!BuffStackTest(buff, pSpell)) {
-					return "does not stack";
-				}
+				if (buff->ID == pSpell->ID) return "already have shortbuff";
+				if (!BuffStackTest(buff, pSpell)) return "shortbuff does not stack";
 				if (pSpellRecourse) {
-					if (buff->ID == pSpellRecourse->ID) {
-						return "already have short recourse";
-					}
-					if (!BuffStackTest(buff, pSpellRecourse)) {
-						return "recourse does not stack";
-					}
+					if (buff->ID == pSpellRecourse->ID) return "already have short recourse";
+					if (!BuffStackTest(buff, pSpellRecourse)) return "short recourse does not stack";
 				}
 			}
 		}
 
 		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= HealAIMax) {
-			sprintf(szTemp, "> %d% hp", HealAIMax);
+			sprintf(szTemp, "> %d%% hp", HealAIMax);
 			return szTemp;
 		}
 
-		if (!ActionSpawnTarget(pChar->pSpawn)) {
-			return "can't target self";
-		}		
+		if (!ActionSpawnTarget(pChar->pSpawn)) return "can't target self";
 		return "";
 	}
 
 	if (damageAmount > 0 && (pSpell->TargetType == 2 || pSpell->TargetType == 4)) { // AE DD
 		ExtendedTargetList* xtm = pChar->pXTargetMgr;
-		if (!xtm) {
-			return "xtarget not supported";
-		}
-		if (!xtm->XTargetSlots.Count) {
-			return "xtarget no count found";
-		}
+		if (!xtm) return "xtarget not supported";
+		if (!xtm->XTargetSlots.Count) return "xtarget no count found";
 
 		int xTargetCount = 0;
 		for (int n = 0; n < xtm->XTargetSlots.Count; n++)
@@ -714,44 +593,25 @@ std::string  Elixir::Spell(PSPELL pSpell)
 	}
  
 	if (isSingleTargetSpell && pSpell->SpellType == 0) { //single target detrimental spell
-		if (!pTarget) {
-			return "no target";
-		}
+		if (!pTarget) return "no target";
 
-		if (pTarget->Data.Type != SPAWN_NPC) {
-			return "non npc targetted";
-		}
+		if (pTarget->Data.Type != SPAWN_NPC) return "non npc targetted";
 
-		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) {
-			return "target too far away";
-		}
+		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) return "target too far away";
 
+		if (pChar->pGroupInfo && !pChar->pGroupInfo->pMember[0]->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > 99) return "target > 99%";
 
-		if (pChar->pGroupInfo && !pChar->pGroupInfo->pMember[0]->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
-			return "target > 99%";
-		}
+		int mobHP = MobHP((PSPAWNINFO)pTarget);
+		if (mobHP > 0 && damageAmount > 0 &&  damageAmount > mobHP) return "mob too low hp";
 
-		int mobHP = MobHP(pTarget->Data.Level, ((PSPAWNINFO)pTarget)->mActorClient.Class);
-		if (mobHP > 0 && damageAmount > 0 &&  damageAmount > mobHP) {
-			return "mob too low hp";
-		}
+		if (isDebuff && !gTargetbuffs) return "target buffs not populated";
 
-		if (isDebuff && !gTargetbuffs) {
-			return "target buffs not populated";
-		}
-
-		if (IsHateAIRunning && damageAmount > 0 && SpawnPctHPs((PSPAWNINFO)pTarget) > 20 && IsHighHateAggro() && !IsIdealDamageReceiver()) {
-			return "waiting to damage until hate lowers";
-		}
+		if (IsHateAIRunning && damageAmount > 0 && SpawnPctHPs((PSPAWNINFO)pTarget) > 20 && IsHighHateAggro() && !IsIdealDamageReceiver()) return "waiting to damage until hate lowers";
 
 		if (isTaunt) {
-			if (GetCharInfo()->pGroupInfo == nullptr) {
-				return "not in a group";
-			}
+			if (GetCharInfo()->pGroupInfo == nullptr) return "not in a group";
 			
-			if (!pAggroInfo) {
-				return "pAggroInfo empty";
-			}
+			if (!pAggroInfo) return "pAggroInfo empty";
 
 			bool isMainTank = false;
 			GROUPMEMBER* pG;
@@ -772,16 +632,10 @@ std::string  Elixir::Spell(PSPELL pSpell)
 				}
 			}
 
-			if (!isMainTank) {
-				return "not main tank";
-			}
+			if (!isMainTank) return "not main tank";
 
-			if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) {
-				return "already primary target";
-			}
-			if (pAggroInfo && pAggroInfo->aggroData[AD_Player].AggroPct >= 100) {
-				return "already have high hate";
-			}
+			if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) return "already primary target";
+			if (pAggroInfo && pAggroInfo->aggroData[AD_Player].AggroPct >= 100) return "already have high hate";
 
 		}
 
@@ -794,10 +648,8 @@ std::string  Elixir::Spell(PSPELL pSpell)
 
 	if (pSpell->TargetType == 0x0e || pSpell->Category == 69) { //Pet target
 		PSPAWNINFO pPet = (PSPAWNINFO)GetSpawnByID(pChar->pSpawn->PetID);
-		if (!pPet) {
-			return "no pet";
-		}
-		
+		if (!pPet) return "no pet";
+
 		//if (Distance3DToSpawn(pChar, pPet) > pSpell->Range) {
 		//	Gems[gemIndex] = "pet too far away (" + to_string(Distance3DToSpawn(pChar, pPet)) + " / " + to_string(pSpell->Range) + ")";
 		//	return false;
@@ -812,26 +664,16 @@ std::string  Elixir::Spell(PSPELL pSpell)
 		}
 
 		if (pSpell->DurationCap > 0) { //pet buff
-			if (!IsSpellStackable(pChar->pSpawn, pSpell)) {
-				return "not stackable";
-			}
-			if (!pPetInfoWnd) {
-				return "no pet info wnd";
-			}
-			if (pChar->pSpawn->PetID == 0) {
-				return "no pet";
-			}
+			if (!IsSpellStackable(pChar->pSpawn, pSpell)) return "not stackable";
+			if (!pPetInfoWnd) return "no pet info wnd";
+			if (pChar->pSpawn->PetID == 0) return "no pet";
 			for (int nBuff = 0; nBuff < 30; nBuff++) {
 				PSPELL buff = GetSpellByID(((PEQPETINFOWINDOW)pPetInfoWnd)->Buff[nBuff]);
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) {
-					return "pet already has buff";
-				}
-				if (!BuffStackTest(buff, pSpell)) {
-					return "pet buff does not stack";
-				}
+				if (buff->ID == pSpell->ID) return "pet already has buff";
+				if (!BuffStackTest(buff, pSpell)) return "pet buff does not stack";
 			}
 
 			return "";
