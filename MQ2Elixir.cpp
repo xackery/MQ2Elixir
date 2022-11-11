@@ -75,10 +75,11 @@ PLUGIN_API void InitializePlugin()
  */
 PLUGIN_API void ShutdownPlugin()
 {
-	DebugSpewAlways("MQ2Elixir::Shutting down");	
-	//TODO: fix unloading
+	DebugSpewAlways("MQ2Elixir::Shutting down");
+	RemoveSettingsPanel("plugins/Elixir");
 	delete pElixir;
     RemoveCommand("/elixir");
+	
 }
 
 /**
