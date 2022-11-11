@@ -7,6 +7,7 @@ using namespace std;
 // Target attempts to target the main assist
 void Elixir::ActionTarget()
 {
+    CHAR szTemp[MAX_STRING] = { 0 };
     if (!IsTargetAIRunning) {
 		TargetStr = "AI not enabled";
         return;
@@ -44,8 +45,9 @@ void Elixir::ActionTarget()
 		return;
 	}
 
-	if (DistanceToSpawn(pCharSpawn, pAssist) > 100) {
-		TargetStr = "assist target distance > 100";
+	if (DistanceToSpawn(pCharSpawn, pAssist) > TargetAIMinRange) {
+        sprintf_s(szTemp, "target > %d%%", TargetAIMinRange);
+		TargetStr = szTemp;
 		return;
 	}
 

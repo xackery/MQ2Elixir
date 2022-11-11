@@ -21,7 +21,7 @@ bool isBashAllowed()
 // Ability returns a string with a reason if provided ability cannot be used
 std::string Elixir::Ability(int abilityIndex)
 {
-
+	CHAR szTemp[MAX_STRING] = { 0 };
 	if (!pLocalPC) {
 		return "pLocalPC not loaded";
 	}
@@ -68,8 +68,9 @@ std::string Elixir::Ability(int abilityIndex)
 	}
 
 
-	if (SpawnPctHPs((PSPAWNINFO)pTarget) > 99) {
-		return "target > 99%";
+	if (SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIMax) {
+		sprintf_s(szTemp, "target > %d%%", NukeAIMax);
+		return szTemp;
 	}
 
 	if (stricmp(abilityName, "Bash") == 0) {

@@ -272,8 +272,8 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		if (isLull) sprintf_s(szTemp, "%s %s", szTemp, "isLull");
 		if (isMez) sprintf_s(szTemp, "%s %s", szTemp, "isMez");
 		if (stunDuration) sprintf_s(szTemp, "%s %s %lldms", szTemp, "stunDuration", stunDuration);
-		if (damageAmount) sprintf_s(szTemp, "%s %s %d", szTemp, "damageAmount", damageAmount);
-		if (healAmount) sprintf_s(szTemp, "%s %s %d", szTemp, "healAmount", healAmount);
+		if (damageAmount) sprintf_s(szTemp, "%s %s %lld", szTemp, "damageAmount", damageAmount);
+		if (healAmount) sprintf_s(szTemp, "%s %s %lld", szTemp, "healAmount", healAmount);
 		return szTemp;
 	}
 
@@ -571,6 +571,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		if (!xtm) return "xtarget not supported";
 		if (!xtm->XTargetSlots.Count) return "xtarget no count found";
 
+		
 		int xTargetCount = 0;
 		for (int n = 0; n < xtm->XTargetSlots.Count; n++)
 		{
@@ -583,6 +584,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			if (!pXTargetSpawn) continue;
 			if (pXTargetSpawn->Type != SPAWN_NPC) continue;
 			if (Distance3DToSpawn(pChar->pSpawn, pXTargetSpawn) > pSpell->AERange) continue;
+			if (SpawnPctHPs(pXTargetSpawn) < NukeAIMax) continue;
 
 			xTargetCount++;
 			//TODO: Main assist check
@@ -602,7 +604,11 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) return "target too far away";
 
-		if (pChar->pGroupInfo && !pChar->Group->GetGroupMember(0)->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > 99) return "target > 99%";
+		//if (pChar->pGroupInfo && !pChar->Group->GetGroupMember(0)->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIMax) {
+		if (SpawnPctHPs(pTarget) > NukeAIMax) {
+			sprintf_s(szTemp, "target > %d%%", NukeAIMax);
+			return szTemp;
+		}
 
 		int mobHP = MobHP((PSPAWNINFO)pTarget);
 		if (mobHP > 0 && damageAmount > 0 &&  damageAmount > mobHP) return "mob too low hp";

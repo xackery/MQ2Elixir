@@ -7,6 +7,7 @@
 
 #include <mq/Plugin.h>
 #include "MQ2Elixir.h"
+#include <mq/imgui/ImGuiUtils.h>
 
 PreSetup("MQ2Elixir");
 PLUGIN_VERSION(0.1);
@@ -16,23 +17,154 @@ void DrawElixirSettingsPanel()
 	if (!pElixir) {
 		return;
 	}
-	ImGui::Checkbox("Buff AI", &pElixir->IsBuffAIRunning);
+	char szBuffer[MAX_STRING] = { 0 };
+	bool isChanged = false;
+	bool isOpen = false;
+	ImU32 redColor = IM_COL32(255, 100, 100, 100);
+	ImU32 greenColor = IM_COL32(100, 255, 100, 100);
+	ImU32 blueColor = IM_COL32(0, 0, 255, 100);
+	ImU32 blueActiveColor = IM_COL32(20, 20, 255, 100);
+	ImU32 blueHoverColor = IM_COL32(40, 40, 255, 100);
 
-	ImGui::Checkbox("Heal AI", &pElixir->IsHealAIRunning);
-	ImGui::Text("%% <=");
-	ImGui::SameLine();
-	ImGui::SliderInt("##elixir.healAIMax", &pElixir->HealAIMax, 10, 90);
+
+	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsBuffAIRunning) ? greenColor : redColor);
+	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+	isOpen = ImGui::TreeNode("##elixir.buffAILabel", "Buff AI (%s)", (pElixir->IsBuffAIRunning) ? "Enabled" : "Disabled");
+	ImGui::PopStyleColor(4);
+	if (ImGui::BeginPopupContextItem())
+	{
+		ImGui::EndPopup();
+	}
+	if (isOpen)
+	{
+		if (ImGui::Checkbox("Buff AI", &pElixir->IsBuffAIRunning)) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("This AI will keep self buffs or target buffs on self maintained.\nIt is not smart enough yet to manage buffs on other targets, nor is it smart about stacking and such, beyond MQ2 built in support logic, buff stacking in EQ is complex and weird.");
+		ImGui::TreePop();
+	}
+
+	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsHealAIRunning) ? greenColor : redColor);
+	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+	isOpen = ImGui::TreeNode("##elixir.healAILabel", "Heal AI (% s <= % d % %HP)", (pElixir->IsHealAIRunning) ? "Enabled" : "Disabled", pElixir->HealAIMax);
+	ImGui::PopStyleColor(4);
+	if (ImGui::BeginPopupContextItem())
+	{
+		ImGui::EndPopup();
+	}
+	if (isOpen)
+	{
+		if (ImGui::Checkbox("Heal AI", &pElixir->IsHealAIRunning)) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("This AI will attempt to use healing spells when you or a group mate reaches the % hp defined below.");
+
+		if (ImGui::SliderInt("##elixir.healAIMax", &pElixir->HealAIMax, 10, 90, "Heal when less than %d%% HP")) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("Heal AI will trigger the lower number gem slot that is valid for the situation when a group mate hits this percent");
+
+		ImGui::TreePop();
+	}
+
+	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsTargetAIRunning) ? greenColor : redColor);
+	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+	isOpen = ImGui::TreeNode("##elixir.targetAILabel", "Auto Target AI (%s <= %d distance)", (pElixir->IsTargetAIRunning) ? "Enabled" : "Disabled", pElixir->TargetAIMinRange);
+	ImGui::PopStyleColor(4);
+	if (ImGui::BeginPopupContextItem())
+	{
+		ImGui::EndPopup();
+	}
+	if (isOpen)
+	{
+		if (ImGui::Checkbox("AutoTarget AI", &pElixir->IsTargetAIRunning)) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("This AI will automatically target the group assist player when it reaches min range and is line of sight.\nBe sure to mark an ally with the Main Assist role to have this properly work.");
+
+		if (ImGui::SliderInt("##elixir.targetAIMax", &pElixir->TargetAIMinRange, 10, 200, "Target at %d distance")) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("Range of main assist target to begin assisting");
+		ImGui::TreePop();
+	}
 
 
-	ImGui::Checkbox("Auto Target AI", &pElixir->IsTargetAIRunning);
-	ImGui::Text("TargetDebug: %s", pElixir->TargetStr.c_str());
+	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsHateAIRunning) ? greenColor : redColor);
+	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+	isOpen = ImGui::TreeNode("##elixir.hateAILabel", "StopHate AI (%s >= %d%% aggro)", (pElixir->IsHateAIRunning) ? "Enabled" : "Disabled", pElixir->HateAIMax);
+	ImGui::PopStyleColor(4);
+	if (ImGui::BeginPopupContextItem())
+	{
+		ImGui::EndPopup();
+	}
+	if (isOpen)
+	{
+		if (ImGui::Checkbox("StopHate AI", &pElixir->IsHateAIRunning)) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("This AI will stop casting spells and offensive abilities if hate reaches this %\nNote this only works in group settings, if not in a group, ignored");
+
+		if (ImGui::SliderInt("##elixir.hateAIMin", &pElixir->HateAIMax, 10, 95, "StopHate at %d%% aggro")) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("StopHate AI will stop casting offensive spells at this %%");
+
+		ImGui::TreePop();
+	}
+
+
+	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsNukeAIRunning) ? greenColor : redColor);
+	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+	isOpen = ImGui::TreeNode("##elixir.nukeAILabel", "Nuke AI(% s <= % d % %HP)", (pElixir->IsNukeAIRunning) ? "Enabled" : "Disabled", pElixir->NukeAIMax);
+	ImGui::PopStyleColor(4);
+	if (ImGui::BeginPopupContextItem())
+	{
+		ImGui::EndPopup();
+	}
+	if (isOpen)
+	{
+		if (ImGui::Checkbox("Nuke AI", &pElixir->IsNukeAIRunning)) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("This AI will cast detrimental spells (not just nukes, dots, snares, slows etc too) and offensive abilities once a target is at %% hp");
+
+		if (ImGui::SliderInt("##elixir.nukeAIMin", &pElixir->NukeAIMax, 10, 95, "Nuke at %d%% HP")) {
+			isChanged = true;
+		}
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("Nuke AI will not cast until target is at %");
+		ImGui::TreePop();
+	}
+
+
 	
-
-	ImGui::Checkbox("Hurt Enemy AI", &pElixir->IsHateAIRunning);
-	ImGui::Text("%% >=");
-	ImGui::SameLine();
-	ImGui::SliderInt("##elixir.hateAIMax", &pElixir->HateAIMax, 10, 90);
-	
+	if (isChanged) {
+		SaveINI();
+	}
 	ImGui::Separator();
 
 	if (ImGui::Button("Reload Settings"))
@@ -45,7 +177,16 @@ void DrawElixirSettingsPanel()
 	{
 		//s_settings.Reset();
 	}
+	ImGui::Separator();
 
+	ImGui::Checkbox("Debug", &pElixir->IsSettingsDebugEnabled);
+	if (pElixir->IsSettingsDebugEnabled) {
+		ImGui::Text("LastAction: %s", pElixir->LastAction.c_str());
+		ImGui::Text("Target AI: %s", pElixir->TargetStr.c_str());
+		for (int i = 0; i < 12; i++) {
+			ImGui::Text("Button %d: %s", i, pElixir->Buttons[i].c_str());
+		}
+	}
 }
 
 /**
