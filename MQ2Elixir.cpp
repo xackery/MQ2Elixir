@@ -32,7 +32,8 @@ void DrawElixirSettingsPanel()
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
 	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
 
-	isOpen = ImGui::TreeNode("##elixir.buffAILabel", "Buff AI (%s)", (pElixir->IsBuffAIRunning) ? "Enabled" : "Disabled");
+	sprintf_s(szBuffer, "Buff AI (%s)", (pElixir->IsBuffAIRunning) ? "Enabled" : "Disabled");
+	isOpen = ImGui::TreeNode("##elixir.buffAILabel", szBuffer);
 	ImGui::PopStyleColor(4);
 	if (ImGui::BeginPopupContextItem())
 	{
@@ -53,7 +54,14 @@ void DrawElixirSettingsPanel()
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
 	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
 
-	isOpen = ImGui::TreeNode("##elixir.healAILabel", "Heal AI (% s <= % d % %HP)", (pElixir->IsHealAIRunning) ? "Enabled" : "Disabled", pElixir->HealAIMax);
+	if (!pElixir->IsHealAIRunning) {
+		sprintf_s(szBuffer, "Heal AI (Disabled)");
+	}
+	else {
+		
+		sprintf_s(szBuffer, "Heal AI (Enabled <= %d%%%% HP)", pElixir->HealAIMax);
+	}
+	isOpen = ImGui::TreeNode("##elixir.healAILabel", szBuffer);
 	ImGui::PopStyleColor(4);
 	if (ImGui::BeginPopupContextItem())
 	{
@@ -80,8 +88,13 @@ void DrawElixirSettingsPanel()
 	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
 	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-
-	isOpen = ImGui::TreeNode("##elixir.targetAILabel", "Auto Target AI (%s <= %d distance)", (pElixir->IsTargetAIRunning) ? "Enabled" : "Disabled", pElixir->TargetAIMinRange);
+	if (!pElixir->IsTargetAIRunning) {
+		sprintf_s(szBuffer, "Target AI (Disabled)");
+	}
+	else {
+		sprintf_s(szBuffer, "Target AI (Enabled <= %d distance)", pElixir->TargetAIMinRange);
+	}
+	isOpen = ImGui::TreeNode("##elixir.targetAILabel", szBuffer);
 	ImGui::PopStyleColor(4);
 	if (ImGui::BeginPopupContextItem())
 	{
@@ -108,8 +121,13 @@ void DrawElixirSettingsPanel()
 	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
 	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-
-	isOpen = ImGui::TreeNode("##elixir.hateAILabel", "StopHate AI (%s >= %d%% aggro)", (pElixir->IsHateAIRunning) ? "Enabled" : "Disabled", pElixir->HateAIMax);
+	if (!pElixir->IsHateAIRunning) {
+		sprintf_s(szBuffer, "StopHate AI (Disabled)");
+	}
+	else {
+		sprintf_s(szBuffer, "StopHate AI (Enabled >= %d%%%% aggro)", pElixir->HateAIMax);
+	}
+	isOpen = ImGui::TreeNode("##elixir.hateAILabel", szBuffer);
 	ImGui::PopStyleColor(4);
 	if (ImGui::BeginPopupContextItem())
 	{
@@ -137,8 +155,13 @@ void DrawElixirSettingsPanel()
 	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
 	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
 	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-
-	isOpen = ImGui::TreeNode("##elixir.nukeAILabel", "Nuke AI(% s <= % d % %HP)", (pElixir->IsNukeAIRunning) ? "Enabled" : "Disabled", pElixir->NukeAIMax);
+	if (!pElixir->IsNukeAIRunning) {
+		sprintf_s(szBuffer, "Nuke AI (Disabled)");
+	}
+	else {
+		sprintf_s(szBuffer, "Nuke AI (Enabled <= %d %%HP)", pElixir->NukeAIMax);
+	}
+	isOpen = ImGui::TreeNode("##elixir.nukeAILabel", szBuffer);
 	ImGui::PopStyleColor(4);
 	if (ImGui::BeginPopupContextItem())
 	{
@@ -305,8 +328,6 @@ PLUGIN_API void SetGameState(int GameState)
 {
 	if (GameState != GAMESTATE_INGAME) return;
 	if (!strcmp(ServerCharacterINI, GetCharInfo()->Name)) return;
-	sprintf(ServerCharacterINI, "%s_%s", EQADDR_SERVERNAME, GetCharInfo()->Name);
-	_snprintf_s(INIFileName, 260, "%s\\MQ2Elixir.ini", gszINIPath);
 	LoadINI();
 }
 
