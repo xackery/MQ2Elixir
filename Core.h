@@ -50,7 +50,7 @@ unsigned long MainAssistTargetID();
 int XTargetNearbyHaterCount();
 #endif
 DWORD SpellCooldown(PCHAR szName);
-PMQPLUGIN Plugin(char* plugin);
+MQPlugin* Plugin(char* plugin);
 
 
 

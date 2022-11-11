@@ -9,7 +9,7 @@ public:
 	// StanceMode is what mode is currently being used.
 	int StanceMode = 1;
 	// cooldown before doing anything after zoning
-	unsigned long ZoneCooldown;
+	std::chrono::steady_clock::time_point ZoneCooldownTimer;
 
 	string LastAction;
 	string Gems[NUM_SPELL_GEMS];
@@ -49,10 +49,10 @@ private:
 	// isActionComplete is set to false on every pulse. When an action succeeds, this is flagged, stopping future actions.
 	bool isActionComplete;
 	
-	unsigned long gemGlobalCooldown;
-	unsigned long movementGlobalCooldown;
+	std::chrono::steady_clock::time_point gemGlobalCooldown;
+	std::chrono::steady_clock::time_point movementGlobalCooldown;
 	// if I cast a stun, this is a cooldown before using another follow up one
-	unsigned long stunGlobalCooldown;
+	std::chrono::steady_clock::time_point stunGlobalCooldown;
 
 	// lastCastedSpellID only is set when elixir invokes a spell cast
 	int lastCastedSpellID;
@@ -60,7 +60,7 @@ private:
 	int lastGemIndex;
 	int lastButtonIndex;
 	int lastActionRepeat;
-	unsigned long lastActionRepeatCooldown;
+	std::chrono::steady_clock::time_point lastActionRepeatCooldown;
 	
 
 	// Gem attempts to cast the provided gem index

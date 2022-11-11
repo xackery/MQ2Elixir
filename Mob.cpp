@@ -1,5 +1,5 @@
 #include "Mob.h"
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 
 using namespace std;
@@ -14,7 +14,7 @@ int MobHPDannet(PSPAWNINFO pSpawn) {
 	char szTemp[MAX_STRING];
 	if (!pSpawn->Type == SPAWN_PLAYER) return 0;
 
-	PMQPLUGIN pLook = Plugin("mq2dannet");
+	MQPlugin* pLook = Plugin("mq2dannet");
 	if (!pLook) return 0;
 	bool(*f_peer_connected)(const std::string & name) = (bool(*)(const std::string & name))GetProcAddress(pLook->hModule, "peer_connected");
 	if (!f_peer_connected) return 0;
@@ -48,7 +48,7 @@ bool IsPlayerPoisonedDannet(PSPAWNINFO pSpawn) {
 	char szTemp[MAX_STRING];
 	if (!pSpawn->Type == SPAWN_PLAYER) return false;
 
-	PMQPLUGIN pLook = Plugin("mq2dannet");
+	MQPlugin* pLook = Plugin("mq2dannet");
 	if (!pLook) return 0;
 	bool(*f_peer_connected)(const std::string & name) = (bool(*)(const std::string & name))GetProcAddress(pLook->hModule, "peer_connected");
 	if (!f_peer_connected) return 0;

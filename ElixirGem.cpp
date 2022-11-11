@@ -1,4 +1,4 @@
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 #include "Elixir.h"
 
@@ -17,7 +17,7 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
-	if (ZoneCooldown > MQGetTickCount64()) {
+	if (ZoneCooldownTimer > std::chrono::steady_clock::now()) {
 		Gems[gemIndex] = "zone cooldown";
 		return;
 	}
@@ -32,12 +32,12 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
-	if (gemGlobalCooldown > MQGetTickCount64()) {
+	if (gemGlobalCooldown > std::chrono::steady_clock::now()) {
 		Gems[gemIndex] = "gem AI cooldown";
 		return;
 	}
 
-	if (movementGlobalCooldown > MQGetTickCount64()) {
+	if (movementGlobalCooldown > std::chrono::steady_clock::now()) {
 		Gems[gemIndex] = "movement AI cooldown";
 		return;
 	}
@@ -63,23 +63,23 @@ void Elixir::ActionGem(int gemIndex)
 	}
 
 
-	if ((int)((PCDISPLAY)pDisplay)->TimeStamp <= ((PSPAWNINFO)pLocalPlayer)->GetSpellCooldownETA()) {
+	if ((int)((CDisplay*)pDisplay)->TimeStamp <= ((PSPAWNINFO)pLocalPlayer)->GetSpellCooldownETA()) {
 		Gems[gemIndex] = "all gems on recent use cooldown";
 		return;
 	}
 
-	if (((PCDISPLAY)pDisplay)->TimeStamp <= ((PSPAWNINFO)pLocalPlayer)->SpellGemETA[gemIndex]) {
+	if (((CDisplay*)pDisplay)->TimeStamp <= ((PSPAWNINFO)pLocalPlayer)->SpellGemETA[gemIndex]) {
 		Gems[gemIndex] = "gem on cooldown";
 		return;
 	}
 
-	if (lastGemIndex == gemIndex && lastActionRepeatCooldown > MQGetTickCount64()) {
+	if (lastGemIndex == gemIndex && lastActionRepeatCooldown > std::chrono::steady_clock::now()) {
 		Gems[gemIndex] = "last action repeat cooldown";
 		return;
 	}
 
 
-	LONG spellID = GetMemorizedSpell(gemIndex);
+	int64_t spellID = GetMemorizedSpell(gemIndex);
 	if (!spellID) {
 		Gems[gemIndex] = "no spell memorized";
 		return;
@@ -98,17 +98,17 @@ void Elixir::ActionGem(int gemIndex)
 
 	unsigned long stunDuration = StunDuration(pSpell);
 	if (stunDuration > 1000) {
-		stunGlobalCooldown = (unsigned long)MQGetTickCount64() + stunDuration;
+		stunGlobalCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(stunDuration);
 	}
 
 	ActionCastGem(gemIndex + 1);
 	Gems[gemIndex] = "casting";
 	LastAction = "gem " + to_string(gemIndex + 1) + " " + Gems[gemIndex];
-	lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+	lastActionRepeatCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 	lastGemIndex = gemIndex;
 	if (pSpell->TargetType == 5) { //Single
 		lastCastedSpellID = pSpell->ID;
 	}
 	isActionComplete = true;
-	gemGlobalCooldown = (unsigned long)MQGetTickCount64() + 3000;
+	gemGlobalCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 }

@@ -1,4 +1,4 @@
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 #include "Elixir.h"
 
@@ -33,13 +33,13 @@ void Elixir::OnPulse()
 		}
 		if (lastCastedSpellID > 0 && !pTarget) {
 			Execute("/stopcast");
-			gemGlobalCooldown = (unsigned long)MQGetTickCount64() + 1000;
+			gemGlobalCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(1000);
 			LastAction = "stopping spell, target dead";
 		}
 	}
 	
 	if (pChar->pSpawn->GetClass() != Bard && IsMoving(pChar->pSpawn)) {
-		movementGlobalCooldown = (unsigned long)MQGetTickCount64() + 2000;
+		movementGlobalCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
 	}
 
 	for (int i = 0; i < 12; i++) {
@@ -66,13 +66,13 @@ void Elixir::OnPulse()
 	for (int i = 0; i < maxGems-1; i++) {
 		ActionGem(i);
 		
-		if (LONG spellID = GetMemorizedSpell(i)) {			
+		if (int64_t spellID = GetMemorizedSpell(i)) {			
 			if (PSPELL pSpell = GetSpellByID(spellID)) {
 				char result[100];
-				sprintf(result, "CSPW_Spell%d", i);
+				sprintf_s(result, "CSPW_Spell%d", i);
 				if (CButtonWnd* pGem = (CButtonWnd*)pCastSpellWnd->GetChildItem(result)) {
 					char result[100];
-					sprintf(result, "%d) %s - %s", i+1, pSpell->Name, Gems[i].c_str());
+					sprintf_s(result, "%d) %s - %s", i+1, pSpell->Name, Gems[i].c_str());
 					pGem->SetTooltip(result);
 				}
 			}

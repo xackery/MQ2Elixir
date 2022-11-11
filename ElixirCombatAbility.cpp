@@ -1,4 +1,4 @@
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 #include "Elixir.h"
 
@@ -8,11 +8,7 @@ using namespace std;
 std::string Elixir::CombatAbility(PSPELL pSpell)
 {
 	unsigned long timeNow = (unsigned long)time(NULL);
-#if !defined(ROF2EMU) && !defined(UFEMU)
 	if (pPCData->GetCombatAbilityTimer(pSpell->ReuseTimerIndex, pSpell->SpellGroup) > timeNow) {
-#else
-	if (pSpell->ReuseTimerIndex != -1 && pSpell->ReuseTimerIndex < 20 && pPCData->GetCombatAbilityTimer(pSpell->ReuseTimerIndex) > timeNow) {
-#endif
 		return "on cooldown";
 	}
 
@@ -29,13 +25,9 @@ std::string Elixir::CombatAbility(PSPELL pSpell)
 	if (!child) {
 		return "combat window effect not found";
 	}
-	char szBuffer[2048] = { 0 };
-	if (!GetCXStr(child->CGetWindowText(), szBuffer, MAX_STRING)) {
-		return "combat window effect text not found";
-	}
 
-	if (szBuffer[0] != '\0') {
-		return "another discipline active";
+	if (!child->GetWindowText().empty()) {
+		return "another discipline is active";
 	}
 
 	return Spell(pSpell);

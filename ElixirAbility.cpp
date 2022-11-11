@@ -1,4 +1,4 @@
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 #include "Elixir.h"
 
@@ -7,11 +7,11 @@ using namespace std;
 
 bool isBashAllowed()
 {
-	if (!GetCharInfo2()) return false;
-	if (GetCharInfo2()->pInventoryArray->Inventory.Secondary && GetItemFromContents(GetCharInfo2()->pInventoryArray->Inventory.Secondary)->ItemType == 8) return true;
+	if (!GetPcProfile()) return false;
+	if (GetPcProfile()->pInventoryArray->Inventory.Secondary && GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Secondary)->ItemType == 8) return true;
 #if !defined(ROF2EMU) && !defined(UFEMU)
-	if (GetCharInfo2()->Class == EQData::Warrior && IsAAPurchased("Two-Handed Bash")) return true;
-	if (GetCharInfo2()->Class == EQData::Paladin || GetCharInfo2()->Class == EQData::Shadowknight && IsAAPurchased("Improved Bash")) return true;
+	if (GetPcProfile()->Class == EQData::Warrior && IsAAPurchased("Two-Handed Bash")) return true;
+	if (GetPcProfile()->Class == EQData::Paladin || GetPcProfile()->Class == EQData::Shadowknight && IsAAPurchased("Improved Bash")) return true;
 #else
 	if (IsAAPurchased("2 Hand Bash")) return true;
 #endif
@@ -22,28 +22,24 @@ bool isBashAllowed()
 std::string Elixir::Ability(int abilityIndex)
 {
 
-	PCHARINFO pChar = (PCHARINFO)pCharData;
-	if (!pChar) {
-		return "char not loaded";
+	if (!pLocalPC) {
+		return "pLocalPC not loaded";
 	}
 
-	if (!pLocalPlayer) {
-		return "pLocalPlayer not loaded";
-	}
-
-	DWORD nToken = pCSkillMgr->GetNameToken(abilityIndex);
+	DWORD nToken = pSkillMgr->GetNameToken(abilityIndex);
 	if (!HasSkill(abilityIndex)) {
 		return "don't have ability";
 	}
-	char* abilityName = pStringTable->getString(nToken, 0);
+
+	const char* abilityName = pStringTable->getString(nToken, 0);
 	if (!abilityName) {
 		return "can't find ability";
 	}
-	if (!pCSkillMgr->IsActivatedSkill(abilityIndex)) {
+	if (!pSkillMgr->IsActivatedSkill(abilityIndex)) {
 		return "not activated skill (ignored)";
 	}
 
-	if (!pCSkillMgr->IsAvailable(abilityIndex)) {
+	if (!pSkillMgr->IsAvailable(abilityIndex)) {
 		return "on cooldown";
 	}
 
@@ -58,15 +54,16 @@ std::string Elixir::Ability(int abilityIndex)
 		return "no target";
 	}
 
-	if (Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > 16) {
+	if (Distance3DToSpawn(pLocalPC->pSpawn, (PSPAWNINFO)pTarget) > 16) {
 		return "too far away";
 	}
 
-	if (pTarget && !pCharSpawn->CanSee((EQPlayer*)pTarget)) {
+	if (pTarget && !pCharSpawn->CanSee(*pTarget)) {
 		return "target not line of sight";
 	}
 
-	if (pTarget->Data.Type != SPAWN_NPC) {
+	
+	if (pTarget->Type != SPAWN_NPC) {
 		return "non npc targetted";
 	}
 
@@ -83,12 +80,12 @@ std::string Elixir::Ability(int abilityIndex)
 		return "";
 	}
 
-
 	if (stricmp(abilityName, "Kick") == 0) {
 		return "";
 	}
+
 	if (stricmp(abilityName, "Disarm") == 0) {
-		if (Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > 14) {
+		if (Distance3DToSpawn(pLocalPC->pSpawn, (PSPAWNINFO)pTarget) > 14) {
 			return "too far away";
 		}
 		return "";
@@ -103,7 +100,7 @@ std::string Elixir::Ability(int abilityIndex)
 	}
 
 	if (stricmp(abilityName, "Taunt") == 0) {
-		if (GetCharInfo()->pGroupInfo == nullptr) {
+		if (GetCharInfo()->Group == nullptr) {
 			return "not in a group";
 		}
 
@@ -112,17 +109,17 @@ std::string Elixir::Ability(int abilityIndex)
 		}
 
 		bool isMainTank = false;
-		GROUPMEMBER* pG;
+		CGroupMember* pG;
 		PSPAWNINFO pSpawn;
 		for (int i = 0; i < 6; i++) {
-			pG = GetCharInfo()->pGroupInfo->pMember[i];
+			pG = GetCharInfo()->Group->GetGroupMember(i);
 			if (!pG) continue;
 			if (pG->Offline) continue;
 			//if (${Group.Member[${i}].Mercenary}) /continue
 			//if (${ Group.Member[${i}].OtherZone }) / continue
 			pSpawn = pG->pSpawn;
 			if (!pSpawn) continue;
-			if (pSpawn->SpawnID != pChar->pSpawn->SpawnID) continue;
+			if (pSpawn->SpawnID != pLocalPC->pSpawn->SpawnID) continue;
 			if (pSpawn->Type == SPAWN_CORPSE) continue;
 			if (pG->MainTank) {
 				isMainTank = true;
@@ -138,7 +135,7 @@ std::string Elixir::Ability(int abilityIndex)
 			return "already have high hate";
 		}
 
-		if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) {
+		if (pAggroInfo->AggroTargetID == pLocalPC->pSpawn->SpawnID) {
 			return "already primary target";
 		}
 		return "";

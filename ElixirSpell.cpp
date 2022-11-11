@@ -1,4 +1,4 @@
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 #include "Elixir.h"
 #include "Mob.h"
@@ -29,21 +29,21 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	bool isBardSong = false;
 	bool isMez = false;
 	bool isLull = false;
-	long stunDuration = 0;
-	long damageAmount = 0;
-	long healAmount = 0;
+	int64_t stunDuration = 0;
+	int64_t damageAmount = 0;
+	int64_t healAmount = 0;
 
 	int bodyType;
-	LONG attr;
-	LONG base;
-	LONG base2;
-	LONG max;
-	LONG calc;
-	LONG spellgroup = pSpell->SpellGroup;
-	LONG ticks = pSpell->DurationCap;
-	LONG targets = pSpell->MaxTargets;
-	LONG targettype = pSpell->TargetType;
-	LONG skill = pSpell->Skill;
+	int64_t attr;
+	int64_t base;
+	int64_t base2;
+	int64_t max;
+	int64_t calc;
+	int64_t spellgroup = pSpell->SpellGroup;
+	int64_t ticks = pSpell->DurationCap;
+	int64_t targets = pSpell->MaxTargets;
+	int64_t targettype = pSpell->TargetType;
+	int64_t skill = pSpell->Skill;
 	PSPELL pSpellRecourse = nullptr;
 	if (pSpell->Autocast > 0) {
 		pSpellRecourse = GetSpellByID(pSpell->Autocast);
@@ -94,7 +94,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			}
 		}
 
-		if (attr == SPA_MOVEMENTRATE) { //3
+		if (attr == SPA_MOVEMENT_RATE) { //3
 			if (base > 0) { //+Movement
 				isBuff = true;
 				isSow = true;
@@ -253,32 +253,32 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	}
 
 	if (IsDebugTagMode) {
-		sprintf(szTemp, "mana %d", pSpell->ManaCost);
-		if (isHeal) sprintf(szTemp, "%s %s", szTemp, "isHeal");
-		if (isDebuff) sprintf(szTemp, "%s %s", szTemp, "isDebuff");
-		if (isBuff) sprintf(szTemp, "%s %s", szTemp, "isBuff");
-		if (isLifetap) sprintf(szTemp, "%s %s", szTemp, "isLifetap");
-		if (isMana) sprintf(szTemp, "%s %s", szTemp, "isMana");
-		if (isSnare) sprintf(szTemp, "%s %s", szTemp, "isSnare");
-		if (isSow) sprintf(szTemp, "%s %s", szTemp, "isSow");
-		if (isTaunt) sprintf(szTemp, "%s %s hateAmount %d", szTemp, "isTaunt", pSpell->HateGenerated);
-		if (isSingleTargetSpell) sprintf(szTemp, "%s %s", szTemp, "isSingleTargetSpell");
-		if (isPetSummon) sprintf(szTemp, "%s %s", szTemp, "isPetSummon");
-		if (isTransport) sprintf(szTemp, "%s %s", szTemp, "isTransport");
-		if (isGroupSpell) sprintf(szTemp, "%s %s", szTemp, "isGroupSpell");
-		if (isBardSong) sprintf(szTemp, "%s %s", szTemp, "isBardSong");
-		if (isCharm) sprintf(szTemp, "%s %s", szTemp, "isCharm");
-		if (isMez) sprintf(szTemp, "%s %s", szTemp, "isMez");
-		if (isLull) sprintf(szTemp, "%s %s", szTemp, "isLull");
-		if (isMez) sprintf(szTemp, "%s %s", szTemp, "isMez");
-		if (stunDuration) sprintf(szTemp, "%s %s %dms", szTemp, "stunDuration", stunDuration);
-		if (damageAmount) sprintf(szTemp, "%s %s %d", szTemp, "damageAmount", damageAmount);
-		if (healAmount) sprintf(szTemp, "%s %s %d", szTemp, "healAmount", healAmount);
+		sprintf_s(szTemp, "mana %d", pSpell->ManaCost);
+		if (isHeal) sprintf_s(szTemp, "%s %s", szTemp, "isHeal");
+		if (isDebuff) sprintf_s(szTemp, "%s %s", szTemp, "isDebuff");
+		if (isBuff) sprintf_s(szTemp, "%s %s", szTemp, "isBuff");
+		if (isLifetap) sprintf_s(szTemp, "%s %s", szTemp, "isLifetap");
+		if (isMana) sprintf_s(szTemp, "%s %s", szTemp, "isMana");
+		if (isSnare) sprintf_s(szTemp, "%s %s", szTemp, "isSnare");
+		if (isSow) sprintf_s(szTemp, "%s %s", szTemp, "isSow");
+		if (isTaunt) sprintf_s(szTemp, "%s %s hateAmount %d", szTemp, "isTaunt", pSpell->HateGenerated);
+		if (isSingleTargetSpell) sprintf_s(szTemp, "%s %s", szTemp, "isSingleTargetSpell");
+		if (isPetSummon) sprintf_s(szTemp, "%s %s", szTemp, "isPetSummon");
+		if (isTransport) sprintf_s(szTemp, "%s %s", szTemp, "isTransport");
+		if (isGroupSpell) sprintf_s(szTemp, "%s %s", szTemp, "isGroupSpell");
+		if (isBardSong) sprintf_s(szTemp, "%s %s", szTemp, "isBardSong");
+		if (isCharm) sprintf_s(szTemp, "%s %s", szTemp, "isCharm");
+		if (isMez) sprintf_s(szTemp, "%s %s", szTemp, "isMez");
+		if (isLull) sprintf_s(szTemp, "%s %s", szTemp, "isLull");
+		if (isMez) sprintf_s(szTemp, "%s %s", szTemp, "isMez");
+		if (stunDuration) sprintf_s(szTemp, "%s %s %lldms", szTemp, "stunDuration", stunDuration);
+		if (damageAmount) sprintf_s(szTemp, "%s %s %d", szTemp, "damageAmount", damageAmount);
+		if (healAmount) sprintf_s(szTemp, "%s %s %d", szTemp, "healAmount", healAmount);
 		return szTemp;
 	}
 
 
-	if (GetCharInfo2()->Mana < (int)pSpell->ManaCost) return "not enough mana (" + to_string((int)pSpell->ManaCost) + "/" + to_string(GetCharInfo2()->Mana) + ")";
+	if (GetPcProfile()->Mana < (int)pSpell->ManaCost) return "not enough mana (" + to_string((int)pSpell->ManaCost) + "/" + to_string(GetPcProfile()->Mana) + ")";
 
 	if (isLull) return "ignored (lull)";
 	if (isMez) return "ignored (mez)";
@@ -306,24 +306,24 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	
 	if (isTransport) return "ignoring (transport)";
 
-	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee((EQPlayer*)pTarget)) return "target not line of sight";
-
+	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee(*pTarget)) return "target not line of sight";
+	
 	for (int i = 0; i < 4; i++) { // Reagent check
 		if (pSpell->ReagentCount[i] == 0) continue;
 		if (pSpell->ReagentID[i] == -1) continue;
 
-		DWORD count = FindItemCountByID((int)pSpell->ReagentID[i]);
+		int count = FindItemCountByID((int)pSpell->ReagentID[i]);
 		if (count > pSpell->ReagentCount[i]) continue;
 
 		PCHAR pItemName = GetItemFromContents(FindItemByID((int)pSpell->ReagentID[i]))->Name;
 		if (pItemName) {
-			sprintf(szTemp, "missing %dx %s", pSpell->ReagentCount[i], pItemName);
+			sprintf_s(szTemp, "missing %dx %s", pSpell->ReagentCount[i], pItemName);
 			return szTemp;
 		}
 	}
 
 
-	DWORD ReqID = pSpell->CasterRequirementID;
+	int ReqID = pSpell->CasterRequirementID;
 	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) return "not < 90% hp";
 
 	//if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
@@ -335,7 +335,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	if (pSpellRecourse && pSpellRecourse->DurationCap > 0) { //recourse buff attached
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
 			if (pSpellRecourse->TargetType == 6) { //self buff
-				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[nBuff].SpellID);
+				PSPELL buff = GetSpellByID(GetPcProfile()->Buffs[nBuff].SpellID);
 				if (!buff) {
 					continue;
 				}
@@ -343,7 +343,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 				if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 			}
 
-			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
+			int buffid = ((CTargetWnd*)pTargetWnd)->BuffSpellID[nBuff];
 			if (buffid <= 0) {
 				continue;
 			}
@@ -352,7 +352,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 				continue;
 			}
 
-			DWORD buffDuration = ((PCTARGETWND)pTargetWnd)->BuffTimer[nBuff];
+			DWORD buffDuration = ((CTargetWnd*)pTargetWnd)->BuffTimer[nBuff];
 			if (buffDuration <= 0) {
 				continue;
 			}
@@ -370,7 +370,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	if (ticks > 0 && pSpell->SpellType == 0) { // debuff
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
 			
-			int buffid = ((PCTARGETWND)pTargetWnd)->BuffSpellID[nBuff];
+			int buffid = ((CTargetWnd*)pTargetWnd)->BuffSpellID[nBuff];
 			if (buffid <= 0) {
 				continue;
 			}
@@ -379,7 +379,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 				continue;
 			}
 
-			DWORD buffDuration = ((PCTARGETWND)pTargetWnd)->BuffTimer[nBuff];
+			DWORD buffDuration = ((CTargetWnd*)pTargetWnd)->BuffTimer[nBuff];
 			if (buffDuration <= 0) {
 				continue;
 			}
@@ -392,22 +392,22 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 	PZONEINFO pZone = reinterpret_cast<PZONEINFO>(pZoneInfo);
 	if (pZone && pSpell->ZoneType == 1) { //can't cast indoors
-		if (pZone->OutDoor == EOutDoor::IndoorDungeon) return "in dungeon";
-		if (pZone->OutDoor == EOutDoor::IndoorCity) return "in city";
-		if (pZone->OutDoor == EOutDoor::DungeonCity) return "in dungeon city";
+		if (pZone->ZoneType == EOutDoor::IndoorDungeon) return "in dungeon";
+		if (pZone->ZoneType == EOutDoor::IndoorCity) return "in city";
+		if (pZone->ZoneType == EOutDoor::DungeonCity) return "in dungeon city";
 	}
 
 	if (pZone && pSpell->ZoneType == 2) { //can't cast outdoor
-		if (pZone->OutDoor == EOutDoor::Outdoor) return "outdoors";
-		if (pZone->OutDoor == EOutDoor::OutdoorCity) return "outdoor city";
-		if (pZone->OutDoor == EOutDoor::OutdoorDungeon) return "outdoor dungeon";
+		if (pZone->ZoneType == EOutDoor::Outdoor) return "outdoors";
+		if (pZone->ZoneType == EOutDoor::OutdoorCity) return "outdoor city";
+		if (pZone->ZoneType == EOutDoor::OutdoorDungeon) return "outdoor dungeon";
 	}
 
 
 	if (!pSpell->CanCastInCombat && CombatState() == COMBATSTATE_COMBAT) return "cannot be cast in combat";
 	
 	
-	if (GetCharInfo2()->Endurance < (int)pSpell->EnduranceCost) return "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetCharInfo2()->Endurance) + ")";	
+	if (GetPcProfile()->Endurance < (int)pSpell->EnduranceCost) return "not enough endurance (" + to_string((int)pSpell->EnduranceCost) + "/" + to_string(GetPcProfile()->Endurance) + ")";	
 
 	if (strstr(pSpell->Name, "Discipline") && pCombatAbilityWnd) {
 		CXWnd* Child = ((CXWnd*)pCombatAbilityWnd)->GetChildItem("CAW_CombatEffectLabel");
@@ -418,7 +418,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		if (szBuffer[0] == '\0') return "combatabilitywnd text not null terminated";
 		PSPELL pBuff = GetSpellByName(szBuffer);
 		if (pBuff) {
-			sprintf(szTemp, "disc %s already active", pBuff->Name);
+			sprintf_s(szTemp, "disc %s already active", pBuff->Name);
 			return szTemp;
 		}
 	}
@@ -427,7 +427,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 	if (isPetSummon) {
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
-			if (GetCharInfo2()->Buff[nBuff].SpellID == pSpell->ID) return "already have pet buff";
+			if (GetPcProfile()->Buffs[nBuff].SpellID == pSpell->ID) return "already have pet buff";
 		}
 	}
 
@@ -441,7 +441,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 
 	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > HealAIMax) {
-		sprintf(szTemp, "> %d%% hp", HealAIMax);
+		sprintf_s(szTemp, "> %d%% hp", HealAIMax);
 		return szTemp;
 	}
 
@@ -457,7 +457,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 			for (int b = 0; b < NUM_LONG_BUFFS; b++)
 			{
-				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[b].SpellID);
+				PSPELL buff = GetSpellByID(GetPcProfile()->Buffs[b].SpellID);
 				if (!buff) {
 					continue;
 				}
@@ -468,17 +468,17 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 					if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 				}
 			}
-			for (int b = 0; b < NUM_SHORT_BUFFS; b++)
+			for (int b = 0; b < NUM_TEMP_BUFFS; b++)
 			{
-				PSPELL buff = GetSpellByID(GetCharInfo2()->ShortBuff[b].SpellID);
+				PSPELL buff = GetSpellByID(GetPcProfile()->GetTempEffect(b).SpellID);
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) return "already have shortbuff";
+				if (buff->ID == pSpell->ID) return "already have temp buff";
 				if (!BuffStackTest(buff, pSpell)) return "does not stack";
 				if (pSpellRecourse) {
-					if (buff->ID == pSpellRecourse->ID) return "already have short recourse";
-					if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
+					if (buff->ID == pSpellRecourse->ID) return "already have temp buff recourse";
+					if (!BuffStackTest(buff, pSpellRecourse)) return "temp buff recourse does not stack";
 				}
 			}
 		}
@@ -491,10 +491,10 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			if (isHeal) { //single target heal
 				int spawnPctHPs = 100;
 				int spawnGroupID = -1;
-				GROUPMEMBER* pG;
+				CGroupMember* pG;
 				PSPAWNINFO pSpawn;
 				for (int i = 0; i < 6; i++) {
-					pG = GetCharInfo()->pGroupInfo->pMember[i];
+					pG = GetCharInfo()->Group->GetGroupMember(i);
 					if (!pG) continue;
 					if (pG->Offline) continue;
 					//if (${Group.Member[${i}].Mercenary}) /continue
@@ -512,11 +512,14 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 				}
 
 				if (spawnPctHPs >= HealAIMax) {
-					sprintf(szTemp, "no one in group < %d%% hp (%d%% lowest %d)", HealAIMax, spawnPctHPs, spawnGroupID);
+					sprintf_s(szTemp, "no one in group < %d%% hp (%d%% lowest %d)", HealAIMax, spawnPctHPs, spawnGroupID);
 					return szTemp;
 				}
 
-				pG = GetCharInfo()->pGroupInfo->pMember[spawnGroupID];
+				pG = GetCharInfo()->Group->GetGroupMember(spawnGroupID);
+				if (!pG) {
+					return "group member not found";
+				}
 				pSpawn = pG->pSpawn;
 				if (!ActionSpawnTarget(pSpawn)) return "can't target group";
 
@@ -526,9 +529,9 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 		//no group
 		if (ticks > 0) {
-			for (int b = 0; b < NUM_LONG_BUFFS; b++)
+			for (int b = 0; b < MAX_TOTAL_BUFFS; b++)
 			{
-				PSPELL buff = GetSpellByID(GetCharInfo2()->Buff[b].SpellID);
+				PSPELL buff = GetSpellByID(GetPcProfile()->Buffs[b].SpellID);
 				if (!buff) {
 					continue;
 				}
@@ -539,23 +542,23 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 					if (!BuffStackTest(buff, pSpellRecourse)) return "recourse does not stack";
 				}
 			}
-			for (int b = 0; b < NUM_SHORT_BUFFS; b++)
+			for (int b = 0; b < NUM_TEMP_BUFFS; b++)
 			{
-				PSPELL buff = GetSpellByID(GetCharInfo2()->ShortBuff[b].SpellID);
+				PSPELL buff = GetSpellByID(GetPcProfile()->GetTempEffect(b).SpellID);
 				if (!buff) {
 					continue;
 				}
-				if (buff->ID == pSpell->ID) return "already have shortbuff";
-				if (!BuffStackTest(buff, pSpell)) return "shortbuff does not stack";
+				if (buff->ID == pSpell->ID) return "already have temp effect";
+				if (!BuffStackTest(buff, pSpell)) return "temp effect does not stack";
 				if (pSpellRecourse) {
-					if (buff->ID == pSpellRecourse->ID) return "already have short recourse";
-					if (!BuffStackTest(buff, pSpellRecourse)) return "short recourse does not stack";
+					if (buff->ID == pSpellRecourse->ID) return "already have temp effect recourse";
+					if (!BuffStackTest(buff, pSpellRecourse)) return "temp effect recourse does not stack";
 				}
 			}
 		}
 
 		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= HealAIMax) {
-			sprintf(szTemp, "> %d%% hp", HealAIMax);
+			sprintf_s(szTemp, "> %d%% hp", HealAIMax);
 			return szTemp;
 		}
 
@@ -586,7 +589,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			//GetTargetBuffBySPA(31, 0)) // Is Target Mezzed?
 		}
 		if (xTargetCount < 3) {
-			sprintf(szTemp, "< 3 targets nearby (%d)", xTargetCount);
+			sprintf_s(szTemp, "< 3 targets nearby (%d)", xTargetCount);
 			return szTemp;
 		}
 		return "";
@@ -595,11 +598,11 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	if (isSingleTargetSpell && pSpell->SpellType == 0) { //single target detrimental spell
 		if (!pTarget) return "no target";
 
-		if (pTarget->Data.Type != SPAWN_NPC) return "non npc targetted";
+		if (pTarget->Type != SPAWN_NPC) return "non npc targetted";
 
 		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) return "target too far away";
 
-		if (pChar->pGroupInfo && !pChar->pGroupInfo->pMember[0]->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > 99) return "target > 99%";
+		if (pChar->pGroupInfo && !pChar->Group->GetGroupMember(0)->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > 99) return "target > 99%";
 
 		int mobHP = MobHP((PSPAWNINFO)pTarget);
 		if (mobHP > 0 && damageAmount > 0 &&  damageAmount > mobHP) return "mob too low hp";
@@ -614,10 +617,10 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			if (!pAggroInfo) return "pAggroInfo empty";
 
 			bool isMainTank = false;
-			GROUPMEMBER* pG;
+			CGroupMember* pG;
 			PSPAWNINFO pSpawn;
 			for (int i = 0; i < 6; i++) {
-				pG = GetCharInfo()->pGroupInfo->pMember[i];
+				pG = GetCharInfo()->Group->GetGroupMember(i);
 				if (!pG) continue;
 				if (pG->Offline) continue;
 				//if (${Group.Member[${i}].Mercenary}) /continue
@@ -639,8 +642,8 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 		}
 
-		if (stunDuration > 1000 && stunGlobalCooldown > MQGetTickCount64()) {
-			sprintf(szTemp, "stun AI cooldown (%llds)", ((stunGlobalCooldown - MQGetTickCount64()) / 1000));
+		if (stunDuration > 1000 && stunGlobalCooldown > std::chrono::steady_clock::now()) {
+			sprintf_s(szTemp, "stun AI cooldown (%llds)", ((stunGlobalCooldown - std::chrono::steady_clock::now()) / 1000));
 			return szTemp;
 		}
 		return "";
@@ -657,7 +660,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		
 		if (isHeal) {
 			if (SpawnPctHPs(pPet) > HealAIMax) {
-				sprintf(szTemp, "pet > %d%% hp", HealAIMax);
+				sprintf_s(szTemp, "pet > %d%% hp", HealAIMax);
 				return szTemp;
 			}
 			return "";

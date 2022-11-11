@@ -1,4 +1,4 @@
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "Core.h"
 #include "Elixir.h"
 
@@ -26,7 +26,7 @@ void Elixir::ActionButton(int buttonIndex)
 		return;
 	}
 
-	if (ZoneCooldown > MQGetTickCount64()) {
+	if (ZoneCooldownTimer > std::chrono::steady_clock::now()) {
 		Buttons[buttonIndex] = "zone cooldown";
 		return;
 	}
@@ -51,7 +51,7 @@ void Elixir::ActionButton(int buttonIndex)
 		Buttons[buttonIndex] = "player invisible";
 	}
 
-	if (lastButtonIndex == buttonIndex && lastActionRepeatCooldown > MQGetTickCount64()) {
+	if (lastButtonIndex == buttonIndex && lastActionRepeatCooldown > std::chrono::steady_clock::now()) {
 		Buttons[buttonIndex] = "last action repeat cooldown";
 		return;
 	}
@@ -62,7 +62,7 @@ void Elixir::ActionButton(int buttonIndex)
 		return;
 	}
 
-	sprintf(szTemp, "HB_Button%d", buttonIndex + 1);
+	sprintf_s(szTemp, "HB_Button%d", buttonIndex + 1);
 	CButtonWnd* hbtnRootWnd = (CButtonWnd*)pHotButtonWnd->GetChildItem(szTemp);
 	if (!hbtnRootWnd) {
 		Buttons[buttonIndex] = "no hot button root";
@@ -146,10 +146,10 @@ void Elixir::ActionButton(int buttonIndex)
 		ActionGem(gemIndex);
 		Buttons[buttonIndex] = "casting";
 		LastAction = "button " + to_string(buttonIndex + 1) + " " + Buttons[buttonIndex] + " gem " + to_string(gemIndex + 1);
-		lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+		lastActionRepeatCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 		lastGemIndex = gemIndex;
 		isActionComplete = true;
-		gemGlobalCooldown = (unsigned long)MQGetTickCount64() + 3000;
+		gemGlobalCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 		return;
 	case 9: //Ability
 		invSlot = (CInvSlotWnd*)hbtnChildWnd->GetChildItem("HB_InvSlot");
@@ -165,9 +165,9 @@ void Elixir::ActionButton(int buttonIndex)
 		}
 
 		for (int i = 0; i < NUM_SKILLS; i++) {
-			DWORD nToken = pCSkillMgr->GetNameToken(i);
+			DWORD nToken = pSkillMgr->GetNameToken(i);
 			if (!HasSkill(i)) continue;
-			char* abilityName = pStringTable->getString(nToken, 0);
+			const char* abilityName = pStringTable->getString(nToken, 0);
 			if (!abilityName) continue;
 			if (stricmp(abilityName, szTemp) != 0) continue;
 
@@ -178,7 +178,7 @@ void Elixir::ActionButton(int buttonIndex)
 			DoAbility(pChar->pSpawn, szTemp);
 			LastAction = "pressing hotbutton " + to_string(buttonIndex);
 			Buttons[buttonIndex] = LastAction;
-			lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+			lastActionRepeatCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 			lastButtonIndex = buttonIndex;
 			isActionComplete = true;
 			return;
@@ -202,30 +202,27 @@ void Elixir::ActionButton(int buttonIndex)
 			return;
 		}
 
-		if (!invSlot->pEQInvSlot) {
+		//TODO: fix item inspection on hotbar
+		/*
+		if (!invSlot->pInvSlot) {
 			Buttons[buttonIndex] = "item slot sub not found";
 			return;
 		}
 
-		pCont = 0;
-		invSlot->pEQInvSlot->GetItemBase(&pCont);
-		if (!pCont) {
+		ItemPtr pItem = invSlot->pInvSlot->GetItem();
+		if (!pItem) {
 			Buttons[buttonIndex] = "no contents in item";
 			return;
 		}
-
-		pItem = GetItemFromContents(pCont);
-		if (!pItem) {
-			Buttons[buttonIndex] = "no item via content";
-			return;
-		}
-
+		*/
+		//TODO: Fix clicky check
+		/*
 		if (pItem->Clicky.TimerID != 0xFFFFFFFF && GetItemTimer(pCont) > 0) {
 			Buttons[buttonIndex] = "on cooldown";
 			return;
 		}
 
-		if (pItem->Type == ITEMTYPE_NORMAL && pCont->Charges <= 0) {
+		if (pItem->GetType() == ITEMTYPE_NORMAL && pCont->Charges <= 0) {
 			Buttons[buttonIndex] = "normal item (no clicky)";
 			return;
 		}
@@ -245,6 +242,8 @@ void Elixir::ActionButton(int buttonIndex)
 		if (strlen(Buttons[buttonIndex].c_str()) > 0) {
 			return;
 		}
+
+		*/
 		Buttons[buttonIndex] = "TODO: click item";
 
 
@@ -284,12 +283,12 @@ void Elixir::ActionButton(int buttonIndex)
 		}
 		LastAction = "pressing hotbutton " + to_string(buttonIndex);
 		Buttons[buttonIndex] = LastAction;
-		lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+		lastActionRepeatCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 		lastButtonIndex = buttonIndex;
 		isActionComplete = true;
 		return;
 	default:
-		sprintf(szTemp, "unkown button type: %i", hbtn->LastButtonType);
+		sprintf_s(szTemp, "unkown button type: %i", hbtn->LastButtonType);
 		Buttons[buttonIndex] = szTemp;
 		return;
 	}
@@ -305,7 +304,7 @@ void Elixir::ActionButton(int buttonIndex)
 	if (isActionComplete) {
 		LastAction = "pressing hotbutton " + buttonIndex;
 		Buttons[buttonIndex] = LastAction;
-		lastActionRepeatCooldown = (unsigned long)MQGetTickCount64() + 3000;
+		lastActionRepeatCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
 		lastButtonIndex = buttonIndex;
 		isActionComplete = true;
 		return;

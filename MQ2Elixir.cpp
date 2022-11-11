@@ -1,22 +1,60 @@
-// MQ2Elixir is a player assistance plugin
+// MQ2Elixir.cpp : Defines the entry point for the DLL application.
+//
 
+// PLUGIN_API is only to be used for callbacks.  All existing callbacks at this time
+// are shown below. Remove the ones your plugin does not use.  Always use Initialize
+// and Shutdown for setup and cleanup.
 
-#include "../MQ2Plugin.h"
+#include <mq/Plugin.h>
 #include "MQ2Elixir.h"
-#include "Core.h"
-#include "Elixir.h"
 
 PreSetup("MQ2Elixir");
-PLUGIN_VERSION(0.2);
+PLUGIN_VERSION(0.1);
 
-
-// Called once, when the plugin is to initialize
-PLUGIN_API VOID InitializePlugin(VOID)
+void DrawElixirSettingsPanel()
 {
-	DebugSpewAlways("Initializing MQ2Elixir");
+	if (!pElixir) {
+		return;
+	}
+	ImGui::Checkbox("Buff AI", &pElixir->IsBuffAIRunning);
+
+	ImGui::Checkbox("Heal AI", &pElixir->IsHealAIRunning);
+	ImGui::Text("%% <=");
+	ImGui::SameLine();
+	ImGui::SliderInt("##elixir.healAIMax", &pElixir->HealAIMax, 10, 90);
+
+	ImGui::Checkbox("Hurt Enemy AI", &pElixir->IsHateAIRunning);
+	ImGui::Text("%% >=");
+	ImGui::SameLine();
+	ImGui::SliderInt("##elixir.hateAIMax", &pElixir->HateAIMax, 10, 90);
+	
+
+	ImGui::Separator();
+
+	if (ImGui::Button("Reload Settings"))
+	{
+		LoadINI();
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Reset Settings"))
+	{
+		//s_settings.Reset();
+	}
+
+}
+
+/**
+ * @fn InitializePlugin
+ *
+ * This is called once on plugin initialization and can be considered the startup
+ * routine for the plugin.
+ */
+PLUGIN_API void InitializePlugin()
+{
+	DebugSpewAlways("MQ2Elixir::Initializing version %f", MQ2Version);
+
 	pElixir = new Elixir();
-	pElixirType = new MQ2ElixirType;
-	AddMQ2Data("Elixir", dataElixir);
 	
 	if (GetCharInfo()) {
 		char szName[256] = { 0 };
@@ -26,378 +64,98 @@ PLUGIN_API VOID InitializePlugin(VOID)
 
 	//Add commands, MQ2Data items, hooks, etc.
 	AddCommand("/elixir", ElixirCommand);
+	AddSettingsPanel("plugins/Elixir", DrawElixirSettingsPanel);
 }
 
-BOOL dataElixir(PCHAR szName, MQ2TYPEVAR& Dest) {
-	Dest.DWord = 1;
-	Dest.Type = pElixirType;
-	return true;
-}
-
-bool MQ2ElixirType::GetMember(MQ2VARPTR VarPtr, char* Member, char* Index, MQ2TYPEVAR& Dest) {
-
-	PMQ2TYPEMEMBER pMethod = MQ2ElixirType::FindMethod(Member);
-	if (pMethod) {
-		if ((ElixirMethods)pMethod->ID == Cast)
-		{
-			Dest.DWord = ActionCast(Index);
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == CastItem)
-		{
-			Dest.DWord = ActionCastItem(Index);
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == CastSpell)
-		{
-			Dest.DWord = ActionCastSpell(Index);
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == CastAbility)
-		{
-			Dest.DWord = ActionCastAbility(Index);
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == CastCombatAbility)
-		{
-			Dest.DWord = ActionCastCombatAbility(Index);
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == CastAA)
-		{
-			Dest.DWord = ActionCastAA(Index);
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == Memorize)
-		{
-			char szName[256] = { 0 };
-			PSPAWNINFO pSpawn = nullptr;
-			WORD gem = 0;
-			int counter = 0;
-			char* token = strtok(Index, " ");
-			std::string name;
-
-			while (token != NULL)
-			{
-				counter++;
-				if (counter == 1) {
-					gem = atoi(token);
-				}
-				else {
-					name.append(token);
-				}
-				token = strtok(NULL, " ");
-				if (counter > 1 && token != NULL) name.append(" ");
-			}
-
-			Dest.DWord = ActionMemorizeSpell(gem, (PCHAR)name.c_str());
-
-			Dest.DWord = false;
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == Disable)
-		{
-			IsElixirRunning = false;
-			Dest.DWord = false;
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == Enable)
-		{
-			IsElixirRunning = true;
-			Dest.DWord = true;
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == HateAIEnable)
-		{
-			pElixir->IsHateAIRunning = true;
-			Dest.DWord = true;
-			Dest.Type = pBoolType;
-			return true;
-		}
-		if ((ElixirMethods)pMethod->ID == HateAIDisable)
-		{
-			pElixir->IsHateAIRunning = false;
-			Dest.DWord = true;
-			Dest.Type = pBoolType;
-			return true;
-		}
-	}
-
-	PMQ2TYPEMEMBER pMember = MQ2ElixirType::FindMember(Member);
-	if (!pMember) return false;
-
-	PSPAWNINFO pSpawn = nullptr;
-	int stance = -1;
-
-	if (pMember->ID == Stance) {
-		if (pElixir) stance = pElixir->StanceMode;
-		Dest.DWord = stance;
-		Dest.Type = pIntType;
-		return true;
-	}
-	if (pMember->ID == IsFacingTarget) {
-		Dest.DWord = false;
-		pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
-		if (pSpawn) Dest.DWord = IsFacingSpawn(pSpawn);
-		Dest.Type = pBoolType;
-		return true;
-	}
-	if (pMember->ID == TargetHasBuff) {
-		Dest.DWord = false;
-		pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
-		if (pSpawn) Dest.DWord = HasBuff(pSpawn, Index);
-		Dest.Type = pBoolType;
-		return true;
-	}
-	if (pMember->ID == SpawnIDHasBuff) {
-		Dest.DWord = false;
-		std::string name;
-		PSPAWNINFO pSpawn = nullptr;
-
-		int counter = 0;
-		char* token = strtok(Index, " ");
-		while (token != NULL)
-		{
-			counter++;
-			if (counter == 1) {
-				int spawnID = atoi(token);
-				if (!spawnID) return true;
-				pSpawn = (PSPAWNINFO)GetSpawnByID(spawnID);
-				if (!pSpawn) return true;
-			}
-			else {
-				name.append(token);
-			}
-			token = strtok(NULL, " ");
-			if (token != NULL && counter > 1) name.append(" ");
-		}
-
-		if (!name.size()) return true;
-		if (!pSpawn) return true;
-
-		Dest.DWord = HasBuff(pSpawn, (PCHAR)name.c_str());
-		Dest.Type = pBoolType;
-		return true;
-	}
-	if (pMember->ID == LastAction) {
-		strcpy_s(lastAction, pElixir->LastAction.c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = lastAction;
-		return true;
-	}
-	if (pMember->ID == Gem1) {
-		strcpy_s(gem1, pElixir->Gems[0].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem1;
-		return true;
-	}
-	if (pMember->ID == Gem2) {
-		strcpy_s(gem2, pElixir->Gems[1].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem2;
-		return true;
-	}
-	if (pMember->ID == Gem3) {
-		strcpy_s(gem3, pElixir->Gems[2].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem3;
-		return true;
-	}
-	if (pMember->ID == Gem4) {
-		strcpy_s(gem4, pElixir->Gems[3].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem4;
-		return true;
-	}
-	if (pMember->ID == Gem5) {
-		strcpy_s(gem5, pElixir->Gems[4].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem5;
-		return true;
-	}
-	if (pMember->ID == Gem6) {
-		strcpy_s(gem6, pElixir->Gems[5].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem6;
-		return true;
-	}
-	if (pMember->ID == Gem7) {
-		strcpy_s(gem7, pElixir->Gems[6].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem7;
-		return true;
-	}
-	if (pMember->ID == Gem8) {
-		strcpy_s(gem8, pElixir->Gems[7].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem8;
-		return true;
-	}
-	if (pMember->ID == Gem9) {
-		strcpy_s(gem9, pElixir->Gems[8].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem9;
-		return true;
-	}
-	if (pMember->ID == Gem10) {
-		strcpy_s(gem10, pElixir->Gems[9].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem10;
-		return true;
-	}
-	if (pMember->ID == Gem11) {
-		strcpy_s(gem11, pElixir->Gems[10].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem11;
-		return true;
-	}
-	if (pMember->ID == Gem12) {
-		strcpy_s(gem12, pElixir->Gems[11].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem12;
-		return true;
-	}
-	if (pMember->ID == Gem13) {
-		strcpy_s(gem13, pElixir->Gems[12].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = gem13;
-		return true;
-	}
-	if (pMember->ID == Button1) {
-		strcpy_s(button1, pElixir->Buttons[0].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button1;
-		return true;
-	}
-	if (pMember->ID == Button2) {
-		strcpy_s(button2, pElixir->Buttons[1].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button2;
-		return true;
-	}
-	if (pMember->ID == Button3) {
-		strcpy_s(button3, pElixir->Buttons[2].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button3;
-		return true;
-	}
-	if (pMember->ID == Button4) {
-		strcpy_s(button4, pElixir->Buttons[3].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button4;
-		return true;
-	}
-	if (pMember->ID == Button5) {
-		strcpy_s(button5, pElixir->Buttons[4].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button5;
-		return true;
-	}
-	if (pMember->ID == Button6) {
-		strcpy_s(button6, pElixir->Buttons[5].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button6;
-		return true;
-	}
-	if (pMember->ID == Button7) {
-		strcpy_s(button7, pElixir->Buttons[6].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button7;
-		return true;
-	}
-	if (pMember->ID == Button8) {
-		strcpy_s(button8, pElixir->Buttons[7].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button8;
-		return true;
-	}
-	if (pMember->ID == Button9) {
-		strcpy_s(button9, pElixir->Buttons[8].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button9;
-		return true;
-	}
-	if (pMember->ID == Button10) {
-		strcpy_s(button10, pElixir->Buttons[9].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button10;
-		return true;
-	}
-	if (pMember->ID == Button11) {
-		strcpy_s(button11, pElixir->Buttons[10].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button11;
-		return true;
-	}
-	if (pMember->ID == Button12) {
-		strcpy_s(button12, pElixir->Buttons[11].c_str());
-		Dest.Type = pStringType;
-		Dest.Ptr = button12;
-		return true;
-	}
-	if (pMember->ID == IsEnabled) {
-		Dest.Type = pBoolType;
-		Dest.DWord = IsElixirRunning;
-		return true;
-	}
-	if (pMember->ID == IsHateAIEnabled) {
-		Dest.Type = pBoolType;
-		Dest.DWord = pElixir->IsHateAIRunning;
-		return true;
-	}
-	return false;
-}
-
-// Called once, when the plugin is to shutdown
-PLUGIN_API VOID ShutdownPlugin(VOID)
+/**
+ * @fn ShutdownPlugin
+ *
+ * This is called once when the plugin has been asked to shutdown.  The plugin has
+ * not actually shut down until this completes.
+ */
+PLUGIN_API void ShutdownPlugin()
 {
-    DebugSpewAlways("Shutting down MQ2Elixir");
-	
-	delete pElixirType;
+	DebugSpewAlways("MQ2Elixir::Shutting down");	
+	//TODO: fix unloading
 	delete pElixir;
-
-	RemoveMQ2Data("Elixir");
     RemoveCommand("/elixir");
 }
 
-// Called after entering a new zone
-PLUGIN_API VOID OnZoned(VOID)
+/**
+ * @fn OnCleanUI
+ *
+ * This is called once just before the shutdown of the UI system and each time the
+ * game requests that the UI be cleaned.  Most commonly this happens when a
+ * /loadskin command is issued, but it also occurs when reaching the character
+ * select screen and when first entering the game.
+ *
+ * One purpose of this function is to allow you to destroy any custom windows that
+ * you have created and cleanup any UI items that need to be removed.
+ */
+PLUGIN_API void OnCleanUI()
 {
- //   DebugSpewAlways("MQ2Elixir::OnZoned()");
-	pElixir->ZoneCooldown = (unsigned long)MQGetTickCount64() + 5000;
+	// DebugSpewAlways("MQ2Elixir::OnCleanUI()");
 }
 
-// Called once directly before shutdown of the new ui system, and also
-// every time the game calls CDisplay::CleanGameUI()
-PLUGIN_API VOID OnCleanUI(VOID)
+/**
+ * @fn OnReloadUI
+ *
+ * This is called once just after the UI system is loaded. Most commonly this
+ * happens when a /loadskin command is issued, but it also occurs when first
+ * entering the game.
+ *
+ * One purpose of this function is to allow you to recreate any custom windows
+ * that you have setup.
+ */
+PLUGIN_API void OnReloadUI()
 {
+	// DebugSpewAlways("MQ2Elixir::OnReloadUI()");
 }
 
-// Called once directly after the game ui is reloaded, after issuing /loadskin
-PLUGIN_API VOID OnReloadUI(VOID)
+/**
+ * @fn OnDrawHUD
+ *
+ * This is called each time the Heads Up Display (HUD) is drawn.  The HUD is
+ * responsible for the net status and packet loss bar.
+ *
+ * Note that this is not called at all if the HUD is not shown (default F11 to
+ * toggle).
+ *
+ * Because the net status is updated frequently, it is recommended to have a
+ * timer or counter at the start of this call to limit the amount of times the
+ * code in this section is executed.
+ */
+PLUGIN_API void OnDrawHUD()
 {
-	if (gGameState != GAMESTATE_INGAME) return;
-	if (!pCharSpawn) return;
+/*
+	static std::chrono::steady_clock::time_point DrawHUDTimer = std::chrono::steady_clock::now();
+	// Run only after timer is up
+	if (std::chrono::steady_clock::now() > DrawHUDTimer)
+	{
+		// Wait half a second before running again
+		DrawHUDTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+		DebugSpewAlways("MQ2Elixir::OnDrawHUD()");
+	}
+*/
 }
 
-// Called every frame that the "HUD" is drawn -- e.g. net status / packet loss bar
-PLUGIN_API VOID OnDrawHUD(VOID)
-{
-    // DONT leave in this debugspew, even if you leave in all the others
-    //DebugSpewAlways("MQ2Elixir::OnDrawHUD()");
-}
-
-// Called once directly after initialization, and then every time the gamestate changes
-PLUGIN_API VOID SetGameState(DWORD GameState)
+/**
+ * @fn SetGameState
+ *
+ * This is called when the GameState changes.  It is also called once after the
+ * plugin is initialized.
+ *
+ * For a list of known GameState values, see the constants that begin with
+ * GAMESTATE_.  The most commonly used of these is GAMESTATE_INGAME.
+ *
+ * When zoning, this is called once after @ref OnBeginZone @ref OnRemoveSpawn
+ * and @ref OnRemoveGroundItem are all done and then called once again after
+ * @ref OnEndZone and @ref OnAddSpawn are done but prior to @ref OnAddGroundItem
+ * and @ref OnZoned
+ *
+ * @param GameState int - The value of GameState at the time of the call
+ */
+PLUGIN_API void SetGameState(int GameState)
 {
 	if (GameState != GAMESTATE_INGAME) return;
 	if (!strcmp(ServerCharacterINI, GetCharInfo()->Name)) return;
@@ -406,14 +164,24 @@ PLUGIN_API VOID SetGameState(DWORD GameState)
 	LoadINI();
 }
 
-// This is called every time MQ pulses
-PLUGIN_API VOID OnPulse(VOID)
+
+/**
+ * @fn OnPulse
+ *
+ * This is called each time MQ2 goes through its heartbeat (pulse) function.
+ *
+ * Because this happens very frequently, it is recommended to have a timer or
+ * counter at the start of this call to limit the amount of times the code in
+ * this section is executed.
+ */
+PLUGIN_API void OnPulse()
 {
+	static std::chrono::steady_clock::time_point PulseTimer = std::chrono::steady_clock::now();
 	if (GetGameState() != GAMESTATE_INGAME) {
 		return;
 	}
 
-	if (PulseDelay > MQGetTickCount64()) {
+	if (PulseTimer > std::chrono::steady_clock::now()) {
 		return;
 	}
 
@@ -425,93 +193,285 @@ PLUGIN_API VOID OnPulse(VOID)
 		return;
 	}
 
-	PulseDelay = MQGetTickCount64() + 1000;
+	PulseTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(1000);
 
 	PCHARINFO pChar = GetCharInfo();
 
 	if (!pChar) return;
 	
-	BuffUpdate(pChar->pSpawn);
-	if (pTarget) {
-		PSPAWNINFO pSpawn = (PSPAWNINFO)GetSpawnByID(pTarget->Data.SpawnID);
-		if (pSpawn) {
-			BuffUpdate(pSpawn);
-		}
-	}
-
 	pElixir->OnPulse();
+	DebugSpewAlways("MQ2Elixir::OnPulse()");
 }
 
-// This is called every time WriteChatColor is called by MQ2Main or any plugin,
-// IGNORING FILTERS, IF YOU NEED THEM MAKE SURE TO IMPLEMENT THEM. IF YOU DONT
-// CALL CEverQuest::dsp_chat MAKE SURE TO IMPLEMENT EVENTS HERE (for chat plugins)
-PLUGIN_API DWORD OnWriteChatColor(PCHAR Line, DWORD Color, DWORD Filter)
+/**
+ * @fn OnWriteChatColor
+ *
+ * This is called each time WriteChatColor is called (whether by MQ2Main or by any
+ * plugin).  This can be considered the "when outputting text from MQ" callback.
+ *
+ * This ignores filters on display, so if they are needed either implement them in
+ * this section or see @ref OnIncomingChat where filters are already handled.
+ *
+ * If CEverQuest::dsp_chat is not called, and events are required, they'll need to
+ * be implemented here as well.  Otherwise, see @ref OnIncomingChat where that is
+ * already handled.
+ *
+ * For a list of Color values, see the constants for USERCOLOR_.  The default is
+ * USERCOLOR_DEFAULT.
+ *
+ * @param Line const char* - The line that was passed to WriteChatColor
+ * @param Color int - The type of chat text this is to be sent as
+ * @param Filter int - (default 0)
+ */
+PLUGIN_API void OnWriteChatColor(const char* Line, int Color, int Filter)
 {
-	//  DebugSpewAlways("MQ2Elixir::OnWriteChatColor(%s)",Line);
-	return 0;
+	// DebugSpewAlways("MQ2Elixir::OnWriteChatColor(%s, %d, %d)", Line, Color, Filter);
 }
 
-// This is called every time EQ shows a line of chat with CEverQuest::dsp_chat,
-// but after MQ filters and chat events are taken care of.
-PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
+/**
+ * @fn OnIncomingChat
+ *
+ * This is called each time a line of chat is shown.  It occurs after MQ filters
+ * and chat events have been handled.  If you need to know when MQ2 has sent chat,
+ * consider using @ref OnWriteChatColor instead.
+ *
+ * For a list of Color values, see the constants for USERCOLOR_. The default is
+ * USERCOLOR_DEFAULT.
+ *
+ * @param Line const char* - The line of text that was shown
+ * @param Color int - The type of chat text this was sent as
+ *
+ * @return bool - Whether to filter this chat from display
+ */
+PLUGIN_API bool OnIncomingChat(const char* Line, DWORD Color)
 {
-	// DebugSpewAlways("MQ2Elixir::OnIncomingChat(%s)",Line);
-	return 0;
+	// DebugSpewAlways("MQ2Elixir::OnIncomingChat(%s, %d)", Line, Color);
+	return false;
 }
 
-// This is called each time a spawn is added to a zone (inserted into EQ's list of spawns),
-// or for each existing spawn when a plugin first initializes
-// NOTE: When you zone, these will come BEFORE OnZoned
-PLUGIN_API VOID OnAddSpawn(PSPAWNINFO pNewSpawn)
+/**
+ * @fn OnAddSpawn
+ *
+ * This is called each time a spawn is added to a zone (ie, something spawns). It is
+ * also called for each existing spawn when a plugin first initializes.
+ *
+ * When zoning, this is called for all spawns in the zone after @ref OnEndZone is
+ * called and before @ref OnZoned is called.
+ *
+ * @param pNewSpawn PSPAWNINFO - The spawn that was added
+ */
+PLUGIN_API void OnAddSpawn(PSPAWNINFO pNewSpawn)
 {
-	// DebugSpewAlways("MQ2Elixir::OnAddSpawn(%s)",pNewSpawn->Name);
+	// DebugSpewAlways("MQ2Elixir::OnAddSpawn(%s)", pNewSpawn->Name);
 }
 
-// This is called each time a spawn is removed from a zone (removed from EQ's list of spawns).
-// It is NOT called for each existing spawn when a plugin shuts down.
-PLUGIN_API VOID OnRemoveSpawn(PSPAWNINFO pSpawn)
+/**
+ * @fn OnRemoveSpawn
+ *
+ * This is called each time a spawn is removed from a zone (ie, something despawns
+ * or is killed).  It is NOT called when a plugin shuts down.
+ *
+ * When zoning, this is called for all spawns in the zone after @ref OnBeginZone is
+ * called.
+ *
+ * @param pSpawn PSPAWNINFO - The spawn that was removed
+ */
+PLUGIN_API void OnRemoveSpawn(PSPAWNINFO pSpawn)
 {
-	//   DebugSpewAlways("MQ2Elixir::OnRemoveSpawn(%s)",pSpawn->Name);
+	// DebugSpewAlways("MQ2Elixir::OnRemoveSpawn(%s)", pSpawn->Name);
 }
 
-// This is called each time a ground item is added to a zone
-// or for each existing ground item when a plugin first initializes
-// NOTE: When you zone, these will come BEFORE OnZoned
-PLUGIN_API VOID OnAddGroundItem(PGROUNDITEM pNewGroundItem)
+/**
+ * @fn OnAddGroundItem
+ *
+ * This is called each time a ground item is added to a zone (ie, something spawns).
+ * It is also called for each existing ground item when a plugin first initializes.
+ *
+ * When zoning, this is called for all ground items in the zone after @ref OnEndZone
+ * is called and before @ref OnZoned is called.
+ *
+ * @param pNewGroundItem PGROUNDITEM - The ground item that was added
+ */
+PLUGIN_API void OnAddGroundItem(PGROUNDITEM pNewGroundItem)
 {
-	//DebugSpewAlways("MQ2Elixir::OnAddGroundItem(%d)",pNewGroundItem->DropID);
+	// DebugSpewAlways("MQ2Elixir::OnAddGroundItem(%d)", pNewGroundItem->DropID);
 }
 
-// This is called each time a ground item is removed from a zone
-// It is NOT called for each existing ground item when a plugin shuts down.
-PLUGIN_API VOID OnRemoveGroundItem(PGROUNDITEM pGroundItem)
+/**
+ * @fn OnRemoveGroundItem
+ *
+ * This is called each time a ground item is removed from a zone (ie, something
+ * despawns or is picked up).  It is NOT called when a plugin shuts down.
+ *
+ * When zoning, this is called for all ground items in the zone after
+ * @ref OnBeginZone is called.
+ *
+ * @param pGroundItem PGROUNDITEM - The ground item that was removed
+ */
+PLUGIN_API void OnRemoveGroundItem(PGROUNDITEM pGroundItem)
 {
-	// DebugSpewAlways("MQ2Elixir::OnRemoveGroundItem(%d)",pGroundItem->DropID);
+	// DebugSpewAlways("MQ2Elixir::OnRemoveGroundItem(%d)", pGroundItem->DropID);
 }
 
-// This is called when we receive the EQ_BEGIN_ZONE packet is received
-PLUGIN_API VOID OnBeginZone(VOID)
+/**
+ * @fn OnBeginZone
+ *
+ * This is called just after entering a zone line and as the loading screen appears.
+ */
+PLUGIN_API void OnBeginZone()
 {
 	IsZoning = true;
 }
 
-// This is called when we receive the EQ_END_ZONE packet is received
-PLUGIN_API VOID OnEndZone(VOID)
+/**
+ * @fn OnEndZone
+ *
+ * This is called just after the loading screen, but prior to the zone being fully
+ * loaded.
+ *
+ * This should occur before @ref OnAddSpawn and @ref OnAddGroundItem are called. It
+ * always occurs before @ref OnZoned is called.
+ */
+PLUGIN_API void OnEndZone()
 {
 	IsZoning = false;
 }
 
-// This is called when pChar!=pCharOld && We are NOT zoning
-// honestly I have no idea if its better to use this one or EndZone (above)
-PLUGIN_API VOID Zoned(VOID)
+/**
+ * @fn OnZoned
+ *
+ * This is called after entering a new zone and the zone is considered "loaded."
+ *
+ * It occurs after @ref OnEndZone @ref OnAddSpawn and @ref OnAddGroundItem have
+ * been called.
+ */
+PLUGIN_API void OnZoned()
 {
-	//    DebugSpewAlways("MQ2Elixir::Zoned");
+	// DebugSpewAlways("MQ2Elixir::OnZoned()");
+	pElixir->ZoneCooldownTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(5000);
+}
+
+/**
+ * @fn OnUpdateImGui
+ *
+ * This is called each time that the ImGui Overlay is rendered. Use this to render
+ * and update plugin specific widgets.
+ *
+ * Because this happens extremely frequently, it is recommended to move any actual
+ * work to a separate call and use this only for updating the display.
+ */
+PLUGIN_API void OnUpdateImGui()
+{
+	/*
+	bool ShowMQ2ElixirWindow = true;
+	if (GetGameState() == GAMESTATE_INGAME)
+	{
+		if (ShowMQ2ElixirWindow)
+		{
+			if (ImGui::Begin("MQ2Elixir", &ShowMQ2ElixirWindow, ImGuiWindowFlags_MenuBar))
+			{
+				if (ImGui::BeginMenuBar())
+				{
+					ImGui::Text("MQ2Elixir is loaded!");
+					ImGui::EndMenuBar();
+				}
+			}
+			ImGui::End();
+		}
+	}
+	*/
+}
+
+/**
+ * @fn OnMacroStart
+ *
+ * This is called each time a macro starts (ex: /mac somemacro.mac), prior to
+ * launching the macro.
+ *
+ * @param Name const char* - The name of the macro that was launched
+ */
+PLUGIN_API void OnMacroStart(const char* Name)
+{
+	// DebugSpewAlways("MQ2Elixir::OnMacroStart(%s)", Name);
+}
+
+/**
+ * @fn OnMacroStop
+ *
+ * This is called each time a macro stops (ex: /endmac), after the macro has ended.
+ *
+ * @param Name const char* - The name of the macro that was stopped.
+ */
+PLUGIN_API void OnMacroStop(const char* Name)
+{
+	// DebugSpewAlways("MQ2Elixir::OnMacroStop(%s)", Name);
+}
+
+/**
+ * @fn OnLoadPlugin
+ *
+ * This is called each time a plugin is loaded (ex: /plugin someplugin), after the
+ * plugin has been loaded and any associated -AutoExec.cfg file has been launched.
+ * This means it will be executed after the plugin's @ref InitializePlugin callback.
+ *
+ * This is also called when THIS plugin is loaded, but initialization tasks should
+ * still be done in @ref InitializePlugin.
+ *
+ * @param Name const char* - The name of the plugin that was loaded
+ */
+PLUGIN_API void OnLoadPlugin(const char* Name)
+{
+	// DebugSpewAlways("MQ2Elixir::OnLoadPlugin(%s)", Name);
+}
+
+/**
+ * @fn OnUnloadPlugin
+ *
+ * This is called each time a plugin is unloaded (ex: /plugin someplugin unload),
+ * just prior to the plugin unloading.  This means it will be executed prior to that
+ * plugin's @ref ShutdownPlugin callback.
+ *
+ * This is also called when THIS plugin is unloaded, but shutdown tasks should still
+ * be done in @ref ShutdownPlugin.
+ *
+ * @param Name const char* - The name of the plugin that is to be unloaded
+ */
+PLUGIN_API void OnUnloadPlugin(const char* Name)
+{
+	// DebugSpewAlways("MQ2Elixir::OnUnloadPlugin(%s)", Name);
+}
+
+void UpdateINIFileName()
+{
+	sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, GetServerShortName(), pLocalPC->Name);
+}
+
+void SaveINI() {
+	UpdateINIFileName();
+	std::string sectionName = "Elixir";
+	WritePrivateProfileInt(sectionName, "HealAIMax", pElixir->HealAIMax, INIFileName);
+	WritePrivateProfileBool(sectionName, "HealAIEnabled", pElixir->IsHealAIRunning, INIFileName);
+	WritePrivateProfileInt(sectionName, "HateAIMax", pElixir->HateAIMax, INIFileName);
+	WritePrivateProfileBool(sectionName, "HateAIEnabled", pElixir->IsHateAIRunning, INIFileName);
+	WritePrivateProfileBool(sectionName, "BuffAIEnabled", pElixir->IsBuffAIRunning, INIFileName);
+	WritePrivateProfileBool(sectionName, "AIEnabled", IsElixirRunning, INIFileName);
+}
+
+void LoadINI() {
+	UpdateINIFileName();
+	std::string sectionName = "Elixir";
+	IsElixirRunning = GetPrivateProfileInt(sectionName, "AIEnabled", 1, INIFileName);
+	pElixir->HealAIMax = GetPrivateProfileInt(sectionName, "HealAIMax", 50, INIFileName);
+	pElixir->IsHealAIRunning = GetPrivateProfileInt(sectionName, "HealAIEnabled", 1, INIFileName);
+	pElixir->HateAIMax = GetPrivateProfileInt(sectionName, "HateAIMax", 80, INIFileName);
+	pElixir->IsHateAIRunning = GetPrivateProfileInt(sectionName, "HateAIEnabled", 0, INIFileName);
+	pElixir->IsBuffAIRunning = GetPrivateProfileInt(sectionName, "BuffAIEnabled", 0, INIFileName);
 }
 
 PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 {
-	if (!GetCharInfo2()) return;
-
+	if (!GetPcProfile()) return;
+	std::string sectionName = "Elixir";
 	char szCommand[MAX_STRING] = { 0 };
 	char szArg[MAX_STRING] = { 0 };
 	char szArg2[MAX_STRING] = { 0 };
@@ -556,13 +516,13 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 			if (!_strnicmp(szArg2, "1", 2)) {
 				pElixir->IsHateAIRunning = true;
 				WriteChatf("elixir hate ai is now enabled");
-				WritePrivateProfileInt("Elixir", "IsHateAIEnabled", 1, INIFileName);
+				WritePrivateProfileInt(sectionName, "IsHateAIEnabled", 1, INIFileName);
 				return;
 			}
 			if (!_strnicmp(szArg2, "0", 2)) {
 				pElixir->IsHateAIRunning = false;
 				WriteChatf("elixir hate ai is now disabled");
-				WritePrivateProfileInt("Elixir", "IsHateAIEnabled", 0, INIFileName);
+				WritePrivateProfileInt(sectionName, "IsHateAIEnabled", 0, INIFileName);
 				return;
 			}
 			WriteChatf("elixir hate ai [0|1] (\a%s\ax): set smart hate AI values", (pElixir->IsHateAIRunning ? "g1" : "r0"));
@@ -675,28 +635,4 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 		WriteChatf("elixir <debug> [tagmode:(\a%s\ax)]: enable debug options", (pElixir->IsDebugTagMode ? "g1" : "r0"));
 		return;
 	}
-}
-
-void SaveINI() {
-	WritePrivateProfileInt(ServerCharacterINI, "HealAIMax", pElixir->HealAIMax, INIFileName);
-	WritePrivateProfileInt(ServerCharacterINI, "HealAIEnabled", (pElixir->IsHealAIRunning ? 1 : 0), INIFileName);
-	WritePrivateProfileInt(ServerCharacterINI, "HateAIMax", pElixir->HateAIMax, INIFileName);
-	WritePrivateProfileInt(ServerCharacterINI, "HateAIEnabled", (pElixir->IsHateAIRunning ? 1 : 0), INIFileName);
-	WritePrivateProfileInt(ServerCharacterINI, "BuffAIEnabled", (pElixir->IsBuffAIRunning ? 1 : 0), INIFileName);
-	WritePrivateProfileInt(ServerCharacterINI, "AIEnabled", (IsElixirRunning ? 1 : 0), INIFileName);
-}
-
-void LoadINI() {
-	IsElixirRunning = GetPrivateProfileInt(ServerCharacterINI, "AIEnabled", 1, INIFileName);
-	pElixir->HealAIMax = GetPrivateProfileInt(ServerCharacterINI, "HealAIMax", 50, INIFileName);
-	pElixir->IsHealAIRunning = GetPrivateProfileInt(ServerCharacterINI, "HealAIEnabled", 1, INIFileName);
-	pElixir->HateAIMax = GetPrivateProfileInt(ServerCharacterINI, "HateAIMax", 80, INIFileName);
-	pElixir->IsHateAIRunning = GetPrivateProfileInt(ServerCharacterINI, "HateAIEnabled", 0, INIFileName);
-	pElixir->IsBuffAIRunning = GetPrivateProfileInt(ServerCharacterINI, "BuffAIEnabled", 0, INIFileName);
-}
-
-bool WINAPI WritePrivateProfileInt(LPCSTR AppName, LPCSTR KeyName, INT Value, LPCSTR Filename) {
-	CHAR Temp[1024] = { 0 };
-	_snprintf_s(Temp, 1023, "%i", Value);
-	return WritePrivateProfileString(AppName, KeyName, Temp, Filename);
 }
