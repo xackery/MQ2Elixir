@@ -23,12 +23,16 @@ void DrawElixirSettingsPanel()
 	ImGui::SameLine();
 	ImGui::SliderInt("##elixir.healAIMax", &pElixir->HealAIMax, 10, 90);
 
+
+	ImGui::Checkbox("Auto Target AI", &pElixir->IsTargetAIRunning);
+	ImGui::Text("TargetDebug: %s", pElixir->TargetStr.c_str());
+	
+
 	ImGui::Checkbox("Hurt Enemy AI", &pElixir->IsHateAIRunning);
 	ImGui::Text("%% >=");
 	ImGui::SameLine();
 	ImGui::SliderInt("##elixir.hateAIMax", &pElixir->HateAIMax, 10, 90);
 	
-
 	ImGui::Separator();
 
 	if (ImGui::Button("Reload Settings"))
@@ -454,6 +458,7 @@ void SaveINI() {
 	WritePrivateProfileBool(sectionName, "HealAIEnabled", pElixir->IsHealAIRunning, INIFileName);
 	WritePrivateProfileInt(sectionName, "HateAIMax", pElixir->HateAIMax, INIFileName);
 	WritePrivateProfileBool(sectionName, "HateAIEnabled", pElixir->IsHateAIRunning, INIFileName);
+	WritePrivateProfileBool(sectionName, "TargetAIEnabled", pElixir->IsTargetAIRunning, INIFileName);	
 	WritePrivateProfileBool(sectionName, "BuffAIEnabled", pElixir->IsBuffAIRunning, INIFileName);
 	WritePrivateProfileBool(sectionName, "AIEnabled", IsElixirRunning, INIFileName);
 }
@@ -466,6 +471,7 @@ void LoadINI() {
 	pElixir->IsHealAIRunning = GetPrivateProfileInt(sectionName, "HealAIEnabled", 1, INIFileName);
 	pElixir->HateAIMax = GetPrivateProfileInt(sectionName, "HateAIMax", 80, INIFileName);
 	pElixir->IsHateAIRunning = GetPrivateProfileInt(sectionName, "HateAIEnabled", 0, INIFileName);
+	pElixir->IsTargetAIRunning = GetPrivateProfileInt(sectionName, "TargetAIEnabled", 0, INIFileName);	
 	pElixir->IsBuffAIRunning = GetPrivateProfileInt(sectionName, "BuffAIEnabled", 0, INIFileName);
 }
 
@@ -482,6 +488,7 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 	if (!*szCommand || !_strnicmp(szCommand, "help", 5)) {
 		WriteChatf("usage: /elixir <command> [subCommands] (current value): description");
 		WriteChatf("elixir <ai> [0|1] (\a%s\ax): overall AI running and management", (IsElixirRunning ? "g1" : "r0"));
+		WriteChatf("elixir <target> [ai:(\a%s\ax)]: set auto target AI values", (pElixir->IsTargetAIRunning ? "g1" : "r0"));
 		WriteChatf("elixir <hate> [ai:(\a%s\ax)|max:(\ag%d\ax)]: set smart hate AI values", (pElixir->IsHateAIRunning ? "g1" : "r0"), pElixir->HateAIMax);
 		WriteChatf("elixir <buff> [ai:(\a%s\ax)]: set smart buff AI values", (pElixir->IsBuffAIRunning ? "g1" : "r0"));
 		WriteChatf("elixir <heal> [ai:(\a%s\ax)|max:(\ag%d\ax)]: set smart heal AI values", (pElixir->IsHealAIRunning ? "g1" : "r0"), pElixir->HealAIMax);
@@ -613,6 +620,27 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 		}
 
 		WriteChatf("elixir <buff> [ai] (\a%s\ax): set smart buff AI threshold", (pElixir->IsBuffAIRunning ? "g1" : "r0"));
+		return;
+	}
+
+	
+	if (!_strnicmp(szCommand, "target", 4)) {
+		if (!_strnicmp(szArg, "ai", 3)) {
+			if (!_strnicmp(szArg2, "1", 2)) {
+				pElixir->IsBuffAIRunning = true;
+				WriteChatf("elixir target ai is now enabled");
+				return;
+			}
+			if (!_strnicmp(szArg2, "0", 2)) {
+				pElixir->IsBuffAIRunning = false;
+				WriteChatf("elixir target ai is now disabled");
+				return;
+			}
+			WriteChatf("elixir target ai [0|1] (\a%s\ax): set smart buff AI values", (pElixir->IsTargetAIRunning ? "g1" : "r0"));
+			return;
+		}
+
+		WriteChatf("elixir <target> [ai] (\a%s\ax): set auto target AI threshold", (pElixir->IsTargetAIRunning ? "g1" : "r0"));
 		return;
 	}
 

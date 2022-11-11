@@ -14,6 +14,7 @@ public:
 	string LastAction;
 	string Gems[NUM_SPELL_GEMS];
 	string Buttons[12];
+	string TargetStr;
 	void OnPulse();
 
 	// Is Hate AI logic running. When disabled, hate is not honored and we just nuke freely
@@ -28,6 +29,9 @@ public:
 	int HateAIMax = 80;
 	// HealAI Maximum health value to trigger heal spells to be casted on a group member
 	int HealAIMax = 50;
+
+	// Is Target AI logic running. When disabled, targetting main assist no longer happens
+	bool IsTargetAIRunning = false;
 
 	// Is the target considered having high hate
 	bool IsHighHateAggro();
@@ -62,10 +66,12 @@ private:
 	int lastActionRepeat;
 	std::chrono::steady_clock::time_point lastActionRepeatCooldown;
 	
+	std::chrono::steady_clock::time_point lastTargetRepeatCooldownTimer;
 
 	// Gem attempts to cast the provided gem index
 	void ActionGem(int gemIndex);
 	void ActionButton(int buttonIndex);
+	void ActionTarget();
 
 	std::string Elixir::Ability(int abilityIndex);
 	std::string Elixir::Spell(PSPELL pSpell);	

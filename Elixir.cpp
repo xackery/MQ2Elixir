@@ -84,8 +84,7 @@ void Elixir::OnPulse()
 	for (int i = maxGems; i < NUM_SPELL_GEMS; i++) {
 		Gems[i] = "not available";
 	}
-
-	//TODO: buff cycle last gem (maxGem)
+	ActionTarget();
 }
 
 bool Elixir::IsHighHateAggro()

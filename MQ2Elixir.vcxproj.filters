@@ -30,13 +30,16 @@
     <ClCompile Include="ElixirButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\mq2elixir\Core.cpp">
+    <ClCompile Include="Core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\mq2elixir\Elixir.cpp">
+    <ClCompile Include="Elixir.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\mq2elixir\Mob.cpp">
+    <ClCompile Include="Mob.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElixirTarget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +56,7 @@
     <ClInclude Include="Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\mq2elixir\Mob.h">
+    <ClInclude Include="Mob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
