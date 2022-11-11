@@ -6,37 +6,9 @@ One Paragraph project description goes here
 
 Quick start instructions to get users up and going
 
-```txt
-/plugin MQ2Elixir
-```
-
-### Commands
-
-Describe the commands available and how to use them.
-
-```txt
-Give examples
-```
-
-### Configuration File
-
-Describe the configuration file and what the settings do
-
-```yaml
-- Example goes here
-```
-
-## Other Notes
-
-Add additional notes
-
-## Authors
-
-* **Your name** - *Initial work*
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## Acknowledgments
-
-* Inspiration from...
-* I'd like to thank the Thieves' Guild for helping me with all the code I stole...
+- [get macroquest (Emu Build)](https://github.com/macroquest/macroquest/releases)
+- [get MQ2Elixir.dll](https://github.com/xackery/MQ2Elixir/releases), place it inside your macroquest\ path
+- [get Emu navmesh](https://github.com/Ewiclip/lazarus_navmesh/archive/refs/heads/main.zip), extract it into macroquest\resources\MQ2Nav
+- in game, type `/plugin mq2elixir`, you should see elixir loaded
+- press your EQ button, you should see MacroQuest, Settings.
+- inside Settings, go to plugins, Elixir. Toggle options
