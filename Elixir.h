@@ -6,6 +6,7 @@
 class Elixir {
 public:
 
+	const char* ElixirPluginVersion = "MQ2Elixir v0.1.1";
 	// StanceMode is what mode is currently being used.
 	int StanceMode = 1;
 	// cooldown before doing anything after zoning
@@ -13,9 +14,22 @@ public:
 
 	string LastAction;
 	string Gems[NUM_SPELL_GEMS];
+	bool IgnoreGems[NUM_SPELL_GEMS];
+	int ignoreGemCount;
+	int maxGemCount;
 	string Buttons[12];
-	string TargetStr;
+	string TargetAIStr;
+	string MeditateAIStr;
 	void OnPulse();
+
+	// Is Elixir as a whole running or not, master override
+	bool IsElixirRunning = true;
+
+	// Is Elixir UI Showing?
+	bool IsElixirUIShowing = true;
+
+	// Will elixir AI run if the EQ window is focused?
+	bool IsElixirDisabledOnFocus = false;
 
 	// Is Hate AI logic running. When disabled, hate is not honored and we just nuke freely
 	bool IsHateAIRunning = false;
@@ -35,12 +49,30 @@ public:
 	// Is Nuke AI logic running. When disabled, enemies don't get hit by offensive abilities
 	bool IsNukeAIRunning = false;
 	// NukeAI's Maximum HP Value before casting spells
-	int NukeAIMax = 95;
+	int NukeAIHPMax = 95;
+	// NukeAI's Maximum Mana Value before stopping casting spells
+	int NukeAIManaMax = 50;
+
+	// Is Meditate AI logic running. When disabled, sitting behaviors won't trigger
+	bool IsMeditateAIRunning = false;
+	bool IsMeditateBySitting = false;
+	bool IsMeditateEnabledDuringCombat = true;
+	int lastHPOnSit = 0;
+	std::chrono::steady_clock::time_point sitCooldownTimer;
+	bool IsMeditateByCannibalize = false;
+	int CanniMaxMana = 99;
+	int CanniMinHP = 20;
 
 	// Is Target AI logic running. When disabled, targetting main assist no longer happens
 	bool IsTargetAIRunning = false;
 	// TargetAI's minimum range a target must be for assist to trigger
 	int TargetAIMinRange = 50;
+
+	// Is Target Auto Attacking allowed, if done via assist
+	bool IsTargetAutoAttack = false;
+
+	// Is Target Pet Attacking allowed, if done via assist
+	bool IsTargetPetAttack = false;
 
 	// If Settings Debug is Enabled, shows additional debug strings on the window
 	bool IsSettingsDebugEnabled = false;
@@ -84,6 +116,7 @@ private:
 	void ActionGem(int gemIndex);
 	void ActionButton(int buttonIndex);
 	void ActionTarget();
+	void ActionSit();
 
 	std::string Elixir::Ability(int abilityIndex);
 	std::string Elixir::Spell(PSPELL pSpell);	

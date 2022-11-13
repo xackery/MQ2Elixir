@@ -15,6 +15,11 @@ void Elixir::ActionButton(int buttonIndex)
 	CXWnd* spellGem = nullptr;
 	int gemIndex;
 
+	if (gbInForeground && IsElixirDisabledOnFocus) {
+		Buttons[buttonIndex] = "AI frozen, has focus";
+		return;
+	}
+
 	if (isActionComplete) {
 		Buttons[buttonIndex] = "earlier action completed";
 		return;
@@ -142,7 +147,10 @@ void Elixir::ActionButton(int buttonIndex)
 		if (Buttons[buttonIndex].c_str() > 0) {
 			return;
 		}
-
+		if (IgnoreGems[gemIndex]) {
+			Buttons[buttonIndex] = "gem ignored";
+			return;
+		}
 		ActionGem(gemIndex);
 		Buttons[buttonIndex] = "casting";
 		LastAction = "button " + to_string(buttonIndex + 1) + " " + Buttons[buttonIndex] + " gem " + to_string(gemIndex + 1);

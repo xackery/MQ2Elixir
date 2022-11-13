@@ -49,11 +49,7 @@ void Elixir::OnPulse()
 	int maxGems = 8;
 	if (PALTABILITY pAbility = AAByName("Mnemonic Retention")) {
 		int rank = pAbility->CurrentRank - 1;
-#if !defined(ROF2EMU) && !defined(UFEMU)
-		if (((PcZoneClient*)pPCData)->HasAlternateAbility(pAbility->Index, NULL, false, false))
-#else
 		if (((PcZoneClient*)pPCData)->HasAlternateAbility(pAbility->Index, NULL, false))
-#endif
 		{
 			rank++;
 		}
@@ -61,10 +57,17 @@ void Elixir::OnPulse()
 			maxGems += rank;
 		}
 	}
-	Gems[maxGems-1] = "reserved";
+	maxGemCount = maxGems;
 
-	for (int i = 0; i < maxGems-1; i++) {
-		ActionGem(i);
+	ignoreGemCount = 0;
+	for (int i = 0; i < maxGems; i++) {
+		if (IgnoreGems[i]) {
+			Gems[i] = "ignored gem";
+			ignoreGemCount++;
+		}
+		else {
+			ActionGem(i);
+		}
 		
 		if (int64_t spellID = GetMemorizedSpell(i)) {			
 			if (PSPELL pSpell = GetSpellByID(spellID)) {
@@ -85,6 +88,7 @@ void Elixir::OnPulse()
 		Gems[i] = "not available";
 	}
 	ActionTarget();
+	ActionSit();
 }
 
 bool Elixir::IsHighHateAggro()

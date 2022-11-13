@@ -12,206 +12,6 @@
 PreSetup("MQ2Elixir");
 PLUGIN_VERSION(0.1);
 
-void DrawElixirSettingsPanel()
-{
-	if (!pElixir) {
-		return;
-	}
-	char szBuffer[MAX_STRING] = { 0 };
-	bool isChanged = false;
-	bool isOpen = false;
-	ImU32 redColor = IM_COL32(255, 100, 100, 100);
-	ImU32 greenColor = IM_COL32(100, 255, 100, 100);
-	ImU32 blueColor = IM_COL32(0, 0, 255, 100);
-	ImU32 blueActiveColor = IM_COL32(20, 20, 255, 100);
-	ImU32 blueHoverColor = IM_COL32(40, 40, 255, 100);
-
-
-	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsBuffAIRunning) ? greenColor : redColor);
-	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
-	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-
-	sprintf_s(szBuffer, "Buff AI (%s)", (pElixir->IsBuffAIRunning) ? "Enabled" : "Disabled");
-	isOpen = ImGui::TreeNode("##elixir.buffAILabel", szBuffer);
-	ImGui::PopStyleColor(4);
-	if (ImGui::BeginPopupContextItem())
-	{
-		ImGui::EndPopup();
-	}
-	if (isOpen)
-	{
-		if (ImGui::Checkbox("Buff AI", &pElixir->IsBuffAIRunning)) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("This AI will keep self buffs or target buffs on self maintained.\nIt is not smart enough yet to manage buffs on other targets, nor is it smart about stacking and such, beyond MQ2 built in support logic, buff stacking in EQ is complex and weird.");
-		ImGui::TreePop();
-	}
-
-	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsHealAIRunning) ? greenColor : redColor);
-	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
-	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-
-	if (!pElixir->IsHealAIRunning) {
-		sprintf_s(szBuffer, "Heal AI (Disabled)");
-	}
-	else {
-		
-		sprintf_s(szBuffer, "Heal AI (Enabled <= %d%%%% HP)", pElixir->HealAIMax);
-	}
-	isOpen = ImGui::TreeNode("##elixir.healAILabel", szBuffer);
-	ImGui::PopStyleColor(4);
-	if (ImGui::BeginPopupContextItem())
-	{
-		ImGui::EndPopup();
-	}
-	if (isOpen)
-	{
-		if (ImGui::Checkbox("Heal AI", &pElixir->IsHealAIRunning)) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("This AI will attempt to use healing spells when you or a group mate reaches the % hp defined below.");
-
-		if (ImGui::SliderInt("##elixir.healAIMax", &pElixir->HealAIMax, 10, 90, "Heal when less than %d%% HP")) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("Heal AI will trigger the lower number gem slot that is valid for the situation when a group mate hits this percent");
-
-		ImGui::TreePop();
-	}
-
-	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsTargetAIRunning) ? greenColor : redColor);
-	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
-	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-	if (!pElixir->IsTargetAIRunning) {
-		sprintf_s(szBuffer, "Target AI (Disabled)");
-	}
-	else {
-		sprintf_s(szBuffer, "Target AI (Enabled <= %d distance)", pElixir->TargetAIMinRange);
-	}
-	isOpen = ImGui::TreeNode("##elixir.targetAILabel", szBuffer);
-	ImGui::PopStyleColor(4);
-	if (ImGui::BeginPopupContextItem())
-	{
-		ImGui::EndPopup();
-	}
-	if (isOpen)
-	{
-		if (ImGui::Checkbox("AutoTarget AI", &pElixir->IsTargetAIRunning)) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("This AI will automatically target the group assist player when it reaches min range and is line of sight.\nBe sure to mark an ally with the Main Assist role to have this properly work.");
-
-		if (ImGui::SliderInt("##elixir.targetAIMax", &pElixir->TargetAIMinRange, 10, 200, "Target at %d distance")) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("Range of main assist target to begin assisting");
-		ImGui::TreePop();
-	}
-
-
-	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsHateAIRunning) ? greenColor : redColor);
-	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
-	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-	if (!pElixir->IsHateAIRunning) {
-		sprintf_s(szBuffer, "StopHate AI (Disabled)");
-	}
-	else {
-		sprintf_s(szBuffer, "StopHate AI (Enabled >= %d%%%% aggro)", pElixir->HateAIMax);
-	}
-	isOpen = ImGui::TreeNode("##elixir.hateAILabel", szBuffer);
-	ImGui::PopStyleColor(4);
-	if (ImGui::BeginPopupContextItem())
-	{
-		ImGui::EndPopup();
-	}
-	if (isOpen)
-	{
-		if (ImGui::Checkbox("StopHate AI", &pElixir->IsHateAIRunning)) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("This AI will stop casting spells and offensive abilities if hate reaches this %\nNote this only works in group settings, if not in a group, ignored");
-
-		if (ImGui::SliderInt("##elixir.hateAIMin", &pElixir->HateAIMax, 10, 95, "StopHate at %d%% aggro")) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("StopHate AI will stop casting offensive spells at this %%");
-
-		ImGui::TreePop();
-	}
-
-
-	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsNukeAIRunning) ? greenColor : redColor);
-	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
-	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
-	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
-	if (!pElixir->IsNukeAIRunning) {
-		sprintf_s(szBuffer, "Nuke AI (Disabled)");
-	}
-	else {
-		sprintf_s(szBuffer, "Nuke AI (Enabled <= %d %%HP)", pElixir->NukeAIMax);
-	}
-	isOpen = ImGui::TreeNode("##elixir.nukeAILabel", szBuffer);
-	ImGui::PopStyleColor(4);
-	if (ImGui::BeginPopupContextItem())
-	{
-		ImGui::EndPopup();
-	}
-	if (isOpen)
-	{
-		if (ImGui::Checkbox("Nuke AI", &pElixir->IsNukeAIRunning)) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("This AI will cast detrimental spells (not just nukes, dots, snares, slows etc too) and offensive abilities once a target is at %% hp");
-
-		if (ImGui::SliderInt("##elixir.nukeAIMin", &pElixir->NukeAIMax, 10, 95, "Nuke at %d%% HP")) {
-			isChanged = true;
-		}
-		ImGui::SameLine();
-		mq::imgui::HelpMarker("Nuke AI will not cast until target is at %");
-		ImGui::TreePop();
-	}
-
-
-	
-	if (isChanged) {
-		SaveINI();
-	}
-	ImGui::Separator();
-
-	if (ImGui::Button("Reload Settings"))
-	{
-		LoadINI();
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("Reset Settings"))
-	{
-		//s_settings.Reset();
-	}
-	ImGui::Separator();
-
-	ImGui::Checkbox("Debug", &pElixir->IsSettingsDebugEnabled);
-	if (pElixir->IsSettingsDebugEnabled) {
-		ImGui::Text("LastAction: %s", pElixir->LastAction.c_str());
-		ImGui::Text("Target AI: %s", pElixir->TargetStr.c_str());
-		for (int i = 0; i < 12; i++) {
-			ImGui::Text("Button %d: %s", i, pElixir->Buttons[i].c_str());
-		}
-	}
-}
-
 /**
  * @fn InitializePlugin
  *
@@ -223,7 +23,7 @@ PLUGIN_API void InitializePlugin()
 	DebugSpewAlways("MQ2Elixir::Initializing version %f", MQ2Version);
 
 	pElixir = new Elixir();
-	
+
 	if (GetCharInfo()) {
 		char szName[256] = { 0 };
 		strcpy_s(szName, GetCharInfo()->Name);
@@ -232,7 +32,7 @@ PLUGIN_API void InitializePlugin()
 
 	//Add commands, MQ2Data items, hooks, etc.
 	AddCommand("/elixir", ElixirCommand);
-	AddSettingsPanel("plugins/Elixir", DrawElixirSettingsPanel);
+	AddSettingsPanel("plugins/Elixir", DrawElixirUIPanel);
 }
 
 /**
@@ -356,7 +156,10 @@ PLUGIN_API void OnPulse()
 		return;
 	}
 
-	if (!IsElixirRunning) {
+	if (!pElixir) {
+		return;
+	}
+	if (!pElixir->IsElixirRunning) {
 		return;
 	}
 
@@ -529,24 +332,16 @@ PLUGIN_API void OnZoned()
  */
 PLUGIN_API void OnUpdateImGui()
 {
-	/*
-	bool ShowMQ2ElixirWindow = true;
-	if (GetGameState() == GAMESTATE_INGAME)
+	if (!pElixir) return;
+	if (!pElixir->IsElixirUIShowing) return;
+
+	if (GetGameState() != GAMESTATE_INGAME) return;	
+
+	if (ImGui::Begin(pElixir->ElixirPluginVersion, &pElixir->IsElixirUIShowing))//, ImGuiWindowFlags_MenuBar))
 	{
-		if (ShowMQ2ElixirWindow)
-		{
-			if (ImGui::Begin("MQ2Elixir", &ShowMQ2ElixirWindow, ImGuiWindowFlags_MenuBar))
-			{
-				if (ImGui::BeginMenuBar())
-				{
-					ImGui::Text("MQ2Elixir is loaded!");
-					ImGui::EndMenuBar();
-				}
-			}
-			ImGui::End();
-		}
+		DrawElixirUI();
 	}
-	*/
+	ImGui::End();
 }
 
 /**
@@ -616,25 +411,75 @@ void UpdateINIFileName()
 void SaveINI() {
 	UpdateINIFileName();
 	std::string sectionName = "Elixir";
-	WritePrivateProfileInt(sectionName, "HealAIMax", pElixir->HealAIMax, INIFileName);
-	WritePrivateProfileBool(sectionName, "HealAIEnabled", pElixir->IsHealAIRunning, INIFileName);
-	WritePrivateProfileInt(sectionName, "HateAIMax", pElixir->HateAIMax, INIFileName);
+	WritePrivateProfileBool(sectionName, "AIEnabled", pElixir->IsElixirRunning, INIFileName);
+	WritePrivateProfileBool(sectionName, "DisableOnFocus", pElixir->IsElixirDisabledOnFocus, INIFileName);
+	
 	WritePrivateProfileBool(sectionName, "HateAIEnabled", pElixir->IsHateAIRunning, INIFileName);
-	WritePrivateProfileBool(sectionName, "TargetAIEnabled", pElixir->IsTargetAIRunning, INIFileName);	
+	WritePrivateProfileInt(sectionName, "HateAIMax", pElixir->HateAIMax, INIFileName);
+	
+	WritePrivateProfileBool(sectionName, "HealAIEnabled", pElixir->IsHealAIRunning, INIFileName);
+	WritePrivateProfileInt(sectionName, "HealAIMax", pElixir->HealAIMax, INIFileName);
+
 	WritePrivateProfileBool(sectionName, "BuffAIEnabled", pElixir->IsBuffAIRunning, INIFileName);
-	WritePrivateProfileBool(sectionName, "AIEnabled", IsElixirRunning, INIFileName);
+	
+	WritePrivateProfileBool(sectionName, "NukeAIEnabled", pElixir->IsNukeAIRunning, INIFileName);
+	WritePrivateProfileInt(sectionName, "NukeAIManaMax", pElixir->NukeAIManaMax, INIFileName);
+	WritePrivateProfileInt(sectionName, "NukeAIHPMax", pElixir->NukeAIHPMax, INIFileName);
+
+	WritePrivateProfileBool(sectionName, "MeditateAIEnabled", pElixir->IsMeditateAIRunning, INIFileName);
+	WritePrivateProfileBool(sectionName, "MeditateBySittingEnabled", pElixir->IsMeditateBySitting, INIFileName);
+	WritePrivateProfileBool(sectionName, "MeditateDuringCombatEnabled", pElixir->IsMeditateEnabledDuringCombat, INIFileName);
+
+	WritePrivateProfileBool(sectionName, "TargetAIEnabled", pElixir->IsTargetAIRunning, INIFileName);	
+	WritePrivateProfileInt(sectionName, "TargetAIMinRange", pElixir->TargetAIMinRange, INIFileName);
+	WritePrivateProfileBool(sectionName, "TargetAIAutoAttack", pElixir->IsTargetAutoAttack, INIFileName);
+	WritePrivateProfileBool(sectionName, "TargetAIPetAttack", pElixir->IsTargetPetAttack, INIFileName);
+
+	WritePrivateProfileBool(sectionName, "SettingsDebugEnabled", pElixir->IsSettingsDebugEnabled, INIFileName);
+	char szBuffer[MAX_STRING] = { 0 };
+
+	for (int i = 0; i < NUM_SPELL_GEMS; i++) {
+		std::string ignoreGemStr = "IgnoreGem";
+		ignoreGemStr += std::to_string((int)(i + 1));
+		WritePrivateProfileBool(sectionName, ignoreGemStr, pElixir->IgnoreGems[i], INIFileName);
+	}
 }
 
 void LoadINI() {
 	UpdateINIFileName();
+	DebugSpewAlways("MQElixir::LoadINI");
 	std::string sectionName = "Elixir";
-	IsElixirRunning = GetPrivateProfileInt(sectionName, "AIEnabled", 1, INIFileName);
-	pElixir->HealAIMax = GetPrivateProfileInt(sectionName, "HealAIMax", 50, INIFileName);
-	pElixir->IsHealAIRunning = GetPrivateProfileInt(sectionName, "HealAIEnabled", 1, INIFileName);
+	pElixir->IsElixirRunning = GetPrivateProfileBool(sectionName, "AIEnabled", true, INIFileName);
+	pElixir->IsElixirDisabledOnFocus = GetPrivateProfileBool(sectionName, "DisableOnFocus", false, INIFileName);
+
+	pElixir->IsHateAIRunning = GetPrivateProfileBool(sectionName, "HateAIEnabled", false, INIFileName);
 	pElixir->HateAIMax = GetPrivateProfileInt(sectionName, "HateAIMax", 80, INIFileName);
-	pElixir->IsHateAIRunning = GetPrivateProfileInt(sectionName, "HateAIEnabled", 0, INIFileName);
-	pElixir->IsTargetAIRunning = GetPrivateProfileInt(sectionName, "TargetAIEnabled", 0, INIFileName);	
-	pElixir->IsBuffAIRunning = GetPrivateProfileInt(sectionName, "BuffAIEnabled", 0, INIFileName);
+		
+	pElixir->IsHealAIRunning = GetPrivateProfileBool(sectionName, "HealAIEnabled", true, INIFileName);
+	pElixir->HealAIMax = GetPrivateProfileInt(sectionName, "HealAIMax", 50, INIFileName);
+
+	pElixir->IsBuffAIRunning = GetPrivateProfileBool(sectionName, "BuffAIEnabled", false, INIFileName);
+
+	pElixir->IsNukeAIRunning = GetPrivateProfileBool(sectionName, "NukeAIEnabled", false, INIFileName);
+	pElixir->NukeAIHPMax = GetPrivateProfileInt(sectionName, "NukeAIHPMax", 95, INIFileName);
+	pElixir->NukeAIManaMax = GetPrivateProfileInt(sectionName, "NukeAIManaMax", 80, INIFileName);
+
+	pElixir->IsMeditateAIRunning = GetPrivateProfileBool(sectionName, "MeditateAIEnabled", false, INIFileName);
+	pElixir->IsMeditateBySitting = GetPrivateProfileBool(sectionName, "MeditateBySittingEnabled", false, INIFileName);
+	pElixir->IsMeditateEnabledDuringCombat = GetPrivateProfileBool(sectionName, "MeditateDuringCombatEnabled", true, INIFileName);
+	
+	pElixir->IsTargetAIRunning = GetPrivateProfileBool(sectionName, "TargetAIEnabled", false, INIFileName);	
+	pElixir->TargetAIMinRange = GetPrivateProfileInt(sectionName, "TargetAIMinRange", 80, INIFileName);
+	pElixir->IsTargetAutoAttack= GetPrivateProfileBool(sectionName, "TargetAIAutoAttack", false, INIFileName);
+	pElixir->IsTargetPetAttack = GetPrivateProfileBool(sectionName, "TargetAIPetAttack", false, INIFileName);
+
+	pElixir->IsSettingsDebugEnabled = GetPrivateProfileInt(sectionName, "SettingsDebugEnabled", 80, INIFileName);
+	
+	for (int i = 0; i < NUM_SPELL_GEMS; i++) {
+		std::string ignoreGemStr = "IgnoreGem";
+		ignoreGemStr += std::to_string((int)(i + 1));
+		pElixir->IgnoreGems[i] = GetPrivateProfileBool(sectionName, ignoreGemStr, 0, INIFileName);
+	}
 }
 
 PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
@@ -649,7 +494,8 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 	GetArg(szArg2, szLine, 3);
 	if (!*szCommand || !_strnicmp(szCommand, "help", 5)) {
 		WriteChatf("usage: /elixir <command> [subCommands] (current value): description");
-		WriteChatf("elixir <ai> [0|1] (\a%s\ax): overall AI running and management", (IsElixirRunning ? "g1" : "r0"));
+		WriteChatf("elixir <ai> [0|1] (\a%s\ax): overall AI running and management", (pElixir->IsElixirRunning ? "g1" : "r0"));
+		WriteChatf("elixir <ui>: show elixir UI");
 		WriteChatf("elixir <target> [ai:(\a%s\ax)]: set auto target AI values", (pElixir->IsTargetAIRunning ? "g1" : "r0"));
 		WriteChatf("elixir <hate> [ai:(\a%s\ax)|max:(\ag%d\ax)]: set smart hate AI values", (pElixir->IsHateAIRunning ? "g1" : "r0"), pElixir->HateAIMax);
 		WriteChatf("elixir <buff> [ai:(\a%s\ax)]: set smart buff AI values", (pElixir->IsBuffAIRunning ? "g1" : "r0"));
@@ -660,12 +506,17 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 		return;
 	}
 	if (!_strnicmp(szCommand, "enable", 7)) {
-		IsElixirRunning = true;
+		pElixir->IsElixirRunning = true;
 		return;
 	}
 
 	if (!_strnicmp(szCommand, "disable", 8)) {
-		IsElixirRunning = true;
+		pElixir->IsElixirRunning = true;
+		return;
+	}
+
+	if (!_strnicmp(szCommand, "ui", 3)) {
+		pElixir->IsElixirUIShowing = true;
 		return;
 	}
 
@@ -826,4 +677,330 @@ PLUGIN_API void ElixirCommand(PSPAWNINFO pLPlayer, char* szLine)
 		WriteChatf("elixir <debug> [tagmode:(\a%s\ax)]: enable debug options", (pElixir->IsDebugTagMode ? "g1" : "r0"));
 		return;
 	}
+}
+
+
+void DrawElixirUI()
+{
+	char szBuffer[MAX_STRING] = { 0 };
+	bool isChanged = false;
+	bool isOpen = false;
+	ImU32 redColor = IM_COL32(255, 100, 100, 100);
+	ImU32 greenColor = IM_COL32(100, 255, 100, 100);
+	ImU32 blueColor = IM_COL32(0, 0, 255, 100);
+	ImU32 blueActiveColor = IM_COL32(20, 20, 255, 100);
+	ImU32 blueHoverColor = IM_COL32(40, 40, 255, 100);
+	ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsElixirRunning) ? greenColor : redColor);
+	ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+	ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+	if (ImGui::Checkbox("Elixir AI", &pElixir->IsElixirRunning)) {
+		isChanged = true;
+	}
+	ImGui::PopStyleColor(4);
+	ImGui::SameLine();
+	mq::imgui::HelpMarker("This is a global Elixir AI toggle. Turning this off disables all plugin actions.");
+
+	if (pElixir->IsElixirRunning) {
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsElixirDisabledOnFocus) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+		if (ImGui::Checkbox("Disable AI On Focus", &pElixir->IsElixirDisabledOnFocus)) {
+			isChanged = true;
+		}
+		ImGui::PopStyleColor(4);
+		ImGui::SameLine();
+		mq::imgui::HelpMarker("When this EQ window is focused, should Elixir continue running?\nHelpful if you like to tab and take over this character.\nThis means AI will only run when this EQ window is in background.");
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsBuffAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+		sprintf_s(szBuffer, "Buff AI (%s)", (pElixir->IsBuffAIRunning) ? "Enabled" : "Disabled");
+		isOpen = ImGui::TreeNode("##elixir.buffAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("Buff AI", &pElixir->IsBuffAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will keep self buffs or target buffs on self maintained.\nIt is not smart enough yet to manage buffs on other targets, nor is it smart about stacking and such, beyond MQ2 built in support logic, buff stacking in EQ is complex and weird.");
+			ImGui::TreePop();
+		}
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsHealAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+		if (!pElixir->IsHealAIRunning) {
+			sprintf_s(szBuffer, "Heal AI (Disabled)");
+		}
+		else {
+			sprintf_s(szBuffer, "Heal AI (Enabled <= %d%%%% HP)", pElixir->HealAIMax);
+		}
+		isOpen = ImGui::TreeNode("##elixir.healAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("Heal AI", &pElixir->IsHealAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will attempt to use healing spells when you or a group mate reaches the % hp defined below.");
+
+			if (ImGui::SliderInt("##elixir.healAIMax", &pElixir->HealAIMax, 10, 90, "Heal when less than %d%% HP")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Heal AI will trigger the lower number gem slot that is valid for the situation when a group mate hits this percent");
+
+			ImGui::TreePop();
+		}
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsTargetAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+		if (!pElixir->IsTargetAIRunning) {
+			sprintf_s(szBuffer, "Target AI (Disabled)");
+		}
+		else {
+			sprintf_s(szBuffer, "Target AI (Enabled <= %d distance)", pElixir->TargetAIMinRange);
+		}
+		isOpen = ImGui::TreeNode("##elixir.targetAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("AutoTarget AI", &pElixir->IsTargetAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will automatically target the group assist player when it reaches min range and is line of sight.\nBe sure to mark an ally with the Main Assist role to have this properly work.");
+
+			if (ImGui::SliderInt("##elixir.targetAIMax", &pElixir->TargetAIMinRange, 10, 200, "Target at %d distance")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Range of main assist target to begin assisting");
+
+			if (ImGui::Checkbox("Auto Attack", &pElixir->IsTargetAutoAttack)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("AI will try to turn on auto attack after assisting");
+
+			if (ImGui::Checkbox("Pet Attack", &pElixir->IsTargetPetAttack)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("AI will try to pet attack after assisting");
+
+			ImGui::TreePop();
+		}
+
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsHateAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+		if (!pElixir->IsHateAIRunning) {
+			sprintf_s(szBuffer, "StopHate AI (Disabled)");
+		}
+		else {
+			sprintf_s(szBuffer, "StopHate AI (Enabled >= %d%%%% aggro)", pElixir->HateAIMax);
+		}
+		isOpen = ImGui::TreeNode("##elixir.hateAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("StopHate AI", &pElixir->IsHateAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will stop casting spells and offensive abilities if hate reaches this %\nNote this only works in group settings, if not in a group, ignored");
+
+			if (ImGui::SliderInt("##elixir.hateAIMin", &pElixir->HateAIMax, 10, 95, "StopHate at %d%% aggro")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("StopHate AI will stop casting offensive spells at this %%");
+
+			ImGui::TreePop();
+		}
+
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsNukeAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+		if (!pElixir->IsNukeAIRunning) {
+			sprintf_s(szBuffer, "Nuke AI (Disabled)");
+		}
+		else {
+			sprintf_s(szBuffer, "Nuke AI (Enabled <= %d %%HP %d %%Mana)", pElixir->NukeAIHPMax, pElixir->NukeAIManaMax);
+		}
+		isOpen = ImGui::TreeNode("##elixir.nukeAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("Nuke AI", &pElixir->IsNukeAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will cast detrimental spells (not just nukes, dots, snares, slows etc too) and offensive abilities once a target is at %% hp");
+
+			if (ImGui::SliderInt("##elixir.nukeAIMin", &pElixir->NukeAIHPMax, 10, 95, "Nuke at %d%% HP")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Nuke AI will not cast until target is at %");
+
+			if (ImGui::SliderInt("##elixir.nukeAIManaMax", &pElixir->NukeAIManaMax, 10, 95, "Nuke until %d%% Mana")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Nuke AI will not cast once at % mana");
+			ImGui::TreePop();
+		}
+
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsMeditateAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+		if (!pElixir->IsMeditateAIRunning) {
+			sprintf_s(szBuffer, "Meditate AI (Disabled)");
+		}
+		else {
+			sprintf_s(szBuffer, "Meditate AI (Enabled Sit)");
+		}
+		isOpen = ImGui::TreeNode("##elixir.meditateAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("Meditate AI", &pElixir->IsMeditateAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will attempt to meditate when the situation seems proper.");
+
+			if (ImGui::Checkbox("During Combat", &pElixir->IsMeditateEnabledDuringCombat)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("AI will try to sit even when combat is detected?");
+
+			if (ImGui::Checkbox("By Sitting", &pElixir->IsMeditateBySitting)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Try to sit down when it seems a safe time to.");
+
+			/*
+			if (ImGui::Checkbox("By Cannibalize", &pElixir->IsMeditateByCannibalize)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Use available canni spells to attempt to regenerate mana");
+
+			if (ImGui::SliderInt("##elixir.meditateAICanniManaMax", &pElixir->CanniMaxMana, 0, 99, "Canni when below %d%% mana")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Attempt to Cannibalize when mana is below provided amount");
+
+			if (ImGui::SliderInt("##elixir.meditateAICanniMinHP", &pElixir->CanniMinHP, 0, 99, "Canni until at %d%% HP")) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Attempt to Cannibalize but if HP reaches this amount, stop");
+			*/
+			ImGui::TreePop();
+		}
+
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->ignoreGemCount > 0) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+
+		sprintf_s(szBuffer, "Ignored Gems (%d/%d)", pElixir->ignoreGemCount, pElixir->maxGemCount);
+		isOpen = ImGui::TreeNode("##elixir.ignoreGemLabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			for (int i = 0; i < pElixir->maxGemCount; i++) {
+				sprintf_s(szBuffer, "Ignore Gem %d (no spell)", i + 1);
+				if (int spellID = GetMemorizedSpell(i)) {
+					if (PSPELL pSpell = GetSpellByID(spellID)) {
+						sprintf_s(szBuffer, "Ignore Gem %d (%s)", i + 1, pSpell->Name);
+					}
+				}
+
+				if (ImGui::Checkbox(szBuffer, &pElixir->IgnoreGems[i])) {
+					isChanged = true;
+				}
+				ImGui::SameLine();
+				mq::imgui::HelpMarker("Gem will be ignored and no AI will skip trying to cast it");
+			}
+			ImGui::TreePop();
+		}
+
+		ImGui::Separator();
+
+		ImGui::Checkbox("Debug", &pElixir->IsSettingsDebugEnabled);
+		if (pElixir->IsSettingsDebugEnabled) {
+			ImGui::Text("LastAction: %s", pElixir->LastAction.c_str());
+			ImGui::Text("Target AI: %s", pElixir->TargetAIStr.c_str());
+			ImGui::Text("Meditate AI: %s", pElixir->MeditateAIStr.c_str());
+			for (int i = 0; i < 12; i++) {
+				ImGui::Text("Button %d: %s", i + 1, pElixir->Buttons[i].c_str());
+			}
+		}
+	}
+
+	if (isChanged) {
+		SaveINI();
+	}
+}
+
+void DrawElixirUIPanel()
+{
+	if (ImGui::Button("Toggle Elixir UI")) {
+		pElixir->IsElixirUIShowing = !pElixir->IsElixirUIShowing;
+	}
+	ImGui::SameLine();
+	mq::imgui::HelpMarker("Typing in /elixir ui is a shortcut to this button");
 }

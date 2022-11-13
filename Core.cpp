@@ -369,6 +369,12 @@ int SpawnPctEndurance(PSPAWNINFO pSpawn)
 	return (int)(pSpawn->GetCurrentEndurance() * 100 / pSpawn->GetMaxEndurance());
 }
 
+int PctMana() {
+	if (!pLocalPC) return 0;
+	if (pLocalPC->Max_Mana() == 0) return 100;
+	return (int)(GetPcProfile()->Mana * 100 / pLocalPC->Max_Mana());
+}
+
 int SpawnPctMana(PSPAWNINFO pSpawn)
 {
 	if (!pSpawn) return 100;
@@ -1025,4 +1031,14 @@ unsigned long MainAssistTargetID() {
 	if (!pChar) return 0;
 	if (pChar->pGroupInfo) return 0;
 	return ((PSPAWNINFO)pLocalPlayer)->GroupAssistNPC[0];
+}
+
+unsigned int PetTargetID() {
+	int petID = GetCharInfo()->pSpawn->PetID;
+	if (!petID) return petID;
+	if (petID == 0xFFFFFFFF) return 0;
+	EQPlayer* pPet = GetSpawnByID(petID);
+	if (!pPet) return 0;
+	if (!pPet->WhoFollowing) return 0;
+	return pPet->WhoFollowing->SpawnID;
 }

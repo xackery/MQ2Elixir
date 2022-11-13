@@ -6,6 +6,11 @@ using namespace std;
 
 void Elixir::ActionGem(int gemIndex)
 {
+	if (gbInForeground && IsElixirDisabledOnFocus) {
+		Gems[gemIndex] = "AI frozen, has focus";
+		return;
+	}
+	
 	PCHARINFO pChar = GetCharInfo();
 	if (!pChar) {
 		Gems[gemIndex] = "char not loaded";

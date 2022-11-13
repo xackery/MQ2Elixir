@@ -435,7 +435,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	if (isMana && pSpell->TargetType == 6 && ticks <= 0 && !isPetSummon) { // self only mana regen, like harvest, canni
 		if (stunDuration > 0 && CombatState() == COMBATSTATE_COMBAT) return "in combat, has stun attached";
 
-		if (SpawnPctMana(pChar->pSpawn) > 50) return "not < 50 % mana";
+		if (PctMana() > 50) return "not < 50 % mana";
 		return "";
 	}
 
@@ -570,7 +570,10 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		ExtendedTargetList* xtm = pChar->pXTargetMgr;
 		if (!xtm) return "xtarget not supported";
 		if (!xtm->XTargetSlots.Count) return "xtarget no count found";
-
+		if (NukeAIManaMax < PctMana()) {
+			sprintf_s(szTemp, "< %d mana", NukeAIManaMax);
+			return szTemp;
+		}
 		
 		int xTargetCount = 0;
 		for (int n = 0; n < xtm->XTargetSlots.Count; n++)
@@ -584,7 +587,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			if (!pXTargetSpawn) continue;
 			if (pXTargetSpawn->Type != SPAWN_NPC) continue;
 			if (Distance3DToSpawn(pChar->pSpawn, pXTargetSpawn) > pSpell->AERange) continue;
-			if (SpawnPctHPs(pXTargetSpawn) < NukeAIMax) continue;
+			if (SpawnPctHPs(pXTargetSpawn) < NukeAIHPMax) continue;		
 
 			xTargetCount++;
 			//TODO: Main assist check
@@ -601,12 +604,16 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		if (!pTarget) return "no target";
 
 		if (pTarget->Type != SPAWN_NPC) return "non npc targetted";
+		if (NukeAIManaMax < PctMana()) {
+			sprintf_s(szTemp, "< %d mana", NukeAIManaMax);
+			return szTemp;
+		}
 
 		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) return "target too far away";
 
 		//if (pChar->pGroupInfo && !pChar->Group->GetGroupMember(0)->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIMax) {
-		if (SpawnPctHPs(pTarget) > NukeAIMax) {
-			sprintf_s(szTemp, "target > %d%%", NukeAIMax);
+		if (SpawnPctHPs(pTarget) > NukeAIHPMax) {
+			sprintf_s(szTemp, "target > %d%%", NukeAIHPMax);
 			return szTemp;
 		}
 

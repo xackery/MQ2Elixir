@@ -42,8 +42,10 @@ bool IsSpellStackable(PSPAWNINFO pSpawn, PSPELL pSpell);
 bool IsSpellStackableCompare(PSPELL pSpell1, PSPELL pSpell2);
 PALTABILITY AAByName(PCHAR Name);
 int CombatState();
+int PctMana();
 int SpawnPctHPs(PSPAWNINFO pSpawn);
 int SpawnPctMana(PSPAWNINFO pSpawn);
+unsigned int PetTargetID();
 unsigned long StunDuration(PSPELL pSpell);
 unsigned long MainAssistTargetID();
 #if !defined(ROF2EMU) && !defined(UF2EMU)

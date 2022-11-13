@@ -68,8 +68,8 @@ std::string Elixir::Ability(int abilityIndex)
 	}
 
 
-	if (SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIMax) {
-		sprintf_s(szTemp, "target > %d%%", NukeAIMax);
+	if (SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIHPMax) {
+		sprintf_s(szTemp, "target > %d%%", NukeAIHPMax);
 		return szTemp;
 	}
 
