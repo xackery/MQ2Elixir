@@ -21,8 +21,8 @@ Quick start instructions to get users up and going
 - in game, `/autogroup create`
 - in game, `/autogroup add eqbc`
 - in game, `/plugin mq2xptracker`
-/mapfilter npcconcolor show
-/mapfilter npc
+- /mapfilter npcconcolor show
+- /mapfilter npc
 - in game, `/nav ui`, go to Settings tab, there'll be a Disabled dropdown - change to Stop Navigation (breaks nav movement)
 - press your EQ button, you should see MacroQuest, Settings.
 - inside Settings, go to plugins, Elixir. Toggle options
