@@ -6,11 +6,8 @@
 using namespace std;
 
 // Spell returns a string with a reason if provided spell cannot be cast
-std::string  Elixir::Spell(PSPELL pSpell) {
+std::string Elixir::Spell(PSPELL pSpell) {
 	CHAR szTemp[MAX_STRING] = { 0 };
-		
-	PCHARINFO pChar = (PCHARINFO)pCharData;
-	if (!pChar) return "char not loaded";
 	if (!pLocalPlayer) return "pLocalPlayer not loaded";
 
 	bool isHeal = false;
@@ -48,7 +45,6 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	if (pSpell->Autocast > 0) {
 		pSpellRecourse = GetSpellByID(pSpell->Autocast);
 	}
-
 
 	for (int i = 0; i < GetSpellNumEffects(pSpell); i++) {
 		attr = GetSpellAttrib(pSpell, i);
@@ -113,7 +109,8 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 				isDebuff = true;
 			}
 		}
-		if (attr == SPA_HASTE) {
+
+		if (attr == SPA_HASTE) { //11
 			if (base > 0) { //+Haste
 				isBuff = true;
 			}
@@ -122,19 +119,39 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			}
 		}
 
-		if (attr == 15) { // Mana
+		if (attr == SPA_INVISIBILITY) { // 12
+			isBuff = true;
+		}
+
+		if (attr == SPA_SEE_INVIS) { // 13
+			isBuff = true;
+		}
+		
+
+		if (attr == SPA_ENDURING_BREATH) { // 14
+			isBuff = true;
+		}
+
+		if (attr == SPA_MANA) { // Mana
 			isMana = true;
 		}
-		if (attr == 18) { // pacify (lull)
+		
+		if (attr == SPA_NPC_FRENZY) { // lull 17
 			isLull = true;
 		}
-		if (attr == 21) { // stun
+		if (attr == SPA_NPC_AWARENESS) { // lull 17
+			isLull = true;
+		}
+		if (attr == SPA_NPC_AGGRO) { // pacify (lull) 18
+			isLull = true;
+		}
+		if (attr == SPA_STUN) { // stun 21
 			stunDuration = base2;
 			if (pSpell->TargetType == 2 || pSpell->TargetType == 4) {
 				isSingleTargetSpell = true; //hack to make ae stuns work
 			}
 		}
-		if (attr == 22) { // charm
+		if (attr == SPA_CHARM) { // charm 22
 			isCharm = true;
 		}
 
@@ -190,7 +207,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	//TODO TargetTypes:
 	case 40: return "AE PC v2";
 	case 25: return "AE Summoned";
-	case 24: return "AE Undead";
+	case 24: return "AE Undead";  
 	case 20: return "Targetted AE Tap";
 	case  8: return "Targetted AE";
 	case  2: return "AE PC v1";
@@ -278,6 +295,8 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	}
 
 
+
+
 	if (GetPcProfile()->Mana < (int)pSpell->ManaCost) return "not enough mana (" + to_string((int)pSpell->ManaCost) + "/" + to_string(GetPcProfile()->Mana) + ")";
 
 	if (isLull) return "ignored (lull)";
@@ -306,7 +325,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	
 	if (isTransport) return "ignoring (transport)";
 
-	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pCharSpawn->CanSee(*pTarget)) return "target not line of sight";
+	if (pSpell->NoNPCLOS == 0 && pTarget && isSingleTargetSpell && !pLocalPlayer->CanSee(*pTarget)) return "target not line of sight";
 	
 	for (int i = 0; i < 4; i++) { // Reagent check
 		if (pSpell->ReagentCount[i] == 0) continue;
@@ -324,11 +343,11 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 
 	int ReqID = pSpell->CasterRequirementID;
-	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) return "not < 90% hp";
+	if (ReqID == 518 && SpawnPctHPs(pLocalPlayer) > 89) return "not < 90% hp";
 
-	//if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
-	//if (ReqID == 826 && SpawnPctEndurance(pChar->pSpawn) > 24) return false;
-	//if (ReqID == 827 && SpawnPctEndurance(pChar->pSpawn) > 29) return false;
+	//if (ReqID == 825 && SpawnPctEndurance(pLocalPlayer) > 20) return false;
+	//if (ReqID == 826 && SpawnPctEndurance(pLocalPlayer) > 24) return false;
+	//if (ReqID == 827 && SpawnPctEndurance(pLocalPlayer) > 29) return false;
 
 	if ((isHeal || isLifetap) && !IsHealAIRunning) return "heal AI not running";
 
@@ -413,17 +432,15 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		CXWnd* Child = ((CXWnd*)pCombatAbilityWnd)->GetChildItem("CAW_CombatEffectLabel");
 		if (!Child) return "combatabilitywnd not found";
 
-		CHAR szBuffer[2048] = { 0 };
-		GetCXStr(Child->CGetWindowText(), szBuffer, MAX_STRING);
-		if (szBuffer[0] == '\0') return "combatabilitywnd text not null terminated";
-		PSPELL pBuff = GetSpellByName(szBuffer);
+		if (Child->CGetWindowText().empty()) return "combatabilitywnd text not null terminated";
+		PSPELL pBuff = GetSpellByName(Child->CGetWindowText());
 		if (pBuff) {
 			sprintf_s(szTemp, "disc %s already active", pBuff->Name);
 			return szTemp;
 		}
 	}
 
-	if (isPetSummon && pChar->pSpawn->PetID > 0) return "already have pet";
+	if (isPetSummon && pLocalPlayer->PetID > 0) return "already have pet";
 
 	if (isPetSummon) {
 		for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++) {
@@ -440,7 +457,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	}
 
 
-	if (isLifetap && SpawnPctHPs(pChar->pSpawn) > HealAIMax) {
+	if (isLifetap && PctHPs() > HealAIMax) {
 		sprintf_s(szTemp, "> %d%% hp", HealAIMax);
 		return szTemp;
 	}
@@ -454,6 +471,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		
 		if (ticks > 0) {
 			if (!IsBuffAIRunning) return "buff ai not running";
+			if (CombatState() == COMBATSTATE_COMBAT && !IsBuffDuringCombat) return "buff ai not allowed during combat";
 
 			for (int b = 0; b < NUM_LONG_BUFFS; b++)
 			{
@@ -487,25 +505,25 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	}
 
 	if (pSpell->TargetType == 5 && pSpell->SpellType >= 1) { //single target beneficial spell
-		if (GetCharInfo()->pGroupInfo != nullptr) {
+		if (pLocalPC->pGroupInfo != nullptr) {
 			if (isHeal) { //single target heal
 				int spawnPctHPs = 100;
 				int spawnGroupID = -1;
 				CGroupMember* pG;
 				PSPAWNINFO pSpawn;
 				for (int i = 0; i < 6; i++) {
-					pG = GetCharInfo()->Group->GetGroupMember(i);
+					pG = pLocalPC->Group->GetGroupMember(i);
 					if (!pG) continue;
 					if (pG->Offline) continue;
 					//if (${Group.Member[${i}].Mercenary}) /continue
 					//if (${ Group.Member[${i}].OtherZone }) / continue
 					pSpawn = pG->pSpawn;
 					if (!pSpawn) continue;
-					//if (pSpawn->SpawnID == pChar->pSpawn->SpawnID) continue;
+					//if (pSpawn->SpawnID == pLocalPlayer->SpawnID) continue;
 					
 					
 					if (pSpawn->Type == SPAWN_CORPSE) continue;
-					if (Distance3DToSpawn(pChar->pSpawn, pSpawn) > 200) continue;
+					if (Distance3DToSpawn(pLocalPlayer, pSpawn) > 200) continue;
 					if (SpawnPctHPs(pSpawn) > spawnPctHPs) continue;
 					spawnGroupID = i;
 					spawnPctHPs = SpawnPctHPs(pSpawn);
@@ -516,7 +534,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 					return szTemp;
 				}
 
-				pG = GetCharInfo()->Group->GetGroupMember(spawnGroupID);
+				pG = pLocalPC->Group->GetGroupMember(spawnGroupID);
 				if (!pG) {
 					return "group member not found";
 				}
@@ -557,21 +575,21 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			}
 		}
 
-		if (isHeal && SpawnPctHPs(pChar->pSpawn) >= HealAIMax) {
+		if (isHeal && SpawnPctHPs(pLocalPlayer) >= HealAIMax) {
 			sprintf_s(szTemp, "> %d%% hp", HealAIMax);
 			return szTemp;
 		}
 
-		if (!ActionSpawnTarget(pChar->pSpawn)) return "can't target self";
+		if (!ActionSpawnTarget(pLocalPlayer)) return "can't target self";
 		return "";
 	}
 
 	if (damageAmount > 0 && (pSpell->TargetType == 2 || pSpell->TargetType == 4)) { // AE DD
-		ExtendedTargetList* xtm = pChar->pXTargetMgr;
+		ExtendedTargetList* xtm = pLocalPC->pXTargetMgr;
 		if (!xtm) return "xtarget not supported";
 		if (!xtm->XTargetSlots.Count) return "xtarget no count found";
-		if (NukeAIManaMax < PctMana()) {
-			sprintf_s(szTemp, "< %d mana", NukeAIManaMax);
+		if (NukeAIManaMax > PctMana()) {
+			sprintf_s(szTemp, "too low mana, < %d%% mana", NukeAIManaMax);
 			return szTemp;
 		}
 		
@@ -586,7 +604,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			PSPAWNINFO pXTargetSpawn = (PSPAWNINFO)GetSpawnByID(xts.SpawnID);
 			if (!pXTargetSpawn) continue;
 			if (pXTargetSpawn->Type != SPAWN_NPC) continue;
-			if (Distance3DToSpawn(pChar->pSpawn, pXTargetSpawn) > pSpell->AERange) continue;
+			if (Distance3DToSpawn(pLocalPlayer, pXTargetSpawn) > pSpell->AERange) continue;
 			if (SpawnPctHPs(pXTargetSpawn) < NukeAIHPMax) continue;		
 
 			xTargetCount++;
@@ -604,14 +622,14 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		if (!pTarget) return "no target";
 
 		if (pTarget->Type != SPAWN_NPC) return "non npc targetted";
-		if (NukeAIManaMax < PctMana()) {
-			sprintf_s(szTemp, "< %d mana", NukeAIManaMax);
+		if (NukeAIManaMax > PctMana()) {
+			sprintf_s(szTemp, "too low mana, < %d%% mana", NukeAIManaMax);
 			return szTemp;
 		}
 
-		if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) return "target too far away";
+		if (pTarget && Distance3DToSpawn(pLocalPlayer, (PSPAWNINFO)pTarget) > pSpell->AERange && Distance3DToSpawn(pLocalPlayer, (PSPAWNINFO)pTarget) > pSpell->Range) return "target too far away";
 
-		//if (pChar->pGroupInfo && !pChar->Group->GetGroupMember(0)->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIMax) {
+		//if (pLocalPC->pGroupInfo && !pLocalPC->Group->GetGroupMember(0)->MainTank && SpawnPctHPs((PSPAWNINFO)pTarget) > NukeAIMax) {
 		if (SpawnPctHPs(pTarget) > NukeAIHPMax) {
 			sprintf_s(szTemp, "target > %d%%", NukeAIHPMax);
 			return szTemp;
@@ -625,7 +643,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		if (IsHateAIRunning && damageAmount > 0 && SpawnPctHPs((PSPAWNINFO)pTarget) > 20 && IsHighHateAggro() && !IsIdealDamageReceiver()) return "waiting to damage until hate lowers";
 
 		if (isTaunt) {
-			if (GetCharInfo()->pGroupInfo == nullptr) return "not in a group";
+			if (pLocalPC->pGroupInfo == nullptr) return "not in a group";
 			
 			if (!pAggroInfo) return "pAggroInfo empty";
 
@@ -633,14 +651,14 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 			CGroupMember* pG;
 			PSPAWNINFO pSpawn;
 			for (int i = 0; i < 6; i++) {
-				pG = GetCharInfo()->Group->GetGroupMember(i);
+				pG = pLocalPC->Group->GetGroupMember(i);
 				if (!pG) continue;
 				if (pG->Offline) continue;
 				//if (${Group.Member[${i}].Mercenary}) /continue
 				//if (${ Group.Member[${i}].OtherZone }) / continue
 				pSpawn = pG->pSpawn;
 				if (!pSpawn) continue;
-				if (pSpawn->SpawnID != pChar->pSpawn->SpawnID) continue;
+				if (pSpawn->SpawnID != pLocalPlayer->SpawnID) continue;
 				if (pSpawn->Type == SPAWN_CORPSE) continue;
 				if (pG->MainTank > 0) {
 					isMainTank = true;
@@ -650,7 +668,7 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 
 			if (!isMainTank) return "not main tank";
 
-			if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) return "already primary target";
+			if (pAggroInfo->AggroTargetID == pLocalPlayer->SpawnID) return "already primary target";
 			if (pAggroInfo && pAggroInfo->aggroData[AD_Player].AggroPct >= 100) return "already have high hate";
 
 		}
@@ -663,11 +681,11 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	}
 
 	if (pSpell->TargetType == 0x0e || pSpell->Category == 69) { //Pet target
-		PSPAWNINFO pPet = (PSPAWNINFO)GetSpawnByID(pChar->pSpawn->PetID);
+		PSPAWNINFO pPet = (PSPAWNINFO)GetSpawnByID(pLocalPlayer->PetID);
 		if (!pPet) return "no pet";
 
-		//if (Distance3DToSpawn(pChar, pPet) > pSpell->Range) {
-		//	Gems[gemIndex] = "pet too far away (" + to_string(Distance3DToSpawn(pChar, pPet)) + " / " + to_string(pSpell->Range) + ")";
+		//if (Distance3DToSpawn(pLocalPC, pPet) > pSpell->Range) {
+		//	Gems[gemIndex] = "pet too far away (" + to_string(Distance3DToSpawn(pLocalPC, pPet)) + " / " + to_string(pSpell->Range) + ")";
 		//	return false;
 		//}
 		
@@ -680,11 +698,11 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 		}
 
 		if (pSpell->DurationCap > 0) { //pet buff
-			if (!IsSpellStackable(pChar->pSpawn, pSpell)) return "not stackable";
+			if (!IsSpellStackable(pLocalPlayer, pSpell)) return "not stackable";
 			if (!pPetInfoWnd) return "no pet info wnd";
-			if (pChar->pSpawn->PetID == 0) return "no pet";
+			if (pLocalPlayer->PetID == 0) return "no pet";
 			for (int nBuff = 0; nBuff < 30; nBuff++) {
-				PSPELL buff = GetSpellByID(((PEQPETINFOWINDOW)pPetInfoWnd)->Buff[nBuff]);
+				PSPELL buff = GetSpellByID(((CPetInfoWnd*)pPetInfoWnd)->Buff[nBuff]);
 				if (!buff) {
 					continue;
 				}
@@ -697,4 +715,12 @@ std::string  Elixir::Spell(PSPELL pSpell) {
 	}
 
 	return "unsupported spell";
+}
+
+
+bool Elixir::IsCharm(PSPELL pSpell) {
+	for (int i = 0; i < GetSpellNumEffects(pSpell); i++) {
+		if (GetSpellAttrib(pSpell, i) == SPA_CHARM) return true;
+	}
+	return false;
 }

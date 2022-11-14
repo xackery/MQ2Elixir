@@ -54,11 +54,11 @@ std::string Elixir::Ability(int abilityIndex)
 		return "no target";
 	}
 
-	if (Distance3DToSpawn(pLocalPC->pSpawn, (PSPAWNINFO)pTarget) > 16) {
+	if (Distance3DToSpawn(pLocalPlayer, (PSPAWNINFO)pTarget) > 16) {
 		return "too far away";
 	}
 
-	if (pTarget && !pCharSpawn->CanSee(*pTarget)) {
+	if (pTarget && !pLocalPlayer->CanSee(*pTarget)) {
 		return "target not line of sight";
 	}
 
@@ -86,14 +86,14 @@ std::string Elixir::Ability(int abilityIndex)
 	}
 
 	if (stricmp(abilityName, "Disarm") == 0) {
-		if (Distance3DToSpawn(pLocalPC->pSpawn, (PSPAWNINFO)pTarget) > 14) {
+		if (Distance3DToSpawn(pLocalPlayer, (PSPAWNINFO)pTarget) > 14) {
 			return "too far away";
 		}
 		return "";
 	}
 
 	if (stricmp(abilityName, "Bind Wound") == 0) {
-		//if (SpawnPctHPs(GetCharInfo()->pSpawn) < 50) {
+		//if (SpawnPctHPs(pLocalPlayer) < 50) {
 			//return "not < 50% hp";
 		//}
 		//return "";
@@ -101,7 +101,7 @@ std::string Elixir::Ability(int abilityIndex)
 	}
 
 	if (stricmp(abilityName, "Taunt") == 0) {
-		if (GetCharInfo()->Group == nullptr) {
+		if (pLocalPC->Group == nullptr) {
 			return "not in a group";
 		}
 
@@ -113,14 +113,14 @@ std::string Elixir::Ability(int abilityIndex)
 		CGroupMember* pG;
 		PSPAWNINFO pSpawn;
 		for (int i = 0; i < 6; i++) {
-			pG = GetCharInfo()->Group->GetGroupMember(i);
+			pG = pLocalPC->Group->GetGroupMember(i);
 			if (!pG) continue;
 			if (pG->Offline) continue;
 			//if (${Group.Member[${i}].Mercenary}) /continue
 			//if (${ Group.Member[${i}].OtherZone }) / continue
 			pSpawn = pG->pSpawn;
 			if (!pSpawn) continue;
-			if (pSpawn->SpawnID != pLocalPC->pSpawn->SpawnID) continue;
+			if (pSpawn->SpawnID != pLocalPlayer->SpawnID) continue;
 			if (pSpawn->Type == SPAWN_CORPSE) continue;
 			if (pG->MainTank) {
 				isMainTank = true;
@@ -136,7 +136,7 @@ std::string Elixir::Ability(int abilityIndex)
 			return "already have high hate";
 		}
 
-		if (pAggroInfo->AggroTargetID == pLocalPC->pSpawn->SpawnID) {
+		if (pAggroInfo->AggroTargetID == pLocalPlayer->SpawnID) {
 			return "already primary target";
 		}
 		return "";

@@ -11,11 +11,6 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 	
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		Gems[gemIndex] = "char not loaded";
-		return;
-	}
 
 	if (!pLocalPlayer) {
 		Gems[gemIndex] = "pLocalPlayer not loaded";
@@ -32,7 +27,7 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
-	if (pChar->pSpawn->GetClass() != Bard && IsMoving(pChar->pSpawn)) {
+	if (pLocalPlayer->GetClass() != Bard && IsMoving(pLocalPlayer)) {
 		Gems[gemIndex] = "player is moving";
 		return;
 	}
@@ -52,17 +47,17 @@ void Elixir::ActionGem(int gemIndex)
 		return;
 	}
 
-	if (GetCharInfo()->pSpawn->CastingData.IsCasting()) {
+	if (pLocalPlayer->CastingData.IsCasting()) {
 		Gems[gemIndex] = "already casting";
 		return;
 	}
 
-	if (GetCharInfo()->Stunned) {
+	if (pLocalPC->Stunned) {
 		Gems[gemIndex] = "player stunned";
 		return;
 	}
 
-	if (GetCharInfo()->pSpawn->HideMode) {
+	if (pLocalPlayer->HideMode) {
 		Gems[gemIndex] = "player invisible";
 		return;
 	}

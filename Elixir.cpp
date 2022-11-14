@@ -6,29 +6,28 @@ using namespace std;
 
 void Elixir::OnPulse()
 {
-	PCHARINFO pChar = GetCharInfo();
 	// Reset last pulse results
 	isActionComplete = false;
 	lastGemIndex = -1;
 	
 
-	//GetCharInfo()->pSpawn->CastingData.SpellETA <= 0
-	//if (!pCastSpellWnd && GetCharInfo()->pSpawn->CastingData.IsCasting() && GetCharInfo()->pSpawn->CastingData.SpellID) {
+	//pLocalPlayer->CastingData.SpellETA <= 0
+	//if (!pCastSpellWnd && pLocalPlayer->CastingData.IsCasting() && pLocalPlayer->CastingData.SpellID) {
 	int eta = ((PSPAWNINFO)pLocalPlayer)->CastingData.SpellETA;
 	if (eta > 0) eta = ((PSPAWNINFO)pLocalPlayer)->CastingData.SpellETA - ((PSPAWNINFO)pLocalPlayer)->TimeStamp;
 
-	if (pCastSpellWnd && !pSpellBookWnd->IsVisible() && GetCharInfo()->pSpawn->CastingData.IsCasting() && eta <= 0) {
+	if (pCastSpellWnd && !pSpellBookWnd->IsVisible() && pLocalPlayer->CastingData.IsCasting() && eta <= 0) {
 		Execute("/stopsong");
 		LastAction = "stopping bard song";
 	}
 
 
-	if (lastCastedSpellID > 0 && (!pCastSpellWnd || !GetCharInfo()->pSpawn->CastingData.IsCasting())) {
+	if (lastCastedSpellID > 0 && (!pCastSpellWnd || !pLocalPlayer->CastingData.IsCasting())) {
 		lastCastedSpellID = 0;
 	}
 
-	if (lastCastedSpellID > 0 && pCastSpellWnd && !pSpellBookWnd->IsVisible() && GetCharInfo()->pSpawn->CastingData.IsCasting()) {
-		if (lastCastedSpellID != GetCharInfo()->pSpawn->CastingData.SpellID) {
+	if (lastCastedSpellID > 0 && pCastSpellWnd && !pSpellBookWnd->IsVisible() && pLocalPlayer->CastingData.IsCasting()) {
+		if (lastCastedSpellID != pLocalPlayer->CastingData.SpellID) {
 			lastCastedSpellID = 0;
 		}
 		if (lastCastedSpellID > 0 && !pTarget) {
@@ -38,10 +37,14 @@ void Elixir::OnPulse()
 		}
 	}
 	
-	if (pChar->pSpawn->GetClass() != Bard && IsMoving(pChar->pSpawn)) {
+	if (pLocalPlayer->GetClass() != Bard && IsMoving(pLocalPlayer)) {
 		movementGlobalCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
 	}
 
+	// higher priority logic
+	ActionCharm();
+	
+	// normal logic
 	for (int i = 0; i < 12; i++) {
 		ActionButton(i);
 	}
@@ -95,8 +98,7 @@ bool Elixir::IsHighHateAggro()
 {
 	if (!pAggroInfo) return false;
 	if (pAggroInfo->aggroData[AD_Player].AggroPct >= HateAIMax) return true;
-	PCHARINFO pChar = GetCharInfo();
-	if (pAggroInfo->AggroTargetID == pChar->pSpawn->SpawnID) return true;
+	if (pAggroInfo->AggroTargetID == pLocalPlayer->SpawnID) return true;
 
 	return false;
 }

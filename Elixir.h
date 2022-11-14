@@ -6,9 +6,7 @@
 class Elixir {
 public:
 
-	const char* ElixirPluginVersion = "MQ2Elixir v0.1.1";
-	// StanceMode is what mode is currently being used.
-	int StanceMode = 1;
+	const char* ElixirPluginVersion = "Elixir v0.1.4";
 	// cooldown before doing anything after zoning
 	std::chrono::steady_clock::time_point ZoneCooldownTimer;
 
@@ -18,8 +16,6 @@ public:
 	int ignoreGemCount;
 	int maxGemCount;
 	string Buttons[12];
-	string TargetAIStr;
-	string MeditateAIStr;
 	void OnPulse();
 
 	// Is Elixir as a whole running or not, master override
@@ -43,6 +39,9 @@ public:
 	
 	// Is Buff AI logic running. When disabled, buffs will not be casted
 	bool IsBuffAIRunning = false;
+	// Is Buff attempting during combat
+	bool IsBuffDuringCombat = false;
+
 	// Tag Mode is a debugging display on spell tooltips etc that show the tags associated with a spell
 	bool IsDebugTagMode = false;
 	
@@ -55,6 +54,7 @@ public:
 
 	// Is Meditate AI logic running. When disabled, sitting behaviors won't trigger
 	bool IsMeditateAIRunning = false;
+	string MeditateAIStr;
 	bool IsMeditateBySitting = false;
 	bool IsMeditateEnabledDuringCombat = true;
 	int lastHPOnSit = 0;
@@ -65,21 +65,27 @@ public:
 
 	// Is Target AI logic running. When disabled, targetting main assist no longer happens
 	bool IsTargetAIRunning = false;
+	string TargetAIStr;
 	// TargetAI's minimum range a target must be for assist to trigger
 	int TargetAIMinRange = 50;
-
 	// Is Target Auto Attacking allowed, if done via assist
 	bool IsTargetAutoAttack = false;
-
 	// Is Target Pet Attacking allowed, if done via assist
 	bool IsTargetPetAttack = false;
 
 	// If Settings Debug is Enabled, shows additional debug strings on the window
 	bool IsSettingsDebugEnabled = false;
 
+	bool IsCharmAIRunning = false;
+	string CharmAIStr;
+	int CharmSpawnID = 0;
+	char CharmName[64] = "No Target";
+	bool IsCharmCurrentValid = false;
+	std::chrono::steady_clock::time_point charmCooldownTimer;
+
 	// Is the target considered having high hate
 	bool IsHighHateAggro();
-
+	void ClearCharmTarget();
 	/*
 	virtual bool CastGroupHeal(PSPAWNINFO pSpawn) { return false; }
 	virtual bool CastPriorityHeal(PSPAWNINFO pSpawn) { return false; }
@@ -91,7 +97,7 @@ public:
 	bool Logic();
 	*/
 private:
-	
+
 	int highPctHPs = 90;
 	int lowPctHPs = 45;
 	// isActionComplete is set to false on every pulse. When an action succeeds, this is flagged, stopping future actions.
@@ -112,16 +118,21 @@ private:
 	
 	std::chrono::steady_clock::time_point lastTargetRepeatCooldownTimer;
 
+	// Last time charm was used, this gem index was it
+	int lastCharmGemIndex;
+	// Last time charm was used, this was the spell ID on the gem index
+	int lastCharmSpellID;
 	// Gem attempts to cast the provided gem index
 	void ActionGem(int gemIndex);
 	void ActionButton(int buttonIndex);
 	void ActionTarget();
 	void ActionSit();
+	void ActionCharm();
 
+	bool IsCharm(PSPELL pSpell);
 	std::string Elixir::Ability(int abilityIndex);
 	std::string Elixir::Spell(PSPELL pSpell);	
 	std::string Elixir::CombatAbility(PSPELL pSpell);
-	
 
 	/*
 	bool Target();

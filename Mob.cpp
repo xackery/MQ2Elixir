@@ -11,7 +11,7 @@ int MobHP(PSPAWNINFO pSpawn) {
 }
 
 int MobHPDannet(PSPAWNINFO pSpawn) {
-	char szTemp[MAX_STRING];
+	char szTemp[MAX_STRING];	
 	if (!pSpawn->Type == SPAWN_PLAYER) return 0;
 
 	MQPlugin* pLook = Plugin("mq2dannet");
@@ -36,7 +36,7 @@ int MobHPDannet(PSPAWNINFO pSpawn) {
 int MobHPEstimate(PSPAWNINFO pSpawn) {
 	int hp = 0;
 	int level = pSpawn->Level;
-	if (GetCharInfo()->zoneId < 200 || level < 48) return level * 20;
+	if (pLocalPC->zoneId < 200 || level < 48) return level * 20;
 	return level * 100;	
 }
 

@@ -75,6 +75,7 @@
   <ItemGroup>
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="Elixir.cpp" />
+    <ClCompile Include="ElixirCharm.cpp" />
     <ClCompile Include="ElixirSit.cpp" />
     <ClCompile Include="ElixirTarget.cpp" />
     <ClCompile Include="Mob.cpp" />

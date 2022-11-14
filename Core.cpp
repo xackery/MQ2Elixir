@@ -8,11 +8,9 @@ using namespace std;
 // How many NPC XTargets within 250 feet of me are there?
 int XTargetNearbyHaterCount()
 {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) return 0;
 	int count = 0;
 	XTARGETSLOT xts;
-	ExtendedTargetList* xtm = pChar->pXTargetMgr;
+	ExtendedTargetList* xtm = pLocalPC->pXTargetMgr;
 	if (!xtm) return count;
 	if (!pAggroInfo) return count;
 
@@ -22,7 +20,7 @@ int XTargetNearbyHaterCount()
 		if (xts.xTargetType != XTARGET_AUTO_HATER) continue;
 		PSPAWNINFO pSpawn = (PSPAWNINFO)GetSpawnByID(xts.SpawnID);
 		if (!pSpawn) continue;
-		if (GetDistance(pChar->pSpawn, pSpawn) > 250) continue;
+		if (GetDistance(pLocalPlayer, pSpawn) > 250) continue;
 		count++;
 	}
 
@@ -72,8 +70,6 @@ bool IsSpellReady(PCHAR szName)
 // IsIdealDamageReceiver means you likely should be doing damage in the current situation (you have aggro, there's a main tank, you're not a tank class, etc)
 bool IsIdealDamageReceiver() 
 {
-	PCHARINFO pChar = GetCharInfo();
-
 	bool isMainTank = false;
 	bool isAnyMainTank = false;
 	bool isTauntClassInGroup = false;
@@ -81,8 +77,8 @@ bool IsIdealDamageReceiver()
 	PSPAWNINFO pSpawn;
 
 	for (int i = 0; i < 6; i++) {
-		if (!GetCharInfo()->Group) continue;
-		pG = GetCharInfo()->Group->GetGroupMember(i);
+		if (!pLocalPC->Group) continue;
+		pG = pLocalPC->Group->GetGroupMember(i);
 		if (!pG) continue;
 		if (pG->Offline) continue;
 		//if (${Group.Member[${i}].Mercenary}) /continue
@@ -99,19 +95,19 @@ bool IsIdealDamageReceiver()
 		if (pG->MainTank != 0) continue;
 		isAnyMainTank = true;
 		isTauntClassInGroup = true;
-		if (pSpawn->SpawnID != pChar->pSpawn->SpawnID) return true;
+		if (pSpawn->SpawnID != pLocalPlayer->SpawnID) return true;
 		break;
 	}
 
 	if (!isTauntClassInGroup) return true;
 
-	int myClass = pChar->pSpawn->GetClass();
+	int myClass = pLocalPlayer->GetClass();
 	switch (myClass) {
 	case Shadowknight:
 	case Warrior:
 	case Paladin:
 		if (isMainTank) return true;
-		if (SpawnPctHPs(pChar->pSpawn) < 50) return false;
+		if (SpawnPctHPs(pLocalPlayer) < 50) return false;
 		return true;
 	case Bard:
 	case Berserker:
@@ -119,7 +115,7 @@ bool IsIdealDamageReceiver()
 	case Ranger:
 	case Beastlord:
 	case Monk:
-		if (SpawnPctHPs(pChar->pSpawn) < 50) return false;
+		if (SpawnPctHPs(pLocalPlayer) < 50) return false;
 		return true;
 	case Cleric:
 	case Druid:
@@ -232,18 +228,16 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 		DebugSpewAlways("MQ2Elixir::HasBuff pSpawn nullptr");
 		return true;
 	}
+
 	if (pSpawn->Type != SPAWN_PLAYER && pSpawn->Type != SPAWN_NPC) {
 		DebugSpewAlways("MQ2Elixir::HasBuff pSpawn %s not player/npc", pSpawn->Name);
 		return true;
 	}
 
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		DebugSpewAlways("MQ2Elixir::HasBuff pChar is nullptr");
+	if (!pLocalPC) {
+		DebugSpewAlways("MQ2Elixir::HasBuff pLocalPC is nullptr");
 		return true;
 	}
-
-
 
 	string szSpellName = szName;
 
@@ -259,8 +253,59 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 		return true;
 	}
 
+	// self buffs
+	if (pSpawn->SpawnID == pLocalPlayer->SpawnID) {
+        for (int i = 0; i < GetPcProfile()->GetMaxEffects(); i++) {
+            EQ_Affect buff = GetPcProfile()->GetEffect(i);
+            if (!buff.SpellID) continue;
+            EQ_Spell* pBuffSpell = GetSpellByID(buff.SpellID);
+            if (!pBuffSpell) continue;
+            //if (pSpell1 && !WillStackWith(pSpell1, pBuffSpell)) return false;
+            //if (pSpell2 && !WillStackWith(pSpell2, pBuffSpell)) return false;
+            //if (pSpell3 && !WillStackWith(pSpell3, pBuffSpell)) return false;
 
-	PSPELL pSpell;
+			int slotIndex = -1;
+			EQ_Affect* ret = pLocalPlayer->GetPcClient()->FindAffectSlot(pSpell1->ID, pLocalPlayer, &slotIndex, true, pLocalPlayer->Level);
+			if (slotIndex != -1) return false;
+			ret = pLocalPlayer->GetPcClient()->FindAffectSlot(pSpell2->ID, pLocalPlayer, &slotIndex, true, pLocalPlayer->Level);
+			if (slotIndex != -1) return false;
+			ret = pLocalPlayer->GetPcClient()->FindAffectSlot(pSpell3->ID, pLocalPlayer, &slotIndex, true, pLocalPlayer->Level);
+			if (slotIndex != -1) return false;
+        }
+        return true;
+    }
+
+	// group buff inspect
+	if (pLocalPC->Group) {
+		CGroupMember* pG;
+		PSPAWNINFO pGSpawn;
+		for (int i = 0; i < 6; i++) {
+			pG = pLocalPC->Group->GetGroupMember(i);
+			if (!pG) continue;
+			if (pG->Offline) continue;
+			pGSpawn = pG->pSpawn;
+			if (pGSpawn->SpawnID != pSpawn->SpawnID) continue;
+			if (pGSpawn->Type == SPAWN_CORPSE) continue;
+			for (int nBuff = 0; nBuff < NUM_BUFF_SLOTS; nBuff++)
+			{
+				int buffid = ((CTargetWnd*)pTargetWnd)->BuffSpellID[nBuff];
+				if (buffid <= 0) {
+					continue;
+				}
+				PSPELL pBuffSpell = GetSpellByID(buffid);
+				if (!pBuffSpell) {
+					continue;
+				}
+				if (pSpell1 && !WillStackWith(pSpell1, pBuffSpell)) return false;
+				if (pSpell2 && !WillStackWith(pSpell2, pBuffSpell)) return false;
+				if (pSpell3 && !WillStackWith(pSpell3, pBuffSpell)) return false;
+				
+				return true;
+			}
+		}
+	}
+
+	// target buff inspect
 	if (pTarget && pSpawn->SpawnID == ((long)((PSPAWNINFO)pTarget)->SpawnID)) {
 		// we are targetting the person we're checking buff on
 		for (int nBuff = 0; nBuff < NUM_BUFF_SLOTS; nBuff++)
@@ -273,40 +318,13 @@ bool HasBuff(PSPAWNINFO pSpawn, PCHAR szName)
 			if (!pBuffSpell) {
 				continue;
 			}
-			pSpell = nullptr;
-			if (pSpell1 && pSpell1->ID == pBuffSpell->ID) pSpell = pSpell1;
-			if (pSpell1 && !BuffStackTest(pBuffSpell, pSpell1)) return false;
-			if (pSpell2 && pSpell2->ID == pBuffSpell->ID) pSpell = pSpell2;
-			if (pSpell2 && !BuffStackTest(pBuffSpell, pSpell2)) return false;
-			if (pSpell3 && pSpell3->ID == pBuffSpell->ID) pSpell = pSpell3;
-			if (pSpell3 && !BuffStackTest(pBuffSpell, pSpell3)) return false;			
-			if (!pSpell) continue;
+			if (pSpell1 && !WillStackWith(pSpell1, pBuffSpell)) return false;
+            if (pSpell2 && !WillStackWith(pSpell2, pBuffSpell)) return false;
+            if (pSpell3 && !WillStackWith(pSpell3, pBuffSpell)) return false;
 			//TODO: add level check comparison
 			return true;
 		}
 	}
-
-	for (unsigned long nBuff = 0; nBuff < NUM_LONG_BUFFS; nBuff++)
-	{
-		pSpell = nullptr;
-		//if (pSpell1 && pSpell1->ID == bc->Buffs[nBuff].SpellID) pSpell = pSpell1;
-		//if (pSpell2 && pSpell2->ID == bc->Buffs[nBuff].SpellID) pSpell = pSpell2;
-		//if (pSpell3 && pSpell3->ID == bc->Buffs[nBuff].SpellID) pSpell = pSpell3;
-		if (!pSpell) continue;
-
-		//if (bc->Buffs[nBuff].Level >= pChar->pSpawn->Level) {
-			//DebugSpewAlways("MQ2Elixir::HasBuff pSpawn already has a higher level version of spell %s casted on them", pSpell->Name);
-		//	return true;
-		//}
-
-		//TODO: stacking logic
-		//EQ_Affect* ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, 0, 0, true);
-
-		//if (!ret || SlotIndex == -1) return false;
-	}
-
-	if (!IsSpellStackable(pSpawn, pSpell)) return true;
-
 	return false;
 }
 
@@ -346,14 +364,20 @@ bool IsFacingSpawn(PSPAWNINFO pSpawn)
 		return false;
 	}
 
-	float fMyHeading = GetCharInfo()->pSpawn->Heading * 0.703125f;
-	float fSpawnHeadingTo = (FLOAT)(atan2f(((PSPAWNINFO)pCharSpawn)->Y - pSpawn->Y, pSpawn->X - ((PSPAWNINFO)pCharSpawn)->X) * 180.0f / PI + 90.0f);
+	float fMyHeading = pLocalPlayer->Heading * 0.703125f;
+	float fSpawnHeadingTo = (FLOAT)(atan2f(pLocalPlayer->Y - pSpawn->Y, pSpawn->X - pLocalPlayer->X) * 180.0f / PI + 90.0f);
 	if (fSpawnHeadingTo < 0.0f)	fSpawnHeadingTo += 360.0f;
 	else if (fSpawnHeadingTo >= 360.0f)	fSpawnHeadingTo -= 360.0f;
 	float facing = abs(fSpawnHeadingTo - fMyHeading);
 	return (facing <= 30);
 }
 
+int PctHPs() 
+{
+	if (!pLocalPlayer) return 0;
+	if (pLocalPlayer->HPMax == 0) return 100;
+	return (int)(pLocalPlayer->HPCurrent * 100 / pLocalPlayer->HPMax);
+}
 
 int SpawnPctHPs(PSPAWNINFO pSpawn)
 {
@@ -369,10 +393,10 @@ int SpawnPctEndurance(PSPAWNINFO pSpawn)
 	return (int)(pSpawn->GetCurrentEndurance() * 100 / pSpawn->GetMaxEndurance());
 }
 
-int PctMana() {
+int PctMana() {	
 	if (!pLocalPC) return 0;
 	if (pLocalPC->Max_Mana() == 0) return 100;
-	return (int)(GetPcProfile()->Mana * 100 / pLocalPC->Max_Mana());
+	return (int)(pLocalPC->Cur_Mana() * 100 / pLocalPC->Max_Mana());
 }
 
 int SpawnPctMana(PSPAWNINFO pSpawn)
@@ -400,23 +424,12 @@ bool ActionSpawnTarget(PSPAWNINFO pSpawn)
 
 bool ActionCastSpell(PCHAR szName)
 {
-
-	if (!pLocalPlayer) {
-		DebugSpewAlways("MQ2Elixir::ActionCastSpell pLocalPlayer not found");
-		return false;
-	}
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		DebugSpewAlways("MQ2Elixir::ActionCastSpell pChar not found");
-		return false;
-	}
-
-	bool isBard = (pChar->pSpawn->GetClass() == Bard);
-	if (!isBard && IsMoving(pChar->pSpawn)) {
+	bool isBard = (pLocalPlayer->GetClass() == Bard);
+	if (!isBard && IsMoving(pLocalPlayer)) {
 		DebugSpewAlways("MQ2Elixir::ActionCastSpell is moving");
 		return false;
 	}
-	if (GetCharInfo()->pSpawn->CastingData.IsCasting()) {
+	if (pLocalPlayer->CastingData.IsCasting()) {
 		DebugSpewAlways("MQ2Elixir::ActionCastSpell is casting");
 		return false;
 	}
@@ -495,12 +508,12 @@ bool ActionCastSpell(PCHAR szName)
 	}
 
 
-	if (pChar->pSpawn->GetCurrentMana() < (int)pSpell->ManaCost) {
+	if (pLocalPlayer->GetCurrentMana() < (int)pSpell->ManaCost) {
 		DebugSpewAlways("MQ2Elixir::ActionCastSpell spell %s not enough mana", pSpell->Name);
 		return false;
 	}
 	
-	if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) {
+	if (pTarget && Distance3DToSpawn(pLocalPlayer, (PSPAWNINFO)pTarget) > pSpell->Range) {
 		DebugSpewAlways("MQ2Elixir::ActionCastSpell spell %s states target too far away", pSpell->Name);
 		return false;
 	}
@@ -555,8 +568,8 @@ bool ActionMemorizeSpell(WORD gem, PCHAR szName)
 	}
 
 
-	if (pSpell->ClassLevel[GetCharInfo()->pSpawn->mActorClient.Class] > GetCharInfo()->pSpawn->Level) {
-		DebugSpewAlways("MQ2Elixir::ActionMemorizeSpell spell %s needs at least level %d, got level %d", pSpell->Name, pSpell->ClassLevel[GetCharInfo()->pSpawn->mActorClient.Class], GetCharInfo()->pSpawn->Level);
+	if (pSpell->ClassLevel[pLocalPlayer->mActorClient.Class] > pLocalPlayer->Level) {
+		DebugSpewAlways("MQ2Elixir::ActionMemorizeSpell spell %s needs at least level %d, got level %d", pSpell->Name, pSpell->ClassLevel[pLocalPlayer->mActorClient.Class], pLocalPlayer->Level);
 		return false;
 	}
 
@@ -581,13 +594,11 @@ void Execute(PCHAR zFormat, ...)
 	if (!zOutput[0]) {
 		return;
 	}
-	DoCommand(GetCharInfo()->pSpawn, zOutput);
+	DoCommand(pLocalPlayer, zOutput);
 }
 
 bool ActionCastItem(PCHAR szName)
 {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) return false;
 	if (!IsCastingReady()) return false;
 	auto pItem = FindItemByName(szName, 1);
 	if (!pItem) return false;
@@ -598,9 +609,7 @@ bool ActionCastItem(PCHAR szName)
 
 bool ActionCastAA(PCHAR szName)
 {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) return false;
-	bool isBard = (pChar->pSpawn->GetClass() == Bard);
+	bool isBard = (pLocalPlayer->GetClass() == Bard);
 	if (!isBard && !IsCastingReady()) {
 		DebugSpewAlways("MQ2Elixir::ActionCastAA not bard, casting isn't ready for %s", szName);
 		return false;
@@ -633,9 +642,6 @@ bool ActionCastAA(PCHAR szName)
 
 bool IsAbilityReady(PCHAR szName)
 {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) return false;
-	
 	for (int i = 0; i < NUM_SKILLS; i++) {
 		DWORD nToken = pSkillMgr->GetNameToken(i);
 		if (!HasSkill(i)) continue;
@@ -671,11 +677,6 @@ bool ActionCastAbility(PCHAR szName)
 		DebugSpewAlways("MQ2Elixir::ActionCastAbility casting not ready");
 		return false;
 	}
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		DebugSpewAlways("MQ2Elixir::ActionCastAbility no pchar");
-		return false;
-	}
 
 	for (int i = 0; i < NUM_SKILLS; i++) {
 		DWORD nToken = pSkillMgr->GetNameToken(i);
@@ -690,7 +691,7 @@ bool ActionCastAbility(PCHAR szName)
 			sprintf_s(temp, "\"%s", szSpellName);
 			strcat_s(temp, MAX_STRING, "\"");
 			DebugSpewAlways("MQ2Elixir::ActionCastAbility doability %s", szSpellName);
-			DoAbility(pChar->pSpawn, temp);
+			DoAbility(pLocalPlayer, temp);
 			return true;
 		}
 		szSpellName = szName;
@@ -700,7 +701,7 @@ bool ActionCastAbility(PCHAR szName)
 			sprintf_s(temp, "\"%s", szSpellName);
 			strcat_s(temp, MAX_STRING, "\"");
 			DebugSpewAlways("MQ2Elixir::ActionCastAbility doability %s", szSpellName);
-			DoAbility(pChar->pSpawn, temp);
+			DoAbility(pLocalPlayer, temp);
 			return true;
 		}
 		szSpellName = szName;
@@ -710,7 +711,7 @@ bool ActionCastAbility(PCHAR szName)
 			sprintf_s(temp, "\"%s", szSpellName);
 			strcat_s(temp, MAX_STRING, "\"");
 			DebugSpewAlways("MQ2Elixir::ActionCastAbility doability %s", szSpellName);
-			DoAbility(pChar->pSpawn, temp);
+			DoAbility(pLocalPlayer, temp);
 			return true;
 		}
 	}
@@ -723,11 +724,6 @@ bool IsCombatAbilityReady(PCHAR szName)
 {
 	if (!IsCastingReady()) {
 		DebugSpewAlways("MQ2Elixir::IsCombatAbilityReady casting not ready");
-		return false;
-	}
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		DebugSpewAlways("MQ2Elixir::IsCombatAbilityReady no pchar");
 		return false;
 	}
 
@@ -761,7 +757,7 @@ bool IsCombatAbilityReady(PCHAR szName)
 		return false;
 	}
 #endif
-	if (HasBuff(pChar->pSpawn, pSpell->Name)) {
+	if (HasBuff(pLocalPlayer, pSpell->Name)) {
 		return false;
 	}
 
@@ -784,27 +780,27 @@ bool IsCombatAbilityReady(PCHAR szName)
 		}
 	}
 
-	if (pChar->pSpawn->GetCurrentMana() < (int)pSpell->ManaCost) {
+	if (pLocalPlayer->GetCurrentMana() < (int)pSpell->ManaCost) {
 		DebugSpewAlways("MQ2Elixir::IsCombatAbilityReady not enough mana for %s", pSpell->Name);
 		return false;
 	}
 
-	if (pChar->pSpawn->GetCurrentEndurance() < (int)pSpell->EnduranceCost) {
+	if (pLocalPlayer->GetCurrentEndurance() < (int)pSpell->EnduranceCost) {
 		DebugSpewAlways("MQ2Elixir::IsCombatAbilityReady not enough mana for %s", pSpell->Name);
 		return false;
 	}
 
 
-	if (pTarget && Distance3DToSpawn(pChar->pSpawn, (PSPAWNINFO)pTarget) > pSpell->Range) {
+	if (pTarget && Distance3DToSpawn(pLocalPlayer, (PSPAWNINFO)pTarget) > pSpell->Range) {
 		DebugSpewAlways("MQ2Elixir::IsCombatAbilityReady target too far away for %s", pSpell->Name);
 		return false;
 	}
 
 	DWORD ReqID = pSpell->CasterRequirementID;
-	if (ReqID == 518 && SpawnPctHPs(pChar->pSpawn) > 89) return false;
-	if (ReqID == 825 && SpawnPctEndurance(pChar->pSpawn) > 20) return false;
-	if (ReqID == 826 && SpawnPctEndurance(pChar->pSpawn) > 24) return false;
-	if (ReqID == 827 && SpawnPctEndurance(pChar->pSpawn) > 29) return false;
+	if (ReqID == 518 && SpawnPctHPs(pLocalPlayer) > 89) return false;
+	if (ReqID == 825 && SpawnPctEndurance(pLocalPlayer) > 20) return false;
+	if (ReqID == 826 && SpawnPctEndurance(pLocalPlayer) > 24) return false;
+	if (ReqID == 827 && SpawnPctEndurance(pLocalPlayer) > 29) return false;
 
 	for (int i = 0; i < 4; i++) {
 		if (pSpell->ReagentCount[i] == 0) continue;
@@ -825,11 +821,6 @@ bool IsCombatAbilityReady(PCHAR szName)
 
 bool ActionCastCombatAbility(PCHAR szName)
 {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		DebugSpewAlways("MQ2Elixir::ActionCastCombatAbility no pchar");
-		return false;
-	}
 
 	PSPELL pSpell = nullptr;
 	string szSpellName = szName;
@@ -848,7 +839,7 @@ bool ActionCastCombatAbility(PCHAR szName)
 		return false;
 	}
 
-	return (pCharData->DoCombatAbility(pSpell->ID));
+	return (pLocalPC->DoCombatAbility(pSpell->ID));
 }
 
 
@@ -870,7 +861,7 @@ PALTABILITY AAByName(PCHAR Name) {
 
 PSPAWNINFO PetTarget()
 {
-	long petID = GetCharInfo()->pSpawn->PetID;
+	long petID = pLocalPlayer->PetID;
 	if (petID <= 0) return nullptr;
 	if (petID == 0xFFFFFFFF) return nullptr;
 
@@ -896,7 +887,7 @@ bool SpellStacks()
 bool ActionCastGem(int gemIndex) 
 {
 #if defined(ROF2EMU) || defined(UFEMU)
-	if (GetCharInfo()->pSpawn->StandState == STANDSTATE_SIT) {
+	if (pLocalPlayer->StandState == STANDSTATE_SIT) {
 		DoCommandf("/stand");
 	}
 #endif
@@ -913,12 +904,9 @@ PCONTENTS EquippedSlot(PCONTENTS pCont)
 		{
 			if (cmp & (1 << N))
 			{
-				if (PCHARINFO2 pChar2 = GetPcProfile())
+				if (PCONTENTS pInvSlot =pLocalPC->GetCurrentPcProfile()->pInventoryArray->InventoryArray[N])
 				{
-					if (PCONTENTS pInvSlot = pChar2->pInventoryArray->InventoryArray[N])
-					{
-						return pInvSlot;
-					}
+					return pInvSlot;
 				}
 			}
 		}
@@ -965,7 +953,7 @@ bool IsSpellStackable(PSPAWNINFO pSpawn, PSPELL pSpell) {
 			if (!IsSpellStackableCompare(pSpell, pBuffSpell)) return false;
 		}
 	}
-	else if (pSpawn->SpawnID == GetCharInfo()->pSpawn->SpawnID) {
+	else if (pSpawn->SpawnID == pLocalPlayer->SpawnID) {
 		for (int i = 0; i < NUM_LONG_BUFFS; i++) {
 			
 			PSPELL pBuffSpell = GetSpellByID(GetPcProfile()->Buffs[i].SpellID);
@@ -1027,14 +1015,12 @@ unsigned long StunDuration(PSPELL pSpell) {
 }
 
 unsigned long MainAssistTargetID() {
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) return 0;
-	if (pChar->pGroupInfo) return 0;
+	if (pLocalPC->pGroupInfo) return 0;
 	return ((PSPAWNINFO)pLocalPlayer)->GroupAssistNPC[0];
 }
 
 unsigned int PetTargetID() {
-	int petID = GetCharInfo()->pSpawn->PetID;
+	int petID = pLocalPlayer->PetID;
 	if (!petID) return petID;
 	if (petID == 0xFFFFFFFF) return 0;
 	EQPlayer* pPet = GetSpawnByID(petID);

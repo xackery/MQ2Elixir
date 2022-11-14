@@ -22,6 +22,21 @@ void Elixir::ActionSit()
 	}
 	CHAR szTemp[MAX_STRING] = { 0 };
 
+	if (ZoneCooldownTimer > std::chrono::steady_clock::now()) {
+		MeditateAIStr = "zone cooldown";
+		return;
+	}
+
+	if (pLocalPC->Stunned) {
+		MeditateAIStr = "player stunned";
+		return;
+	}
+
+	if (AreObstructionWindowsVisible()) {
+		MeditateAIStr = "obstruction window visible";
+		return;
+	}
+
 	if (sitCooldownTimer > std::chrono::steady_clock::now()) {
 		MeditateAIStr = "sit on cooldown";
 		return;
@@ -36,7 +51,7 @@ void Elixir::ActionSit()
 		sprintf_s(szTemp, "currently sitting (%d%%)", PctMana());
 		MeditateAIStr = szTemp;
 		
-		lastHPOnSit = SpawnPctHPs(pLocalPC->pSpawn);
+		lastHPOnSit = SpawnPctHPs(pLocalPlayer);
 		return;
 	}
 
@@ -45,7 +60,7 @@ void Elixir::ActionSit()
 		return;
 	}
 
-	if (IsMoving(GetCharInfo()->pSpawn)) {
+	if (IsMoving(pLocalPlayer)) {
 		sitCooldownTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(6000);
 		MeditateAIStr = "currently moving";
 		return;
@@ -67,7 +82,7 @@ void Elixir::ActionSit()
 		if (!IsMeditateEnabledDuringCombat) {
 			MeditateAIStr = "combat detected, meditate disabled";
 		}
-		if (lastHPOnSit > SpawnPctHPs(GetCharInfo()->pSpawn) + 5) {
+		if (lastHPOnSit > SpawnPctHPs(pLocalPlayer) + 5) {
 			sitCooldownTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(12000);
 		}
 		else {
@@ -78,7 +93,7 @@ void Elixir::ActionSit()
 		sitCooldownTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
 	}
 
-	lastHPOnSit = SpawnPctHPs(GetCharInfo()->pSpawn);
+	lastHPOnSit = SpawnPctHPs(pLocalPlayer);
 	EzCommand("/sit");
 	MeditateAIStr = "trying to sit";
 	return;

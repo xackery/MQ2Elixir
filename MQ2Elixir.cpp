@@ -24,12 +24,6 @@ PLUGIN_API void InitializePlugin()
 
 	pElixir = new Elixir();
 
-	if (GetCharInfo()) {
-		char szName[256] = { 0 };
-		strcpy_s(szName, GetCharInfo()->Name);
-		pElixir->StanceMode = GetPrivateProfileInt(szName, "Options-DefaultStanceMode", 0, INIFileName);
-	}
-
 	//Add commands, MQ2Data items, hooks, etc.
 	AddCommand("/elixir", ElixirCommand);
 	AddSettingsPanel("plugins/Elixir", DrawElixirUIPanel);
@@ -47,7 +41,6 @@ PLUGIN_API void ShutdownPlugin()
 	RemoveSettingsPanel("plugins/Elixir");
 	delete pElixir;
     RemoveCommand("/elixir");
-	
 }
 
 /**
@@ -127,7 +120,8 @@ PLUGIN_API void OnDrawHUD()
 PLUGIN_API void SetGameState(int GameState)
 {
 	if (GameState != GAMESTATE_INGAME) return;
-	if (!strcmp(ServerCharacterINI, GetCharInfo()->Name)) return;
+	if (!pLocalPC) return;
+	if (!strcmp(ServerCharacterINI, pLocalPC->Name)) return;
 	LoadINI();
 }
 
@@ -148,6 +142,10 @@ PLUGIN_API void OnPulse()
 		return;
 	}
 
+	if (!pLocalPC) {
+		return;
+	}
+
 	if (PulseTimer > std::chrono::steady_clock::now()) {
 		return;
 	}
@@ -165,10 +163,6 @@ PLUGIN_API void OnPulse()
 
 	PulseTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(1000);
 
-	PCHARINFO pChar = GetCharInfo();
-
-	if (!pChar) return;
-	
 	pElixir->OnPulse();
 	DebugSpewAlways("MQ2Elixir::OnPulse()");
 }
@@ -291,6 +285,7 @@ PLUGIN_API void OnRemoveGroundItem(PGROUNDITEM pGroundItem)
 PLUGIN_API void OnBeginZone()
 {
 	IsZoning = true;
+	pElixir->ClearCharmTarget();
 }
 
 /**
@@ -421,6 +416,7 @@ void SaveINI() {
 	WritePrivateProfileInt(sectionName, "HealAIMax", pElixir->HealAIMax, INIFileName);
 
 	WritePrivateProfileBool(sectionName, "BuffAIEnabled", pElixir->IsBuffAIRunning, INIFileName);
+	WritePrivateProfileBool(sectionName, "BuffAIDuringCombat", pElixir->IsBuffDuringCombat, INIFileName);
 	
 	WritePrivateProfileBool(sectionName, "NukeAIEnabled", pElixir->IsNukeAIRunning, INIFileName);
 	WritePrivateProfileInt(sectionName, "NukeAIManaMax", pElixir->NukeAIManaMax, INIFileName);
@@ -434,6 +430,8 @@ void SaveINI() {
 	WritePrivateProfileInt(sectionName, "TargetAIMinRange", pElixir->TargetAIMinRange, INIFileName);
 	WritePrivateProfileBool(sectionName, "TargetAIAutoAttack", pElixir->IsTargetAutoAttack, INIFileName);
 	WritePrivateProfileBool(sectionName, "TargetAIPetAttack", pElixir->IsTargetPetAttack, INIFileName);
+
+	WritePrivateProfileBool(sectionName, "CharmAIEnabled", pElixir->IsCharmAIRunning, INIFileName);
 
 	WritePrivateProfileBool(sectionName, "SettingsDebugEnabled", pElixir->IsSettingsDebugEnabled, INIFileName);
 	char szBuffer[MAX_STRING] = { 0 };
@@ -459,6 +457,7 @@ void LoadINI() {
 	pElixir->HealAIMax = GetPrivateProfileInt(sectionName, "HealAIMax", 50, INIFileName);
 
 	pElixir->IsBuffAIRunning = GetPrivateProfileBool(sectionName, "BuffAIEnabled", false, INIFileName);
+	pElixir->IsBuffDuringCombat = GetPrivateProfileBool(sectionName, "BuffAIDuringCombat", false, INIFileName);
 
 	pElixir->IsNukeAIRunning = GetPrivateProfileBool(sectionName, "NukeAIEnabled", false, INIFileName);
 	pElixir->NukeAIHPMax = GetPrivateProfileInt(sectionName, "NukeAIHPMax", 95, INIFileName);
@@ -472,6 +471,8 @@ void LoadINI() {
 	pElixir->TargetAIMinRange = GetPrivateProfileInt(sectionName, "TargetAIMinRange", 80, INIFileName);
 	pElixir->IsTargetAutoAttack= GetPrivateProfileBool(sectionName, "TargetAIAutoAttack", false, INIFileName);
 	pElixir->IsTargetPetAttack = GetPrivateProfileBool(sectionName, "TargetAIPetAttack", false, INIFileName);
+
+	pElixir->IsCharmAIRunning = GetPrivateProfileBool(sectionName, "CharmAIEnabled", false, INIFileName);
 
 	pElixir->IsSettingsDebugEnabled = GetPrivateProfileInt(sectionName, "SettingsDebugEnabled", 80, INIFileName);
 	
@@ -733,6 +734,12 @@ void DrawElixirUI()
 			}
 			ImGui::SameLine();
 			mq::imgui::HelpMarker("This AI will keep self buffs or target buffs on self maintained.\nIt is not smart enough yet to manage buffs on other targets, nor is it smart about stacking and such, beyond MQ2 built in support logic, buff stacking in EQ is complex and weird.");
+
+			if (ImGui::Checkbox("During Combat", &pElixir->IsBuffDuringCombat)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("If Checked, Buffs will be casted even during combat.");
 			ImGui::TreePop();
 		}
 
@@ -947,6 +954,58 @@ void DrawElixirUI()
 			ImGui::TreePop();
 		}
 
+		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->IsCharmAIRunning) ? greenColor : redColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+		if (!pElixir->IsCharmAIRunning) {
+			sprintf_s(szBuffer, "Charm AI (Disabled)");
+		}
+		else {
+			sprintf_s(szBuffer, "Charm AI (Enabled - %s)", pElixir->CharmName);
+		}
+		isOpen = ImGui::TreeNode("##elixir.charmAILabel", szBuffer);
+		ImGui::PopStyleColor(4);
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::EndPopup();
+		}
+		if (isOpen)
+		{
+			if (ImGui::Checkbox("Charm AI", &pElixir->IsCharmAIRunning)) {
+				isChanged = true;
+			}
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("This AI will attempt to charm a designated target as a high priority process.");
+
+			ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->CharmName != "No Target\0") ? greenColor : redColor);
+			ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
+			ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
+			ImGui::PushStyleColor(ImGuiCol_TabActive, blueActiveColor);
+			ImGui::Text("Charm Target: %s", pElixir->CharmName);
+			ImGui::PopStyleColor(4);
+
+			if (!pElixir->IsCharmCurrentValid) ImGui::BeginDisabled();
+			if (ImGui::Button("Set Charm Target")) {
+				pElixir->CharmSpawnID = pTarget->SpawnID;
+				sprintf_s(pElixir->CharmName, pTarget->Name);
+			}
+			if (!pElixir->IsCharmCurrentValid) ImGui::EndDisabled();
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("AI will try to keep charm target charmed");
+
+			bool isClearDisabled = pElixir->CharmSpawnID == 0;
+			if (isClearDisabled) ImGui::BeginDisabled();
+			if (ImGui::Button("Clear Charm Target")) {
+				pElixir->ClearCharmTarget();
+			}
+			if (isClearDisabled) ImGui::EndDisabled();
+			ImGui::SameLine();
+			mq::imgui::HelpMarker("Clear current charmed target, disabling charm AI until a new target is set");
+			
+			ImGui::TreePop();
+		}
+
 		ImGui::PushStyleColor(ImGuiCol_Text, (pElixir->ignoreGemCount > 0) ? greenColor : redColor);
 		ImGui::PushStyleColor(ImGuiCol_Tab, blueColor);
 		ImGui::PushStyleColor(ImGuiCol_TabHovered, blueHoverColor);
@@ -984,6 +1043,7 @@ void DrawElixirUI()
 		if (pElixir->IsSettingsDebugEnabled) {
 			ImGui::Text("LastAction: %s", pElixir->LastAction.c_str());
 			ImGui::Text("Target AI: %s", pElixir->TargetAIStr.c_str());
+			ImGui::Text("Charm AI: %s", pElixir->CharmAIStr.c_str());
 			ImGui::Text("Meditate AI: %s", pElixir->MeditateAIStr.c_str());
 			for (int i = 0; i < 12; i++) {
 				ImGui::Text("Button %d: %s", i + 1, pElixir->Buttons[i].c_str());

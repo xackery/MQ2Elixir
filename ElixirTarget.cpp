@@ -21,6 +21,11 @@ void Elixir::ActionTarget()
 		TargetAIStr = "not in a group";
 		return;
 	}
+
+	if (AreObstructionWindowsVisible()) {
+		TargetAIStr = "obstruction window visible";
+		return;
+	}
 	
     uint32_t assist_id = GetGroupMainAssistTargetID();
     if (!assist_id) {
@@ -35,7 +40,7 @@ void Elixir::ActionTarget()
     }
 
 	if (pTarget && pTarget->SpawnID == pAssist->SpawnID) {
-		if (IsTargetPetAttack && GetCharInfo()->pSpawn->PetID > 0 && PetTargetID() == 0 && pAssist->SpawnID != GetCharInfo()->pSpawn->PetID) {
+		if (IsTargetPetAttack && pLocalPlayer->PetID > 0 && PetTargetID() == 0 && pAssist->SpawnID != pLocalPlayer->PetID) {
 			EzCommand("/pet attack");
 			TargetAIStr = "pet attacking";
 			return;
@@ -55,18 +60,18 @@ void Elixir::ActionTarget()
 		return;
 	}
 
-	if (IsMoving(pCharSpawn)) {
+	if (IsMoving(pLocalPlayer)) {
 		TargetAIStr = "I am moving";
 		return;
 	}
 
-	if (DistanceToSpawn(pCharSpawn, pAssist) > TargetAIMinRange) {
+	if (DistanceToSpawn(pLocalPlayer, pAssist) > TargetAIMinRange) {
         sprintf_s(szTemp, "target > %d%%", TargetAIMinRange);
 		TargetAIStr = szTemp;
 		return;
 	}
 
-	if (!LineOfSight(pCharSpawn, pAssist)) {
+	if (!LineOfSight(pLocalPlayer, pAssist)) {
 		TargetAIStr = "not line of sight";
 		return;
 	}

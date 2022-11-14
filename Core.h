@@ -43,6 +43,7 @@ bool IsSpellStackableCompare(PSPELL pSpell1, PSPELL pSpell2);
 PALTABILITY AAByName(PCHAR Name);
 int CombatState();
 int PctMana();
+int PctHPs();
 int SpawnPctHPs(PSPAWNINFO pSpawn);
 int SpawnPctMana(PSPAWNINFO pSpawn);
 unsigned int PetTargetID();

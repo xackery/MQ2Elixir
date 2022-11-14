@@ -25,24 +25,18 @@ void Elixir::ActionButton(int buttonIndex)
 		return;
 	}
 
-	PCHARINFO pChar = GetCharInfo();
-	if (!pChar) {
-		Buttons[buttonIndex] = "char not loaded";
-		return;
-	}
-
 	if (ZoneCooldownTimer > std::chrono::steady_clock::now()) {
 		Buttons[buttonIndex] = "zone cooldown";
 		return;
 	}
 
 
-	if (pChar->pSpawn->GetClass() != Bard && isActionComplete) {
+	if (pLocalPlayer->GetClass() != Bard && isActionComplete) {
 		Buttons[buttonIndex] = "earlier action complete";
 		return;
 	}
 
-	if (GetCharInfo()->Stunned) {
+	if (pLocalPC->Stunned) {
 		Buttons[buttonIndex] = "player stunned";
 		return;
 	}
@@ -52,7 +46,7 @@ void Elixir::ActionButton(int buttonIndex)
 		return;
 	}
 
-	if (GetCharInfo()->pSpawn->HideMode) {
+	if (pLocalPlayer->HideMode) {
 		Buttons[buttonIndex] = "player invisible";
 	}
 
@@ -183,7 +177,7 @@ void Elixir::ActionButton(int buttonIndex)
 			if (strlen(Buttons[buttonIndex].c_str()) > 0) {
 				return;
 			}
-			DoAbility(pChar->pSpawn, szTemp);
+			DoAbility(pLocalPlayer, szTemp);
 			LastAction = "pressing hotbutton " + to_string(buttonIndex);
 			Buttons[buttonIndex] = LastAction;
 			lastActionRepeatCooldown = std::chrono::steady_clock::now() + std::chrono::milliseconds(3000);
@@ -285,7 +279,7 @@ void Elixir::ActionButton(int buttonIndex)
 			return;
 		}
 
-		if (!pCharData->DoCombatAbility(pSpell->ID)) {
+		if (!pLocalPC->DoCombatAbility(pSpell->ID)) {
 			Buttons[buttonIndex] = "ability failed";
 			return;
 		}
