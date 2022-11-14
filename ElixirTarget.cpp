@@ -22,6 +22,11 @@ void Elixir::ActionTarget()
 		return;
 	}
 
+	if (isActionComplete) {
+		TargetAIStr = "earlier action completed";
+		return;
+	}
+
 	if (AreObstructionWindowsVisible()) {
 		TargetAIStr = "obstruction window visible";
 		return;

@@ -164,7 +164,6 @@ PLUGIN_API void OnPulse()
 	PulseTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(1000);
 
 	pElixir->OnPulse();
-	DebugSpewAlways("MQ2Elixir::OnPulse()");
 }
 
 /**
