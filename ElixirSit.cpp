@@ -37,6 +37,11 @@ void Elixir::ActionSit()
 		return;
 	}
 
+	if (DoIHaveHate()) {
+		MeditateAIStr = "currently have aggro";
+		return;
+	}
+
 	if (sitCooldownTimer > std::chrono::steady_clock::now()) {
 		MeditateAIStr = "sit on cooldown";
 		return;

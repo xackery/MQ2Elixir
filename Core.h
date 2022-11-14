@@ -40,6 +40,7 @@ bool IsFacingSpawn(PSPAWNINFO pSpawn);
 bool IsAAPurchased(PCHAR AAName);
 bool IsSpellStackable(PSPAWNINFO pSpawn, PSPELL pSpell);
 bool IsSpellStackableCompare(PSPELL pSpell1, PSPELL pSpell2);
+bool DoIHaveHate();
 PALTABILITY AAByName(PCHAR Name);
 int CombatState();
 int PctMana();

@@ -671,6 +671,27 @@ bool IsAbilityReady(PCHAR szName)
 	return false;
 }
 
+bool DoIHaveHate() 
+{
+	XTARGETSLOT xts;
+	ExtendedTargetList* xtm = pLocalPC->pXTargetMgr;
+	if (!xtm) return false;
+	if (!pAggroInfo) return false;
+
+	for (int i = 0; i < xtm->XTargetSlots.Count; i++) {
+		xts = xtm->XTargetSlots[i];
+		if (!xts.SpawnID) continue;
+		if (xts.xTargetType != XTARGET_AUTO_HATER) continue;
+		PSPAWNINFO pSpawn = (PSPAWNINFO)GetSpawnByID(xts.SpawnID);
+		if (!pSpawn) continue;
+		if (pSpawn->Type != SPAWN_NPC) continue;
+		if (GetDistance(pLocalPlayer, pSpawn) > 100) continue;
+		DWORD aggroPct = pAggroInfo->aggroData[AD_xTarget1 + i].AggroPct;
+		if (aggroPct > 95) return true;
+	}
+	return false;
+}
+
 bool ActionCastAbility(PCHAR szName)
 {
 	if (!IsCastingReady()) {
