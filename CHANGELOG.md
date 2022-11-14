@@ -5,3 +5,4 @@
 - Fixed bugs with PctMana checks
 - Added PetTargetID
 - Cleaned up MaxGemCount
+- Disabled Meditate AI auto stand on full mana

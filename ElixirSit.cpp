@@ -49,9 +49,9 @@ void Elixir::ActionSit()
 	
 	if (pLocalPC->standstate == STANDSTATE_SIT) {
 		if (sitCooldownTimer <= std::chrono::steady_clock::now() && PctMana() >= 99) {
-			MeditateAIStr = "standing up, full mana";
-			EzCommand("/stand");
-			return;
+			//MeditateAIStr = "standing up, full mana";
+			//EzCommand("/stand");
+			//return;
 		}
 		sprintf_s(szTemp, "currently sitting (%d%%)", PctMana());
 		MeditateAIStr = szTemp;
